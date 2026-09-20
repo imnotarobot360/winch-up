@@ -14,18 +14,21 @@ Product rules, flow and conventions live in [CLAUDE.md](./CLAUDE.md). Read that 
 | Milestone | Scope | Status |
 |---|---|---|
 | **M1** | schema + migrations + RLS + seed data | **code complete, not yet run** |
-| M2 | `/request` + `/r` status page + requester SMS | not started |
+| **M2** | `/request` + `/r` status page + requester SMS | **code complete, not yet run** |
 | M3 | responder signup + dispatch engine + inbound webhook + tests | not started |
 | M4 | `/board`, `/post`, `/admin` | not started |
 | M5 | PWA polish, i18n pass, README, deploy to Vercel | not started |
 
-> **M1 has never been executed.** It was written on a machine with no Node.js, no Docker and no
-> Supabase CLI, so `supabase db reset` and `supabase test db` have not been run against it.
-> The first task of M2 is step 3 below: apply the migrations locally and fix whatever the first
-> run turns up.
-
-The Next.js app itself is not scaffolded yet — only the pieces that are independent of it:
-`src/config/app.ts` (the one place the product name lives) and `messages/{en,es}.json`.
+> **Nothing here has been executed.** M1 and M2 were both written on a machine with no Node.js,
+> no npm, no Docker and no Supabase CLI. That means:
+>
+> - `npm install` has never run, so no dependency version in `package.json` has been resolved
+> - `npm run build` and `tsc --noEmit` have never run, so nothing is type-checked
+> - `supabase db reset` and `supabase test db` have never run, so no migration has been applied
+>   and no test has passed
+>
+> Treat the first run as part of the work, not as a formality. Steps 1–3 below are the next
+> action; expect to fix things.
 
 ---
 
@@ -54,6 +57,10 @@ leave it running before any `supabase start`.
 ---
 
 ## 1. Local setup
+
+```bash
+npm install
+```
 
 ```bash
 cp .env.example .env.local
@@ -103,9 +110,48 @@ pull the requester's contact details.
 
 Run it before every deploy. If one of these fails, the fix is the code, not the test.
 
+Also keep the two message catalogues in step:
+
+```bash
+npm run i18n:check
+```
+
+It fails on any key that exists in one language and not the other, and on any translation that
+dropped an ICU placeholder like `{count}` or `{url}`.
+
+## 4. Run the app
+
+```bash
+npm run dev
+```
+
+Open http://127.0.0.1:3000. With `SMS_DRY_RUN=1` (the default in `.env.example`) no real text is
+sent — the message is printed to the terminal instead:
+
+```
+[sms:dry-run] to=+12815550123 body="TxRecover TX-8K4M: we got it. ..."
+```
+
+Copy the `/r/...` link out of that line to reach the status page, the same way a requester would.
+
+Walking the flow end to end locally:
+
+1. `/request` → answer the eight screens. GPS will not work over plain HTTP on a phone; on the
+   desktop, use the **Paste** tab with something like `29.7604, -95.3698`.
+2. Submit. The terminal prints the SMS with the status link.
+3. Open the link. The status page polls every 15 seconds.
+4. Nothing will advance past "Sent" yet — the dispatch state machine is M3. Cancel and
+   Mark recovered both work now.
+
+To drain the SMS outbox by hand (the scheduled job arrives in M3):
+
+```bash
+curl -X POST http://127.0.0.1:3000/api/sms/drain -H "Authorization: Bearer $DISPATCH_TICK_SECRET"
+```
+
 ---
 
-## 4. Supabase cloud project (one time)
+## 5. Supabase cloud project (one time)
 
 1. Create a project at https://supabase.com/dashboard — pick a region close to Texas
    (`us-east-1` or `us-west-1`). Save the database password.
@@ -115,7 +161,7 @@ Run it before every deploy. If one of these fails, the fix is the code, not the 
 4. **Project Settings → API → Exposed schemas**: confirm it lists `public` only.
    Schema `app` must never appear there.
 5. **Authentication → Providers → Phone**: enable it, set the provider to Twilio, and paste the
-   Twilio credentials from step 5 below.
+   Twilio credentials from step 6 below.
 6. Link and push:
 
 ```bash
@@ -132,7 +178,7 @@ supabase db push
 supabase db execute --file supabase/seed.sql --linked
 ```
 
-## 5. Twilio (one time, and start early — 10DLC takes days)
+## 6. Twilio (one time, and start early — 10DLC takes days)
 
 1. Create an account at https://twilio.com and buy a **local US long code** in a Texas area code.
    Toll-free is an option but 10DLC is the right fit for this traffic.
@@ -152,7 +198,7 @@ supabase db execute --file supabase/seed.sql --linked
    `https://YOUR_DOMAIN/api/twilio/inbound`, method POST. (That route arrives in M3.)
 5. Copy the Account SID, Auth Token and Messaging Service SID into `.env.local` and Vercel.
 
-## 6. Mapbox (one time)
+## 7. Mapbox (one time)
 
 1. Create an account at https://account.mapbox.com.
 2. Create a **public** token (`pk.…`) and restrict it to your domains, including
@@ -162,7 +208,7 @@ supabase db execute --file supabase/seed.sql --linked
 4. Set a spending limit on the account. The free tier is generous; a loop in a map component is
    not.
 
-## 7. Vercel
+## 8. Vercel
 
 1. Push this repo to GitHub, then import it at https://vercel.com/new.
 2. Add every variable from `.env.example` to **Production** and **Preview**.
@@ -174,7 +220,7 @@ supabase db execute --file supabase/seed.sql --linked
 4. After the first deploy, update the Twilio inbound webhook to the production domain and add the
    domain to the Supabase Auth redirect list.
 
-## 8. The dispatch tick (M3)
+## 9. The dispatch tick (M3)
 
 Scheduled from Postgres, not Vercel:
 
@@ -197,15 +243,24 @@ dispatch logic of its own.
 ## Repository layout
 
 ```
-CLAUDE.md                 stack, rules, flow — read first
-src/config/app.ts         APP_NAME and the tuning mirrored from app_settings
-messages/{en,es}.json     every user-facing string, key-for-key identical
-supabase/config.toml      local stack config, incl. pinned test OTPs
-supabase/migrations/      numbered, append-only once applied to production
-supabase/seed.sql         reference data, safe to run anywhere, idempotent
-supabase/seeds/demo.sql   demo volunteers and requests, local only
-supabase/tests/           pgTAP — the privacy rules, proven
-docs/                     milestone plan and decisions
+CLAUDE.md                     stack, rules, flow — read first
+src/app/[locale]/             pages: landing, /request, /r/[token], legal
+src/app/actions/              server actions — the only write path from the browser
+src/app/api/                  route handlers: photo signing, geo resolve, status poll, SMS drain
+src/components/request/       the one-question-per-screen wizard
+src/components/status/        the /r/[token] status page
+src/components/ui/            the small primitive set everything is built from
+src/config/app.ts             APP_NAME and the tuning mirrored from app_settings
+src/i18n/                     next-intl routing, request config, navigation helpers
+src/lib/                      supabase admin client, geo parsing, photos, SMS, validation
+messages/{en,es}.json         every user-facing string, key-for-key identical
+scripts/check-messages.mjs    fails the build when en and es drift apart
+supabase/config.toml          local stack config, incl. pinned test OTPs
+supabase/migrations/          numbered, append-only once applied to production
+supabase/seed.sql             reference data, safe to run anywhere, idempotent
+supabase/seeds/demo.sql       demo volunteers and requests, local only
+supabase/tests/               pgTAP — the privacy rules, proven
+docs/                         milestone plan and decisions
 ```
 
 ## Database at a glance

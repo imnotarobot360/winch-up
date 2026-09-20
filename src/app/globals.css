@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+/*
+ * Designed for a phone held at arm's length, in direct Texas sun, by someone who is stressed.
+ *
+ * That drives everything here: near-black on white rather than grey on grey, 18px base text,
+ * 56px minimum tap targets, and one loud accent reserved for the action that matters.
+ */
+
+@theme {
+  --color-ink: #0b0f14;
+  --color-ink-soft: #3d4754;
+  --color-ink-faint: #6b7686;
+  --color-surface: #ffffff;
+  --color-surface-sunk: #f2f4f7;
+  --color-line: #d6dbe3;
+
+  /* Safety orange. Used for the primary action and nothing else. */
+  --color-brand: #e2560f;
+  --color-brand-dark: #b94109;
+  --color-brand-tint: #fff1e9;
+
+  --color-danger: #b3261e;
+  --color-danger-tint: #fdeceb;
+  --color-good: #146c43;
+  --color-good-tint: #e7f4ed;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --radius-field: 0.75rem;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  line-height: 1.5;
+  /* Room for the fixed action bar at the bottom of the wizard. */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Visible focus, always. People use these forms with gloves on and with a keyboard. */
+:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@utility tap-target {
+  min-height: 3.5rem;
+}

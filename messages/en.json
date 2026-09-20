@@ -3,6 +3,21 @@
     "name": "TxRecover",
     "tagline": "Neighbors with winches, not a tow bill."
   },
+  "home": {
+    "stuckCta": "I'm stuck — get help",
+    "emergencyNote": "If anyone is hurt, in water, or in traffic, call 911 first. We are volunteers, not emergency services.",
+    "howTitle": "How it works",
+    "how1": "Tell us where you are and how you're stuck. Takes about two minutes.",
+    "how2": "We text the nearest volunteers with the right gear. The first one to answer takes it.",
+    "how3": "You get their name and an ETA, and a link you can watch until you're out.",
+    "volunteerTitle": "Want to help?",
+    "volunteerSoon": "Volunteer signup opens soon. If you already pull people out in the Facebook groups, this is for you."
+  },
+  "notFound": {
+    "title": "We couldn't find that",
+    "body": "That link may have expired, or it was typed in slightly wrong. If you're stuck right now, start a new request.",
+    "cta": "Start a request"
+  },
   "enum": {
     "requestStatus": {
       "submitted": "Sent",
@@ -98,9 +113,155 @@
   },
   "emergency": {
     "heading": "Is anyone hurt or in danger?",
-    "body": "Call 911 first. We are volunteers, not emergency services.",
+    "body": "Call 911 first. We are volunteers, not emergency services. If your vehicle is in water, in a traffic lane, or on fire, get out and call 911 now.",
     "call911": "Call 911",
-    "acknowledge": "Nobody is hurt, keep going"
+    "acknowledge": "Nobody is hurt or in danger. Keep going."
+  },
+  "request": {
+    "pageTitle": "Get help",
+    "loading": "Loading…",
+    "progress": "Step {current} of {total}",
+    "back": "Back",
+    "next": "Next",
+    "send": "Send request",
+    "sending": "Sending…",
+    "steps": {
+      "emergency": { "title": "First things first" },
+      "location": { "title": "Where are you?" },
+      "photos": { "title": "Add a photo" },
+      "vehicle": { "title": "What are you driving?" },
+      "situation": { "title": "How are you stuck?" },
+      "land": { "title": "Where is this?" },
+      "contact": { "title": "How do we reach you?" },
+      "consent": { "title": "Last thing" }
+    },
+    "location": {
+      "haveIt": "Got your location",
+      "accuracy": "Accurate to about {value}",
+      "outsideArea": "That looks like it's outside our area. Double-check the pin before you send.",
+      "tabGps": "Use GPS",
+      "tabMap": "Map",
+      "tabPaste": "Paste",
+      "locating": "Finding you… hold still for a few seconds.",
+      "denied": "Your phone blocked location access. Use the map or paste a link instead, or turn location on in your browser settings.",
+      "unavailable": "We couldn't get a GPS fix. Use the map or paste a link instead.",
+      "weakFix": "That fix is rough. If you can, wait a few seconds or set it on the map.",
+      "useThis": "Use this location",
+      "mapHelp": "Move the map until the pin is on your vehicle.",
+      "mapLabel": "Map. Pan to place the pin.",
+      "mapUnavailable": "The map couldn't load. Paste coordinates or a Google Maps link instead.",
+      "pasteLabel": "Paste a location",
+      "pasteHint": "Coordinates, a Google Maps link, or a what3words address.",
+      "pastePlaceholder": "29.7604, -95.3698",
+      "resolve": "Find it",
+      "resolving": "Looking…",
+      "pasteError": {
+        "unrecognised": "We couldn't read that. Try coordinates like 29.7604, -95.3698.",
+        "short_link_no_coords": "That short link didn't contain a location. Open it, then copy the full link.",
+        "short_link_failed": "We couldn't open that link. Try the full Google Maps link.",
+        "w3w_unavailable": "We can't look up what3words addresses yet. Use GPS or the map instead.",
+        "w3w_not_found": "That what3words address didn't match a place.",
+        "w3w_failed": "The what3words lookup failed. Use GPS or the map instead.",
+        "network": "No connection. Try again in a moment.",
+        "bad_request": "We couldn't read that."
+      },
+      "noteLabel": "Anything that helps us find you",
+      "noteHint": "Optional. Gate, road name, landmark, which side of the creek.",
+      "notePlaceholder": "Past the second cattle gate, blue tractor at the turn"
+    },
+    "photos": {
+      "help": "A photo tells a volunteer whether to bring a winch or a tractor. Optional, but it helps a lot.",
+      "add": "Take or choose a photo",
+      "addMore": "Add another ({remaining} left)",
+      "uploading": "Uploading…",
+      "remove": "Remove",
+      "failed": "That photo didn't upload. You can try again or keep going without it.",
+      "privacy": "Photos are shrunk on your phone and stripped of location data before they're sent."
+    },
+    "vehicle": {
+      "make": "Make",
+      "model": "Model",
+      "drivetrain": "Drive"
+    },
+    "situation": {
+      "depth": "How deep?",
+      "depthHint": "Roughly where does it come up to?",
+      "needsTractor": "Going to need a tractor",
+      "needsTractorHint": "Pick this if a truck alone won't do it.",
+      "needsSecondTruck": "Going to need a second truck",
+      "needsSecondTruckHint": "Heavy vehicle, or a bad angle."
+    },
+    "land": {
+      "permissionLabel": "Who gave permission?",
+      "permissionHint": "Volunteers won't come onto private land without it.",
+      "notesLabel": "Anything else?",
+      "notesHint": "Optional. This is shown publicly, so no phone numbers or links.",
+      "notesPlaceholder": "Rear end sank in a rut after the rain. Tires spinning."
+    },
+    "contact": {
+      "nameLabel": "Your first name",
+      "phoneLabel": "Your mobile number",
+      "phoneHint": "We text you a link to follow along.",
+      "privacy": "Your number is never shown publicly. It goes only to the volunteer who takes your request."
+    },
+    "consent": {
+      "summaryTitle": "Sending this",
+      "photoCount": "{count, plural, =0 {No photos} one {# photo} other {# photos}}",
+      "waiver": "I have read and accept the <link>waiver</link>.",
+      "rules": "I have read and accept the <link>ground rules</link>."
+    },
+    "errors": {
+      "invalid_phone": "That doesn't look like a US mobile number.",
+      "invalid_location": "We don't have a usable location yet. Go back a step.",
+      "blocked": "This number can't create requests. Contact the group admins.",
+      "rate_limited_phone": "That number has already sent several requests today. If this is an emergency, call 911.",
+      "rate_limited_ip": "Too many requests from this connection. Wait a few minutes and try again.",
+      "server_error": "Something broke on our end. Try again — your answers are saved.",
+      "validation_failed": "Something in the form isn't right. Go back and check.",
+      "contact_info_not_allowed": "Take the phone number or link out — this part is shown publicly."
+    }
+  },
+  "status": {
+    "headline": {
+      "submitted": "We've got your request and we're lining up volunteers.",
+      "dispatching": "We're texting volunteers near you. Keep this page open.",
+      "unmatched": "Nobody has taken it yet. Here are some paid options while we keep trying.",
+      "accepted": "A volunteer is on the way. Stay with your vehicle if it's safe.",
+      "on_site": "Your volunteer says they're on site.",
+      "recovered": "Glad you're out.",
+      "cancelled": "This request was cancelled.",
+      "expired": "This request was closed with no answer."
+    },
+    "notifying": "{count, plural, =0 {Looking for volunteers within {miles} miles} one {# volunteer notified within {miles} miles} other {# volunteers notified within {miles} miles}}",
+    "responderTitle": "Your volunteer",
+    "eta": "About {minutes} minutes out",
+    "callResponder": "Call {phone}",
+    "unmatchedTitle": "No volunteer yet",
+    "unmatchedBody": "We've texted everyone in range. We're still trying, but if you can't wait, these operators charge for recovery.",
+    "noProOptions": "No paid operators have been added for your area yet.",
+    "timelineTitle": "What's happened",
+    "detailsTitle": "What we sent out",
+    "markRecovered": "I'm out — mark recovered",
+    "confirmRecovered": "Mark recovered",
+    "cancelRequest": "Cancel this request",
+    "cancelConfirm": "Cancel this request? Volunteers heading your way will be told to stop.",
+    "thankYouLabel": "Say thanks (optional)",
+    "thankYouHint": "We'll text this to the volunteer. No phone numbers or links.",
+    "sendThanks": "Send thanks",
+    "shareLink": "Share this link",
+    "shareTitle": "Recovery request {code}",
+    "linkCopied": "Link copied",
+    "autoRefresh": "This page updates itself every {seconds} seconds.",
+    "back": "Back",
+    "errors": {
+      "not_found": "We couldn't find that request.",
+      "already_closed": "This request is already closed.",
+      "server_error": "Something broke on our end. Try again.",
+      "contact_info_in_note": "Take the phone number or link out of your note.",
+      "empty_note": "Write something first.",
+      "no_responder": "Nobody has accepted this request yet.",
+      "already_thanked": "You've already sent a thank-you."
+    }
   },
   "common": {
     "next": "Next",
@@ -118,11 +279,16 @@
   },
   "legal": {
     "reviewBanner": "PLACEHOLDER TEXT — REVIEW WITH LAWYER",
-    "terms": "Terms",
+    "reviewExplainer": "This wording has not been reviewed by an attorney. Do not rely on it.",
+    "terms": "Ground rules",
     "waiver": "Waiver",
     "privacy": "Privacy",
+    "backHome": "Back",
+    "version": "Version {version}",
+    "missing": "This document hasn't been published yet.",
     "acceptWaiver": "I have read and accept the waiver",
-    "acceptRules": "I have read and accept the ground rules"
+    "acceptRules": "I have read and accept the ground rules",
+    "privacyBody": "PLACEHOLDER — REVIEW WITH LAWYER.\n\nWhat we collect\n\n- Your name and mobile number, so a volunteer can reach you.\n- The location you give us, and how accurate it was.\n- Any photos you upload. These are shrunk and stripped of camera metadata on your phone before they reach us.\n- Your IP address and browser user agent at the moment you accept the waiver, because that acceptance is a legal record.\n\nWho sees what\n\n- Your phone number is never shown publicly. It is released to one person: the volunteer who accepts your request.\n- Your exact location is never shown publicly. The public board shows a pin moved about a mile off.\n- Volunteers who were notified but did not take the job never see your name, number or exact location.\n- Administrators can see everything, because somebody has to be able to sort out a job that goes wrong.\n\nHow long we keep it\n\n- REVIEW WITH LAWYER: set a retention period here.\n\nWho we share it with\n\n- Twilio, to send the text messages.\n- Supabase, which hosts the database and the photos.\n- Mapbox, which draws the map. Mapbox receives map tile requests from your browser.\n- Nobody else. We do not sell anything, and we do not hand lists of stranded drivers to towing companies.\n\n>>> REVIEW WITH LAWYER <<<"
   },
   "privacyNote": {
     "phone": "Your phone number is never shown publicly. It goes only to the volunteer who takes your request.",

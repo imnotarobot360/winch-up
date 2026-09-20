@@ -3,6 +3,21 @@
     "name": "TxRecover",
     "tagline": "Vecinos con winche, no una factura de grúa."
   },
+  "home": {
+    "stuckCta": "Estoy atascado — necesito ayuda",
+    "emergencyNote": "Si hay heridos, si alguien está en el agua o en el tráfico, llame primero al 911. Somos voluntarios, no servicios de emergencia.",
+    "howTitle": "Cómo funciona",
+    "how1": "Díganos dónde está y cómo se atascó. Toma unos dos minutos.",
+    "how2": "Avisamos por mensaje a los voluntarios más cercanos con el equipo adecuado. El primero que responda toma el trabajo.",
+    "how3": "Usted recibe su nombre, un tiempo estimado y un enlace para seguir todo hasta que salga.",
+    "volunteerTitle": "¿Quiere ayudar?",
+    "volunteerSoon": "El registro de voluntarios abre pronto. Si usted ya saca gente en los grupos de Facebook, esto es para usted."
+  },
+  "notFound": {
+    "title": "No encontramos eso",
+    "body": "Puede que el enlace haya vencido o que esté escrito con algún error. Si está atascado ahora mismo, empiece una solicitud nueva.",
+    "cta": "Empezar una solicitud"
+  },
   "enum": {
     "requestStatus": {
       "submitted": "Enviada",
@@ -98,9 +113,155 @@
   },
   "emergency": {
     "heading": "¿Hay alguien herido o en peligro?",
-    "body": "Llame primero al 911. Somos voluntarios, no servicios de emergencia.",
+    "body": "Llame primero al 911. Somos voluntarios, no servicios de emergencia. Si su vehículo está en el agua, en un carril de tráfico o se está incendiando, salga y llame al 911 ahora.",
     "call911": "Llamar al 911",
-    "acknowledge": "Nadie está herido, continuar"
+    "acknowledge": "Nadie está herido ni en peligro. Continuar."
+  },
+  "request": {
+    "pageTitle": "Pedir ayuda",
+    "loading": "Cargando…",
+    "progress": "Paso {current} de {total}",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "send": "Enviar solicitud",
+    "sending": "Enviando…",
+    "steps": {
+      "emergency": { "title": "Primero lo primero" },
+      "location": { "title": "¿Dónde está?" },
+      "photos": { "title": "Agregue una foto" },
+      "vehicle": { "title": "¿Qué está manejando?" },
+      "situation": { "title": "¿Cómo se atascó?" },
+      "land": { "title": "¿Dónde es esto?" },
+      "contact": { "title": "¿Cómo lo contactamos?" },
+      "consent": { "title": "Último paso" }
+    },
+    "location": {
+      "haveIt": "Ya tenemos su ubicación",
+      "accuracy": "Precisión de unos {value}",
+      "outsideArea": "Eso parece estar fuera de nuestra zona. Revise el punto antes de enviar.",
+      "tabGps": "Usar GPS",
+      "tabMap": "Mapa",
+      "tabPaste": "Pegar",
+      "locating": "Buscándolo… quédese quieto unos segundos.",
+      "denied": "Su teléfono bloqueó el acceso a la ubicación. Use el mapa o pegue un enlace, o active la ubicación en la configuración del navegador.",
+      "unavailable": "No pudimos obtener señal de GPS. Use el mapa o pegue un enlace.",
+      "weakFix": "Esa señal es débil. Si puede, espere unos segundos o marque el punto en el mapa.",
+      "useThis": "Usar esta ubicación",
+      "mapHelp": "Mueva el mapa hasta que el punto quede sobre su vehículo.",
+      "mapLabel": "Mapa. Muévalo para colocar el punto.",
+      "mapUnavailable": "El mapa no cargó. Pegue coordenadas o un enlace de Google Maps.",
+      "pasteLabel": "Pegue una ubicación",
+      "pasteHint": "Coordenadas, un enlace de Google Maps o una dirección de what3words.",
+      "pastePlaceholder": "29.7604, -95.3698",
+      "resolve": "Buscarla",
+      "resolving": "Buscando…",
+      "pasteError": {
+        "unrecognised": "No pudimos leer eso. Pruebe con coordenadas como 29.7604, -95.3698.",
+        "short_link_no_coords": "Ese enlace corto no traía una ubicación. Ábralo y copie el enlace completo.",
+        "short_link_failed": "No pudimos abrir ese enlace. Pruebe con el enlace completo de Google Maps.",
+        "w3w_unavailable": "Todavía no podemos buscar direcciones de what3words. Use el GPS o el mapa.",
+        "w3w_not_found": "Esa dirección de what3words no corresponde a un lugar.",
+        "w3w_failed": "La búsqueda de what3words falló. Use el GPS o el mapa.",
+        "network": "Sin conexión. Intente de nuevo en un momento.",
+        "bad_request": "No pudimos leer eso."
+      },
+      "noteLabel": "Algo que ayude a encontrarlo",
+      "noteHint": "Opcional. Portón, nombre del camino, alguna referencia, de qué lado del arroyo.",
+      "notePlaceholder": "Pasando el segundo portón de ganado, tractor azul en la vuelta"
+    },
+    "photos": {
+      "help": "Una foto le dice al voluntario si traer winche o tractor. Es opcional, pero ayuda mucho.",
+      "add": "Tomar o elegir una foto",
+      "addMore": "Agregar otra (faltan {remaining})",
+      "uploading": "Subiendo…",
+      "remove": "Quitar",
+      "failed": "Esa foto no se subió. Puede intentar de nuevo o seguir sin ella.",
+      "privacy": "Las fotos se reducen en su teléfono y se les quitan los datos de ubicación antes de enviarlas."
+    },
+    "vehicle": {
+      "make": "Marca",
+      "model": "Modelo",
+      "drivetrain": "Tracción"
+    },
+    "situation": {
+      "depth": "¿Qué tan hondo?",
+      "depthHint": "¿Más o menos hasta dónde le llega?",
+      "needsTractor": "Va a hacer falta un tractor",
+      "needsTractorHint": "Elija esto si una troca sola no va a poder.",
+      "needsSecondTruck": "Va a hacer falta una segunda troca",
+      "needsSecondTruckHint": "Vehículo pesado, o un ángulo malo."
+    },
+    "land": {
+      "permissionLabel": "¿Quién le dio permiso?",
+      "permissionHint": "Los voluntarios no entran a terreno privado sin permiso.",
+      "notesLabel": "¿Algo más?",
+      "notesHint": "Opcional. Esto se muestra públicamente, así que no ponga teléfonos ni enlaces.",
+      "notesPlaceholder": "La parte de atrás se hundió en un surco después de la lluvia. Las llantas solo patinan."
+    },
+    "contact": {
+      "nameLabel": "Su nombre",
+      "phoneLabel": "Su número de celular",
+      "phoneHint": "Le mandamos un mensaje con un enlace para seguir el proceso.",
+      "privacy": "Su número nunca se muestra públicamente. Solo llega al voluntario que toma su solicitud."
+    },
+    "consent": {
+      "summaryTitle": "Esto es lo que se envía",
+      "photoCount": "{count, plural, =0 {Sin fotos} one {# foto} other {# fotos}}",
+      "waiver": "He leído y acepto la <link>exoneración</link>.",
+      "rules": "He leído y acepto las <link>reglas básicas</link>."
+    },
+    "errors": {
+      "invalid_phone": "Eso no parece un número de celular de Estados Unidos.",
+      "invalid_location": "Todavía no tenemos una ubicación utilizable. Regrese un paso.",
+      "blocked": "Este número no puede crear solicitudes. Comuníquese con los administradores del grupo.",
+      "rate_limited_phone": "Ese número ya envió varias solicitudes hoy. Si es una emergencia, llame al 911.",
+      "rate_limited_ip": "Demasiadas solicitudes desde esta conexión. Espere unos minutos e intente de nuevo.",
+      "server_error": "Algo falló de nuestro lado. Intente de nuevo; sus respuestas están guardadas.",
+      "validation_failed": "Algo en el formulario no está bien. Regrese y revise.",
+      "contact_info_not_allowed": "Quite el número de teléfono o el enlace: esta parte se muestra públicamente."
+    }
+  },
+  "status": {
+    "headline": {
+      "submitted": "Recibimos su solicitud y estamos organizando a los voluntarios.",
+      "dispatching": "Estamos avisando a voluntarios cerca de usted. Deje esta página abierta.",
+      "unmatched": "Todavía nadie la ha tomado. Aquí hay opciones de pago mientras seguimos intentando.",
+      "accepted": "Un voluntario va en camino. Quédese con su vehículo si es seguro.",
+      "on_site": "Su voluntario dice que ya está en el lugar.",
+      "recovered": "Qué bueno que ya salió.",
+      "cancelled": "Esta solicitud fue cancelada.",
+      "expired": "Esta solicitud se cerró sin respuesta."
+    },
+    "notifying": "{count, plural, =0 {Buscando voluntarios a {miles} millas a la redonda} one {# voluntario avisado a {miles} millas a la redonda} other {# voluntarios avisados a {miles} millas a la redonda}}",
+    "responderTitle": "Su voluntario",
+    "eta": "A unos {minutes} minutos",
+    "callResponder": "Llamar al {phone}",
+    "unmatchedTitle": "Aún sin voluntario",
+    "unmatchedBody": "Ya avisamos a todos los que están en rango. Seguimos intentando, pero si no puede esperar, estos operadores cobran por el rescate.",
+    "noProOptions": "Todavía no se han agregado operadores de pago para su zona.",
+    "timelineTitle": "Qué ha pasado",
+    "detailsTitle": "Lo que enviamos",
+    "markRecovered": "Ya salí — marcar como rescatado",
+    "confirmRecovered": "Marcar como rescatado",
+    "cancelRequest": "Cancelar esta solicitud",
+    "cancelConfirm": "¿Cancelar esta solicitud? A los voluntarios que van en camino se les avisará que se detengan.",
+    "thankYouLabel": "Dé las gracias (opcional)",
+    "thankYouHint": "Le enviaremos esto al voluntario por mensaje. Sin teléfonos ni enlaces.",
+    "sendThanks": "Enviar agradecimiento",
+    "shareLink": "Compartir este enlace",
+    "shareTitle": "Solicitud de rescate {code}",
+    "linkCopied": "Enlace copiado",
+    "autoRefresh": "Esta página se actualiza sola cada {seconds} segundos.",
+    "back": "Atrás",
+    "errors": {
+      "not_found": "No encontramos esa solicitud.",
+      "already_closed": "Esta solicitud ya está cerrada.",
+      "server_error": "Algo falló de nuestro lado. Intente de nuevo.",
+      "contact_info_in_note": "Quite el número de teléfono o el enlace de su nota.",
+      "empty_note": "Escriba algo primero.",
+      "no_responder": "Todavía nadie ha aceptado esta solicitud.",
+      "already_thanked": "Ya envió un agradecimiento."
+    }
   },
   "common": {
     "next": "Siguiente",
@@ -118,11 +279,16 @@
   },
   "legal": {
     "reviewBanner": "TEXTO PROVISIONAL — REVISAR CON ABOGADO",
-    "terms": "Términos",
+    "reviewExplainer": "Un abogado no ha revisado esta redacción. No se base en ella.",
+    "terms": "Reglas básicas",
     "waiver": "Exoneración",
     "privacy": "Privacidad",
+    "backHome": "Atrás",
+    "version": "Versión {version}",
+    "missing": "Este documento todavía no se ha publicado.",
     "acceptWaiver": "He leído y acepto la exoneración",
-    "acceptRules": "He leído y acepto las reglas básicas"
+    "acceptRules": "He leído y acepto las reglas básicas",
+    "privacyBody": "PROVISIONAL — REVISAR CON ABOGADO.\n\nQué recopilamos\n\n- Su nombre y número de celular, para que un voluntario pueda comunicarse con usted.\n- La ubicación que nos da, y qué tan precisa era.\n- Las fotos que suba. Se reducen y se les quitan los metadatos de la cámara en su teléfono antes de llegar a nosotros.\n- Su dirección IP y el identificador de su navegador en el momento en que acepta la exoneración, porque esa aceptación es un registro legal.\n\nQuién ve qué\n\n- Su número de teléfono nunca se muestra públicamente. Se entrega a una sola persona: el voluntario que acepta su solicitud.\n- Su ubicación exacta nunca se muestra públicamente. El tablero público muestra un punto desplazado cerca de una milla.\n- Los voluntarios que fueron avisados pero no tomaron el trabajo nunca ven su nombre, su número ni su ubicación exacta.\n- Los administradores pueden ver todo, porque alguien tiene que poder resolver un trabajo que salga mal.\n\nCuánto tiempo lo guardamos\n\n- REVISAR CON ABOGADO: definir aquí un periodo de retención.\n\nCon quién lo compartimos\n\n- Twilio, para enviar los mensajes de texto.\n- Supabase, que aloja la base de datos y las fotos.\n- Mapbox, que dibuja el mapa. Mapbox recibe las solicitudes de mosaicos del mapa desde su navegador.\n- Nadie más. No vendemos nada, y no entregamos listas de conductores varados a empresas de grúas.\n\n>>> REVISAR CON ABOGADO <<<"
   },
   "privacyNote": {
     "phone": "Su número de teléfono nunca se muestra públicamente. Solo llega al voluntario que toma su solicitud.",

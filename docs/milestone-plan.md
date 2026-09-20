@@ -30,28 +30,41 @@ Each milestone ends with a commit and something you can actually look at or run.
 
 ---
 
-## M2 — `/request`, `/r/[token]`, requester SMS
+## M2 — `/request`, `/r/[token]`, requester SMS  *(code complete, not yet run)*
 
-1. Scaffold Next.js 15 + TypeScript + Tailwind + shadcn/ui + next-intl (locale segment,
-   `en` default, `es` prefixed). Wire `messages/{en,es}.json`.
-2. `/request` as one question per screen, state held in `sessionStorage` so a dropped connection
-   does not lose the form:
-   - 911 gate → GPS capture with live accuracy → Mapbox pin fallback → paste coordinates /
-     Google Maps link / what3words → photos → vehicle → how stuck → land type → name + phone →
-     waiver + rules.
-   - Photos: canvas downscale to ~1600 px, re-encode to JPEG (which drops EXIF), 3 max.
-   - Submit posts once, idempotently, to a server action.
-3. `create_request()` RPC: rate-limit by phone and IP, blocklist check, insert, mint the token,
-   queue the requester SMS. Everything in one transaction.
-4. Photo upload through server-minted signed upload URLs; move `incoming/<draft>` →
-   `<request_id>/` on submit.
-5. `/r/[token]` rendering `get_request_by_token()`: timeline, live-ish polling, Cancel,
-   Mark recovered, thank-you note.
-6. SMS sender: drain `sms_messages` where `state = 'queued'`, render the template in the
-   recipient's locale, send through Twilio, honour `SMS_DRY_RUN`.
-7. `/terms`, `/waiver`, `/privacy` from the `waivers` table with the REVIEW WITH LAWYER banner.
+**Shipped**
 
-**Done when** a request submitted on a phone produces a text with a working status link.
+- Next.js 15 + TypeScript + Tailwind 4 + next-intl scaffold, hand-written (no `create-next-app`:
+  this machine has no Node). Locale segment, `en` unprefixed, `es` at `/es/...`.
+- `supabase/migrations/20260920001000_write_rpc.sql` — `create_request` (idempotent by
+  `submission_id`, rate-limited by phone and IP, blocklist-checked, queues the requester SMS in
+  the same transaction), `cancel_request_by_token`, `mark_recovered_by_token`,
+  `thank_responder_by_token`, and the outbox claim/confirm trio. Service-role only.
+- `/request`: eight screens — 911 gate, location, photos, vehicle, situation, land, contact,
+  consent. Draft state in `sessionStorage`, so a reload does not cost someone the form.
+- Location with three paths: GPS (`watchPosition`, keeps the best fix, shows accuracy in feet),
+  a fixed-crosshair Mapbox picker, and a paste field that understands coordinates, DMS, `geo:`
+  URIs, full and short Google Maps links, and what3words.
+- Photos: `createImageBitmap` with `imageOrientation: "from-image"` → canvas → JPEG at 1600 px.
+  Re-encoding is what strips EXIF, including the GPS block. Uploaded straight to Storage through
+  a server-minted signed URL, so the file never passes through the Next.js server.
+- `/r/[token]`: timeline, 15 s polling that pauses when the tab is hidden, responder card with a
+  tap-to-call button once accepted, the paid-options panel when unmatched, Cancel, Mark
+  recovered, thank-you note, and a share button.
+- SMS: template registry in TypeScript (EN + ES), Twilio sender with `SMS_DRY_RUN`, outbox drain
+  called inline after submit via `after()` and exposed at `/api/sms/drain`.
+- `/terms`, `/waiver` from the versioned `waivers` rows; `/privacy` from the message catalogue.
+  All three carry the REVIEW WITH LAWYER banner.
+- `scripts/check-messages.mjs` — fails when `en.json` and `es.json` drift, including dropped ICU
+  placeholders.
+
+**Open**
+
+- Nothing has been installed, built, type-checked or run. `npm install`, `npm run typecheck`,
+  `supabase db reset` and `supabase test db` are all still pending.
+- what3words resolution needs `W3W_API_KEY` (free tier). Without it the paste field says so
+  rather than silently losing the address.
+- No test covers `create_request` yet; its unit tests land with the state-machine tests in M3.
 
 ---
 

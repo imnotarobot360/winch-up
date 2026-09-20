@@ -129,19 +129,38 @@ No other paid services without asking the owner first.
 
 ```
 src/app/[locale]/...      routes (next-intl locale segment)
+src/app/actions/          server actions — the only write path from the browser
+src/app/api/              route handlers (photo signing, geo resolve, status poll, SMS drain)
+src/components/           request wizard, status page, ui primitives
 src/config/app.ts         APP_NAME + dispatch tuning mirrored from app_settings
-src/lib/                  supabase clients, sms templates, geo helpers
+src/i18n/                 next-intl routing, request config, navigation helpers
+src/lib/                  supabase admin client, sms templates, geo helpers, validation
 messages/{en,es}.json     every user-facing string
+scripts/check-messages.mjs  CI guard: en and es must stay key-for-key identical
 supabase/migrations/      numbered, committed, never edited after being applied to prod
 supabase/tests/           pgTAP — RLS proofs and dispatch state-machine unit tests
 supabase/functions/       Edge Functions (dispatch tick, sms sender, twilio inbound)
 docs/                     decisions + runbooks
 ```
 
+### Things that are easy to get wrong here
+
+- **Write RPCs are service-role only.** `create_request`, `cancel_request_by_token`,
+  `mark_recovered_by_token` and `thank_responder_by_token` are not granted to `anon`. They are
+  called from server actions, because the caller supplies the IP used for rate limiting and
+  stored with the waiver acceptance — that has to be a value the server derived.
+- **SMS copy lives in `src/lib/sms/templates.ts`, never in SQL.** The database queues a
+  `template_key` plus params; the sender renders it in the recipient's language.
+- **Photos are stripped client-side.** `createImageBitmap(file, {imageOrientation: "from-image"})`
+  then canvas then JPEG. The re-encode is what drops EXIF, including GPS. Never add a path that
+  uploads the original file.
+- **`public.contains_contact_info()` has a TypeScript twin** in `src/lib/contact-info.ts`. Change
+  one, change both.
+
 ## Milestones
 
-- **M1** schema + migrations + RLS + seed data
-- **M2** `/request` + `/r` status page + requester SMS
+- **M1** schema + migrations + RLS + seed data — *written, never executed*
+- **M2** `/request` + `/r` status page + requester SMS — *written, never executed*
 - **M3** responder signup + dispatch engine + inbound webhook + tests
 - **M4** `/board`, `/post`, `/admin`
 - **M5** PWA polish, i18n pass, README, deploy to Vercel
