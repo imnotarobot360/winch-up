@@ -68,25 +68,46 @@ Each milestone ends with a commit and something you can actually look at or run.
 
 ---
 
-## M3 — responder signup, dispatch engine, inbound webhook, tests
+## M3 — responder signup, dispatch engine, inbound webhook, tests  *(code complete, not yet run)*
 
-1. `/join`: phone OTP, name, home address → Mapbox geocode, radius, equipment, vehicle, hours,
-   waiver. Lands as `pending`.
-2. `/me`: active/paused toggle, current job, history, stats.
-3. **`app.advance_dispatch()`** — the one function that owns every transition:
-   start → ring 1 → ring 2 → ring 3 → unmatched → expired, and accept / decline / cancel /
-   on-site / recovered. Candidate selection is `ST_DWithin` on `home_location`, intersected with
-   the volunteer's own radius, `equipment @> required_equipment`, approved + active + opted in,
-   not already dispatched, capped at `dispatch.max_per_ring`, ordered by distance.
-   Accept takes `select … for update` on the request row, so a second `1` reply loses and gets
-   "already covered".
-4. `dispatch-tick` Edge Function + `pg_cron` every 60 s. The function calls the SQL and sends
-   whatever landed in the outbox; it holds no logic.
-5. `/api/twilio/inbound`: verify the Twilio signature, match the sender to a responder and their
-   most recent open dispatch, handle `1` / `2` / `YES` / `SI` / `NO` / `STOP`, and reply usefully
-   to anything else.
-6. pgTAP unit tests for the state machine: ring escalation timing, double accept, accept after
-   cancel, cancel mid-dispatch, expiry, STOP mid-ring, a responder outside their own radius.
+**Shipped**
+
+- `supabase/migrations/20260920002000_dispatch.sql` — the state machine.
+  - `app.advance_one(request_id)` owns every timed transition: submitted → ring 1 → ring 2 →
+    ring 3 → unmatched → expired. It locks the request row first, so two overlapping ticks
+    cannot both escalate the same job.
+  - `app.candidates()` filters on `ST_DWithin` **intersected with the volunteer's own radius**,
+    `equipment @> required_equipment`, approved + active + opted in, not already dispatched,
+    under their `max_active_jobs`, and not asleep (21:00–06:00 Central for anyone who said no
+    night calls). Ordered by distance, capped at `dispatch.max_per_ring`.
+  - `app.accept_request()` takes `select … for update` before it looks at anything. The second
+    `1` to arrive reads a row that already has a winner and gets "already covered".
+  - `public.advance_dispatch()` is the tick, using `for update skip locked` so overlapping runs
+    share the work rather than block.
+  - `public.handle_inbound_sms()` parses `1` / `2` / `YES` / `SI` / `NO` / `STOP` / `START` /
+    `HERE` / `DONE` / `HELP` plus an optional ETA after the `1`, and returns a reply template.
+  - `upsert_responder_profile()` takes the phone from the **verified OTP claim**, never from the
+    form, and forces every new volunteer to `pending`.
+  - Fixes the M1 timeline trigger forward: ring 1 no longer logs "widening the search".
+- `supabase/functions/dispatch-tick/index.ts` — the Edge Function pg_cron calls. It runs the SQL
+  and then pokes `/api/sms/drain`; it contains no dispatch logic of its own.
+- `/api/twilio/inbound` — HMAC-SHA1 signature check, then straight into the SQL. Replies as
+  TwiML. Returns 200 even on error, because a 500 makes Twilio retry and replay a stale `1`.
+- `/join` — phone OTP, then profile: name, home address via Mapbox geocoding, radius, equipment,
+  vehicle, night calls, volunteer agreement.
+- `/me` — approval state, on-call toggle, current job with the requester's phone and pin, open
+  offers with accept/pass and an ETA box, past jobs with thank-you notes.
+- `supabase/tests/dispatch_test.sql` — about 45 assertions over real rows, with time moved by
+  rewinding timestamps: ring 1 / 2 / 3 escalation and its timing, a volunteer inside our ring but
+  outside their own radius, pending and paused volunteers never dispatched, equipment matching,
+  **double accept**, cancel mid-dispatch, unmatched, expiry, the tick itself, and every inbound
+  SMS branch.
+
+**Open**
+
+- Still nothing executed. These tests have never run.
+- `max_active_jobs` defaults to 1, so a volunteer holding a job is skipped by later rings. That
+  is deliberate but worth watching once there is real traffic.
 
 **Done when** two phones can race for the same job and exactly one wins.
 

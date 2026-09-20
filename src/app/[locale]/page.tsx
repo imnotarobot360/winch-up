@@ -42,9 +42,26 @@ export default async function HomePage({
         </ol>
       </Card>
 
-      <Card className="mt-4 space-y-2">
+      <Card className="mt-4 space-y-3">
         <h2 className="text-xl font-semibold">{t("volunteerTitle")}</h2>
         <p className="text-base text-ink-soft">{t("volunteerSoon")}</p>
+        <Link
+          href="/join"
+          className="tap-target flex w-full items-center justify-center rounded-field border-2 border-line px-4 text-lg font-semibold"
+        >
+          {t("volunteerCta")}
+        </Link>
+      </Card>
+
+      <Card className="mt-4 space-y-3">
+        <h2 className="text-xl font-semibold">{t("boardTitle")}</h2>
+        <p className="text-base text-ink-soft">{t("boardBody")}</p>
+        <Link
+          href="/board"
+          className="tap-target flex w-full items-center justify-center rounded-field border-2 border-line px-4 text-lg font-semibold"
+        >
+          {t("boardCta")}
+        </Link>
       </Card>
 
       <nav className="mt-10 flex flex-wrap gap-4 text-base text-ink-soft">

@@ -15,7 +15,7 @@ Product rules, flow and conventions live in [CLAUDE.md](./CLAUDE.md). Read that 
 |---|---|---|
 | **M1** | schema + migrations + RLS + seed data | **code complete, not yet run** |
 | **M2** | `/request` + `/r` status page + requester SMS | **code complete, not yet run** |
-| M3 | responder signup + dispatch engine + inbound webhook + tests | not started |
+| **M3** | responder signup + dispatch engine + inbound webhook + tests | **code complete, not yet run** |
 | M4 | `/board`, `/post`, `/admin` | not started |
 | M5 | PWA polish, i18n pass, README, deploy to Vercel | not started |
 
@@ -140,10 +140,15 @@ Walking the flow end to end locally:
    desktop, use the **Paste** tab with something like `29.7604, -95.3698`.
 2. Submit. The terminal prints the SMS with the status link.
 3. Open the link. The status page polls every 15 seconds.
-4. Nothing will advance past "Sent" yet — the dispatch state machine is M3. Cancel and
-   Mark recovered both work now.
+4. Nothing advances on its own locally unless you run the tick. Fire it by hand:
 
-To drain the SMS outbox by hand (the scheduled job arrives in M3):
+```bash
+curl -X POST http://127.0.0.1:54321/functions/v1/dispatch-tick -H "Authorization: Bearer $DISPATCH_TICK_SECRET"
+```
+
+   Or call the SQL directly in Studio: `select advance_dispatch(50);` then drain the outbox.
+
+To drain the SMS outbox by hand:
 
 ```bash
 curl -X POST http://127.0.0.1:3000/api/sms/drain -H "Authorization: Bearer $DISPATCH_TICK_SECRET"
@@ -195,7 +200,7 @@ supabase db execute --file supabase/seed.sql --linked
      an OTP, and every message carries STOP instructions. Screenshot `/join` for the submission.
    - Expect 1–10 business days. Until it is approved, leave `SMS_DRY_RUN=1`.
 4. **Phone Numbers → your number → Messaging**: set the inbound webhook to
-   `https://YOUR_DOMAIN/api/twilio/inbound`, method POST. (That route arrives in M3.)
+   `https://YOUR_DOMAIN/api/twilio/inbound`, method POST.
 5. Copy the Account SID, Auth Token and Messaging Service SID into `.env.local` and Vercel.
 
 ## 7. Mapbox (one time)
@@ -220,7 +225,7 @@ supabase db execute --file supabase/seed.sql --linked
 4. After the first deploy, update the Twilio inbound webhook to the production domain and add the
    domain to the Supabase Auth redirect list.
 
-## 9. The dispatch tick (M3)
+## 9. The dispatch tick
 
 Scheduled from Postgres, not Vercel:
 

@@ -1,0 +1,587 @@
+-- TxRecover :: dispatch state machine
+--
+-- Run with:  supabase test db
+--
+-- These are the transitions that decide whether a stranded driver gets help, so they are tested
+-- against real rows rather than mocked. Time is moved by rewinding `dispatch_started_at` and
+-- `next_action_at`, not by waiting.
+--
+-- Fixtures are built here rather than taken from the demo seed: a test that fails because
+-- somebody edited seed data is a test nobody trusts.
+
+begin;
+
+create extension if not exists pgtap with schema extensions;
+set search_path = public, extensions;
+
+select no_plan();
+
+-- ---------------------------------------------------------------------------
+-- Fixtures
+--
+-- One spot in Houston, and volunteers at known distances due north of it.
+--   R1   5 mi   winch                      -> ring 1
+--   R2  20 mi   winch                      -> ring 2
+--   R3  45 mi   winch                      -> ring 3
+--   R4   8 mi   winch + tractor            -> ring 1, and the only one for tractor jobs
+--   R5  40 mi   winch, but only drives 15  -> never, their own radius rules them out
+--   R6   6 mi   winch, awaiting approval   -> never
+--   R7   6 mi   winch, paused              -> never
+-- ---------------------------------------------------------------------------
+
+create temporary table t_ids (name text primary key, id uuid not null);
+
+insert into responders (
+  id, phone, first_name, home_location, radius_miles, equipment,
+  vehicle_class, drivetrain, approval, approved_at, availability, night_ok, is_test
+) values
+  ('aaaa0001-0000-4000-8000-000000000001', '+12813330001', 'Ringone',
+   st_setsrid(st_point(-95.3698, 29.8329), 4326)::geography, 60, '{winch}',
+   'truck', '4wd', 'approved', now(), 'active', true, true),
+  ('aaaa0001-0000-4000-8000-000000000002', '+12813330002', 'Ringtwo',
+   st_setsrid(st_point(-95.3698, 30.0504), 4326)::geography, 60, '{winch}',
+   'truck', '4wd', 'approved', now(), 'active', true, true),
+  ('aaaa0001-0000-4000-8000-000000000003', '+12813330003', 'Ringthree',
+   st_setsrid(st_point(-95.3698, 30.4124), 4326)::geography, 60, '{winch}',
+   'truck', '4wd', 'approved', now(), 'active', true, true),
+  ('aaaa0001-0000-4000-8000-000000000004', '+12813330004', 'Tractorguy',
+   st_setsrid(st_point(-95.3698, 29.8764), 4326)::geography, 60, '{winch,tractor}',
+   'truck', '4wd', 'approved', now(), 'active', true, true),
+  ('aaaa0001-0000-4000-8000-000000000005', '+12813330005', 'Homebody',
+   st_setsrid(st_point(-95.3698, 30.3400), 4326)::geography, 15, '{winch}',
+   'truck', '4wd', 'approved', now(), 'active', true, true),
+  ('aaaa0001-0000-4000-8000-000000000006', '+12813330006', 'Waiting',
+   st_setsrid(st_point(-95.3698, 29.8474), 4326)::geography, 60, '{winch}',
+   'truck', '4wd', 'pending', null, 'active', true, true),
+  ('aaaa0001-0000-4000-8000-000000000007', '+12813330007', 'Onbreak',
+   st_setsrid(st_point(-95.3698, 29.8474), 4326)::geography, 60, '{winch}',
+   'truck', '4wd', 'approved', now(), 'paused', true, true);
+
+-- A request maker, so each scenario gets its own clean row.
+create or replace function pg_temp.make_request(
+  p_token text,
+  p_needs_tractor boolean default false
+)
+returns uuid
+language plpgsql
+as $$
+declare
+  new_id uuid;
+begin
+  insert into public.requests (
+    public_token, requester_name, requester_phone,
+    location, location_source, vehicle_class, stuck_type, stuck_depth,
+    needs_tractor, land_type, emergency_ack_at, rules_accepted,
+    waiver_id, waiver_accepted_at, next_action_at, is_test
+  ) values (
+    p_token, 'Test Driver', '+17130000001',
+    extensions.st_setsrid(extensions.st_point(-95.3698, 29.7604), 4326)::extensions.geography,
+    'gps', 'truck', 'mud', 'frame',
+    p_needs_tractor, 'public', now(), true,
+    (select id from public.waivers where slug = 'requester_waiver' and is_current),
+    now(), now(), true
+  )
+  returning id into new_id;
+
+  return new_id;
+end;
+$$;
+
+-- Wind a request back in time by the given number of minutes.
+create or replace function pg_temp.rewind(p_request_id uuid, p_minutes integer)
+returns void
+language sql
+as $$
+  update public.requests
+     set dispatch_started_at = dispatch_started_at - make_interval(mins => p_minutes),
+         ring_started_at     = ring_started_at - make_interval(mins => p_minutes),
+         next_action_at      = next_action_at - make_interval(mins => p_minutes)
+   where id = p_request_id;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 1. Ring 1
+-- ---------------------------------------------------------------------------
+
+insert into t_ids values ('r1', pg_temp.make_request('test-token-ring-escalation-1'));
+
+select is(
+  (select app.advance_one(id) ->> 'action' from t_ids where name = 'r1'),
+  'ring_1',
+  'the first tick opens ring 1'
+);
+
+select is(
+  (select status::text from requests where id = (select id from t_ids where name = 'r1')),
+  'dispatching',
+  'the request moves to dispatching'
+);
+
+select is(
+  (select count(*)::int from dispatches
+    where request_id = (select id from t_ids where name = 'r1') and ring = 1),
+  2,
+  'ring 1 reaches exactly the two volunteers inside 15 miles'
+);
+
+select is(
+  (select count(*)::int from dispatches d
+     join responders r on r.id = d.responder_id
+    where d.request_id = (select id from t_ids where name = 'r1')
+      and r.first_name in ('Waiting', 'Onbreak')),
+  0,
+  'a pending volunteer and a paused volunteer are never dispatched to'
+);
+
+select is(
+  (select count(*)::int from sms_messages
+    where request_id = (select id from t_ids where name = 'r1')
+      and template_key = 'responder.offer'),
+  2,
+  'each dispatched volunteer has an offer queued'
+);
+
+select is(
+  (select count(*)::int from request_events
+    where request_id = (select id from t_ids where name = 'r1')
+      and event_type = 'ring_escalated'),
+  0,
+  'opening ring 1 is not reported to the requester as widening the search'
+);
+
+-- ---------------------------------------------------------------------------
+-- 2. Ring escalation
+-- ---------------------------------------------------------------------------
+
+select is(
+  (select app.advance_one(id) ->> 'action' from t_ids where name = 'r1'),
+  'not_due',
+  'nothing escalates before the ring has had its seven minutes'
+);
+
+do $$ begin perform pg_temp.rewind((select id from t_ids where name = 'r1'), 8); end $$;
+
+select is(
+  (select app.advance_one(id) ->> 'action' from t_ids where name = 'r1'),
+  'ring_2',
+  'after the wait, the search widens to ring 2'
+);
+
+select is(
+  (select count(*)::int from dispatches
+    where request_id = (select id from t_ids where name = 'r1') and ring = 2),
+  1,
+  'ring 2 picks up the volunteer 20 miles out'
+);
+
+select is(
+  (select count(*)::int from dispatches d
+     join responders r on r.id = d.responder_id
+    where d.request_id = (select id from t_ids where name = 'r1')
+      and r.first_name = 'Ringone'),
+  1,
+  'a volunteer already texted in ring 1 is not texted again in ring 2'
+);
+
+do $$ begin perform pg_temp.rewind((select id from t_ids where name = 'r1'), 8); end $$;
+
+select is(
+  (select app.advance_one(id) ->> 'action' from t_ids where name = 'r1'),
+  'ring_3',
+  'and again to ring 3'
+);
+
+select is(
+  (select count(*)::int from dispatches d
+     join responders r on r.id = d.responder_id
+    where d.request_id = (select id from t_ids where name = 'r1')
+      and r.first_name = 'Homebody'),
+  0,
+  'a volunteer inside our ring but outside their own radius is left alone'
+);
+
+select is(
+  (select count(*)::int from dispatches d
+     join responders r on r.id = d.responder_id
+    where d.request_id = (select id from t_ids where name = 'r1')
+      and r.first_name = 'Ringthree'),
+  1,
+  'ring 3 reaches the volunteer 45 miles out'
+);
+
+-- ---------------------------------------------------------------------------
+-- 3. Equipment matching
+-- ---------------------------------------------------------------------------
+
+insert into t_ids values ('tractor', pg_temp.make_request('test-token-needs-tractor-1', true));
+
+select is(
+  (select required_equipment::text from requests where id = (select id from t_ids where name = 'tractor')),
+  '{tractor}',
+  'asking for a tractor is turned into a hard equipment requirement'
+);
+
+select lives_ok(
+  $$select app.advance_one((select id from t_ids where name = 'tractor'))$$,
+  'the tractor job dispatches'
+);
+
+select is(
+  (select count(*)::int from dispatches d
+     join responders r on r.id = d.responder_id
+    where d.request_id = (select id from t_ids where name = 'tractor')
+      and not (r.equipment @> '{tractor}'::equipment_type[])),
+  0,
+  'nobody without a tractor is texted about a job that needs one'
+);
+
+select ok(
+  (select count(*) from dispatches d
+     join responders r on r.id = d.responder_id
+    where d.request_id = (select id from t_ids where name = 'tractor')
+      and r.first_name = 'Tractorguy') = 1,
+  'the volunteer with a tractor is texted'
+);
+
+-- ---------------------------------------------------------------------------
+-- 4. Double accept — the one that must never happen
+-- ---------------------------------------------------------------------------
+
+insert into t_ids values ('race', pg_temp.make_request('test-token-double-accept-1'));
+do $$ begin perform app.advance_one((select id from t_ids where name = 'race')); end $$;
+
+select is(
+  app.accept_request(
+    (select id from t_ids where name = 'race'),
+    'aaaa0001-0000-4000-8000-000000000001',
+    30
+  ) ->> 'ok',
+  'true',
+  'the first volunteer to answer gets the job'
+);
+
+select is(
+  app.accept_request(
+    (select id from t_ids where name = 'race'),
+    'aaaa0001-0000-4000-8000-000000000004',
+    20
+  ) ->> 'error',
+  'already_covered',
+  'the second volunteer to answer is told it is already covered'
+);
+
+select is(
+  (select accepted_responder_id from requests where id = (select id from t_ids where name = 'race')),
+  'aaaa0001-0000-4000-8000-000000000001'::uuid,
+  'the winner is still the first one in'
+);
+
+select is(
+  (select count(*)::int from requests
+    where id = (select id from t_ids where name = 'race') and status = 'accepted'),
+  1,
+  'the request lands in exactly one accepted state'
+);
+
+select is(
+  (select count(*)::int from dispatches
+    where request_id = (select id from t_ids where name = 'race') and state = 'accepted'),
+  1,
+  'exactly one dispatch row is marked accepted'
+);
+
+select is(
+  (select count(*)::int from dispatches
+    where request_id = (select id from t_ids where name = 'race')
+      and state in ('queued', 'sent', 'delivered')),
+  0,
+  'every other offer is closed out'
+);
+
+select is(
+  (select count(*)::int from sms_messages
+    where request_id = (select id from t_ids where name = 'race')
+      and template_key = 'responder.assigned'),
+  1,
+  'only the winner is sent the assignment, which carries the phone and the pin'
+);
+
+select is(
+  (select count(*)::int from sms_messages
+    where request_id = (select id from t_ids where name = 'race')
+      and template_key = 'requester.accepted'),
+  1,
+  'the requester is told who is coming'
+);
+
+select is(
+  (select next_action_at from requests where id = (select id from t_ids where name = 'race')),
+  null::timestamptz,
+  'an accepted request drops out of the tick'
+);
+
+-- A request that is already taken is not re-opened by the scheduler.
+select is(
+  app.advance_one((select id from t_ids where name = 'race')) ->> 'action',
+  'none',
+  'the tick leaves an accepted request alone'
+);
+
+-- ---------------------------------------------------------------------------
+-- 5. Cancel mid-dispatch
+-- ---------------------------------------------------------------------------
+
+insert into t_ids values ('cancel', pg_temp.make_request('test-token-cancel-midway-1'));
+do $$ begin perform app.advance_one((select id from t_ids where name = 'cancel')); end $$;
+
+-- Pretend the offers actually went out, so the "stand down" texts are exercised.
+update dispatches set state = 'sent', sent_at = now()
+ where request_id = (select id from t_ids where name = 'cancel');
+
+select is(
+  cancel_request_by_token('test-token-cancel-midway-1', 'got pulled out by a friend') ->> 'ok',
+  'true',
+  'a requester can cancel while volunteers are being notified'
+);
+
+select is(
+  (select status::text from requests where id = (select id from t_ids where name = 'cancel')),
+  'cancelled',
+  'the request is cancelled'
+);
+
+select is(
+  (select count(*)::int from dispatches
+    where request_id = (select id from t_ids where name = 'cancel')
+      and state in ('queued', 'sent', 'delivered')),
+  0,
+  'nobody is left holding an open offer for a cancelled job'
+);
+
+select is(
+  cancel_request_by_token('test-token-cancel-midway-1') ->> 'error',
+  'already_closed',
+  'cancelling twice is refused rather than silently repeated'
+);
+
+-- ---------------------------------------------------------------------------
+-- 6. Nobody takes it
+-- ---------------------------------------------------------------------------
+
+insert into t_ids values ('nobody', pg_temp.make_request('test-token-unmatched-flow-1'));
+do $$ begin perform app.advance_one((select id from t_ids where name = 'nobody')); end $$;
+do $$ begin perform pg_temp.rewind((select id from t_ids where name = 'nobody'), 30); end $$;
+
+select is(
+  app.advance_one((select id from t_ids where name = 'nobody')) ->> 'action',
+  'unmatched',
+  'after the full escalation window the request goes unmatched'
+);
+
+select isnt(
+  (select unmatched_at from requests where id = (select id from t_ids where name = 'nobody')),
+  null::timestamptz,
+  'the unmatched time is recorded'
+);
+
+select isnt(
+  (select admin_alerted_at from requests where id = (select id from t_ids where name = 'nobody')),
+  null::timestamptz,
+  'the admins are marked as alerted'
+);
+
+select is(
+  (select count(*)::int from sms_messages
+    where request_id = (select id from t_ids where name = 'nobody')
+      and template_key = 'requester.unmatched'),
+  1,
+  'the requester is told nobody has taken it'
+);
+
+select isnt(
+  get_request_by_token('test-token-unmatched-flow-1') -> 'pro_options',
+  null::jsonb,
+  'and the status page starts offering paid options'
+);
+
+-- ---------------------------------------------------------------------------
+-- 7. Expiry
+-- ---------------------------------------------------------------------------
+
+select is(
+  app.advance_one((select id from t_ids where name = 'nobody')) ->> 'action',
+  'not_due',
+  'an unmatched request is not expired immediately'
+);
+
+update requests set next_action_at = now() - interval '1 minute'
+ where id = (select id from t_ids where name = 'nobody');
+
+select is(
+  app.advance_one((select id from t_ids where name = 'nobody')) ->> 'action',
+  'expired',
+  'once the expiry window passes, the request is closed'
+);
+
+select is(
+  (select count(*)::int from dispatches
+    where request_id = (select id from t_ids where name = 'nobody')
+      and state in ('queued', 'sent', 'delivered')),
+  0,
+  'expiring a request closes any offer still open'
+);
+
+-- ---------------------------------------------------------------------------
+-- 8. The tick itself
+-- ---------------------------------------------------------------------------
+
+insert into t_ids values ('tick', pg_temp.make_request('test-token-tick-driven-01'));
+
+select ok(
+  (advance_dispatch(50) ->> 'processed')::int >= 1,
+  'advance_dispatch picks up everything that is due'
+);
+
+select is(
+  (select current_ring from requests where id = (select id from t_ids where name = 'tick')),
+  1::smallint,
+  'and it opened ring 1 for the request that was waiting'
+);
+
+-- ---------------------------------------------------------------------------
+-- 9. Inbound SMS
+-- ---------------------------------------------------------------------------
+
+insert into t_ids values ('sms', pg_temp.make_request('test-token-inbound-sms-01'));
+do $$ begin perform app.advance_one((select id from t_ids where name = 'sms')); end $$;
+
+-- Ringone is holding the 'race' job, so the offer here went to Tractorguy.
+select is(
+  handle_inbound_sms('+12813330004', '2') ->> 'action',
+  'declined',
+  'replying 2 passes on the job'
+);
+
+select is(
+  (select state::text from dispatches
+    where request_id = (select id from t_ids where name = 'sms')
+      and responder_id = 'aaaa0001-0000-4000-8000-000000000004'),
+  'declined',
+  'the offer is recorded as declined'
+);
+
+select is(
+  handle_inbound_sms('+12813330004', 'wat') ->> 'reply_template',
+  'responder.help',
+  'anything we cannot parse gets the help text, not silence'
+);
+
+select is(
+  handle_inbound_sms('+15550009999', '1') ->> 'reply_template',
+  'unknown.no_account',
+  'a number we do not know is told it is not registered'
+);
+
+select is(
+  handle_inbound_sms('+12813330002', 'STOP') ->> 'action',
+  'stop',
+  'STOP is honoured'
+);
+
+select is(
+  (select sms_opt_in from responders where phone = '+12813330002'),
+  false,
+  'and it actually opts the volunteer out'
+);
+
+select is(
+  (select availability::text from responders where phone = '+12813330002'),
+  'paused',
+  'a volunteer who texts STOP is also taken off the call list'
+);
+
+select is(
+  handle_inbound_sms('+12813330002', 'START') ->> 'action',
+  'start',
+  'START puts them back'
+);
+
+select is(
+  (select sms_opt_in from responders where phone = '+12813330002'),
+  true,
+  'and opts them back in'
+);
+
+-- Accepting by text, including the optional ETA.
+insert into t_ids values ('sms2', pg_temp.make_request('test-token-inbound-accept-1'));
+do $$ begin perform app.advance_one((select id from t_ids where name = 'sms2')); end $$;
+
+select is(
+  handle_inbound_sms('+12813330004', '1 45') ->> 'action',
+  'accepted',
+  'replying 1 takes the job'
+);
+
+select is(
+  (select eta_minutes from requests where id = (select id from t_ids where name = 'sms2')),
+  45::smallint,
+  'a number after the 1 is read as the ETA'
+);
+
+select is(
+  handle_inbound_sms('+12813330004', 'HERE') ->> 'action',
+  'on_site',
+  'HERE reports arrival'
+);
+
+select is(
+  (select status::text from requests where id = (select id from t_ids where name = 'sms2')),
+  'on_site',
+  'and the request says so'
+);
+
+select is(
+  handle_inbound_sms('+12813330004', 'DONE') ->> 'action',
+  'complete',
+  'DONE closes the job'
+);
+
+select is(
+  (select status::text from requests where id = (select id from t_ids where name = 'sms2')),
+  'recovered',
+  'and the request is recovered'
+);
+
+select is(
+  handle_inbound_sms('+12813330004', 'DONE') ->> 'action',
+  'no_job',
+  'a second DONE has nothing to close'
+);
+
+-- ---------------------------------------------------------------------------
+-- 10. A volunteer cannot accept something they were never offered
+-- ---------------------------------------------------------------------------
+
+insert into t_ids values ('unoffered', pg_temp.make_request('test-token-not-offered-01'));
+
+select is(
+  app.accept_request(
+    (select id from t_ids where name = 'unoffered'),
+    'aaaa0001-0000-4000-8000-000000000003'
+  ) ->> 'error',
+  'not_offered',
+  'accepting a job you were never texted about is refused'
+);
+
+select is(
+  app.accept_request(
+    (select id from t_ids where name = 'unoffered'),
+    'aaaa0001-0000-4000-8000-000000000006'
+  ) ->> 'error',
+  'not_approved',
+  'a volunteer awaiting approval cannot accept anything'
+);
+
+select * from finish();
+
+rollback;
