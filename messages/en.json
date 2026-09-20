@@ -1,0 +1,131 @@
+{
+  "app": {
+    "name": "TxRecover",
+    "tagline": "Neighbors with winches, not a tow bill."
+  },
+  "enum": {
+    "requestStatus": {
+      "submitted": "Sent",
+      "dispatching": "Notifying volunteers",
+      "unmatched": "No volunteer yet",
+      "accepted": "Volunteer on the way",
+      "on_site": "Volunteer on site",
+      "recovered": "Recovered",
+      "cancelled": "Cancelled",
+      "expired": "Closed, no answer"
+    },
+    "stuckType": {
+      "mud": "Mud",
+      "sand": "Sand",
+      "water": "Water",
+      "ditch": "Ditch",
+      "rollover": "Rolled over",
+      "mechanical": "Broken down",
+      "other": "Something else"
+    },
+    "stuckDepth": {
+      "hubs": "To the hubs",
+      "frame": "To the frame",
+      "buried": "Buried"
+    },
+    "drivetrain": {
+      "2wd": "2WD",
+      "4wd": "4WD",
+      "awd": "AWD",
+      "unknown": "Not sure"
+    },
+    "landType": {
+      "public": "Public land or road",
+      "offroad_park": "Off-road park",
+      "private_permission": "Private land, I have permission"
+    },
+    "vehicleClass": {
+      "car": "Car",
+      "suv": "SUV",
+      "truck": "Truck",
+      "jeep": "Jeep",
+      "van": "Van",
+      "utv_atv": "UTV or ATV",
+      "motorcycle": "Motorcycle",
+      "rv_trailer": "RV or trailer",
+      "semi": "Semi",
+      "other": "Other"
+    },
+    "equipment": {
+      "winch": "Winch",
+      "kinetic_rope": "Kinetic rope or straps",
+      "traction_boards": "Traction boards",
+      "tractor": "Tractor",
+      "second_truck": "Second truck",
+      "trailer": "Trailer",
+      "lifted_4x4": "Lifted 4x4",
+      "night_lights": "Lights for night work"
+    },
+    "locationSource": {
+      "gps": "Phone GPS",
+      "map_pin": "Pin on the map",
+      "coordinates": "Pasted coordinates",
+      "google_maps_link": "Google Maps link",
+      "what3words": "what3words",
+      "admin_intake": "Entered by an admin"
+    },
+    "responderApproval": {
+      "pending": "Waiting for approval",
+      "approved": "Approved",
+      "rejected": "Not approved",
+      "banned": "Banned"
+    },
+    "availability": {
+      "active": "Active",
+      "paused": "Paused"
+    },
+    "event": {
+      "created": "Request sent",
+      "dispatch_started": "Notifying volunteers",
+      "ring_escalated": "Widening the search",
+      "responder_notified": "Volunteer notified",
+      "accepted": "A volunteer accepted",
+      "declined": "A volunteer passed",
+      "on_site": "Volunteer arrived",
+      "recovered": "Recovered",
+      "cancelled": "Cancelled",
+      "expired": "Closed with no answer",
+      "unmatched": "No volunteer yet",
+      "reassigned": "Reassigned",
+      "thanked": "Thank-you sent",
+      "admin_note": "Admin note"
+    }
+  },
+  "emergency": {
+    "heading": "Is anyone hurt or in danger?",
+    "body": "Call 911 first. We are volunteers, not emergency services.",
+    "call911": "Call 911",
+    "acknowledge": "Nobody is hurt, keep going"
+  },
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "cancel": "Cancel",
+    "submit": "Send request",
+    "retry": "Try again",
+    "close": "Close",
+    "copy": "Copy",
+    "copied": "Copied",
+    "loading": "Loading",
+    "miles": "{count, plural, one {# mile} other {# miles}}",
+    "minutes": "{count, plural, one {# minute} other {# minutes}}",
+    "volunteersNotified": "{count, plural, one {# volunteer notified} other {# volunteers notified}}"
+  },
+  "legal": {
+    "reviewBanner": "PLACEHOLDER TEXT — REVIEW WITH LAWYER",
+    "terms": "Terms",
+    "waiver": "Waiver",
+    "privacy": "Privacy",
+    "acceptWaiver": "I have read and accept the waiver",
+    "acceptRules": "I have read and accept the ground rules"
+  },
+  "privacyNote": {
+    "phone": "Your phone number is never shown publicly. It goes only to the volunteer who takes your request.",
+    "pin": "Your exact location is only shared with the volunteer who takes your request. The public board shows an approximate pin about a mile off."
+  }
+}

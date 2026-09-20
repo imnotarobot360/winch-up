@@ -1,0 +1,70 @@
+project_id = "txrecover"
+
+[api]
+enabled = true
+port = 54321
+# Only `public` is exposed. Schema `app` holds internals and must never be added here.
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 200
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[db.seed]
+enabled = true
+# Reference data first, then local-only demo data.
+sql_paths = ["./seed.sql", "./seeds/demo.sql"]
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+file_size_limit = "5MiB"
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["http://127.0.0.1:3000"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+enable_signup = true
+# Responders and admins sign in with a phone OTP. Email exists only so local demo users can log in.
+enable_anonymous_sign_ins = false
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false
+
+[auth.sms]
+enable_signup = true
+enable_confirmations = true
+template = "Your {{ .AppName }} code is {{ .Code }}"
+
+# Local development uses the test OTP below instead of burning real Twilio messages.
+[auth.sms.test_otp]
+"+12815550101" = "123456"
+"+19365550102" = "123456"
+"+17135550100" = "123456"
+
+[auth.sms.twilio]
+enabled = false
+account_sid = ""
+message_service_sid = ""
+auth_token = "env(SUPABASE_AUTH_SMS_TWILIO_AUTH_TOKEN)"
+
+[edge_runtime]
+enabled = true
+policy = "oneshot"
+inspector_port = 8083
+
+[analytics]
+enabled = false

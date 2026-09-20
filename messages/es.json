@@ -1,0 +1,131 @@
+{
+  "app": {
+    "name": "TxRecover",
+    "tagline": "Vecinos con winche, no una factura de grúa."
+  },
+  "enum": {
+    "requestStatus": {
+      "submitted": "Enviada",
+      "dispatching": "Avisando a voluntarios",
+      "unmatched": "Aún sin voluntario",
+      "accepted": "Voluntario en camino",
+      "on_site": "Voluntario en el lugar",
+      "recovered": "Rescatado",
+      "cancelled": "Cancelada",
+      "expired": "Cerrada sin respuesta"
+    },
+    "stuckType": {
+      "mud": "Lodo",
+      "sand": "Arena",
+      "water": "Agua",
+      "ditch": "Zanja",
+      "rollover": "Volcado",
+      "mechanical": "Falla mecánica",
+      "other": "Otra cosa"
+    },
+    "stuckDepth": {
+      "hubs": "Hasta los rines",
+      "frame": "Hasta el chasis",
+      "buried": "Enterrado"
+    },
+    "drivetrain": {
+      "2wd": "2WD",
+      "4wd": "4WD",
+      "awd": "AWD",
+      "unknown": "No estoy seguro"
+    },
+    "landType": {
+      "public": "Terreno o camino público",
+      "offroad_park": "Parque todoterreno",
+      "private_permission": "Terreno privado, tengo permiso"
+    },
+    "vehicleClass": {
+      "car": "Carro",
+      "suv": "Camioneta SUV",
+      "truck": "Troca",
+      "jeep": "Jeep",
+      "van": "Van",
+      "utv_atv": "UTV o ATV",
+      "motorcycle": "Motocicleta",
+      "rv_trailer": "Casa rodante o remolque",
+      "semi": "Tráiler",
+      "other": "Otro"
+    },
+    "equipment": {
+      "winch": "Winche",
+      "kinetic_rope": "Cuerda cinética o correas",
+      "traction_boards": "Tablas de tracción",
+      "tractor": "Tractor",
+      "second_truck": "Segunda troca",
+      "trailer": "Remolque",
+      "lifted_4x4": "4x4 levantada",
+      "night_lights": "Luces para trabajar de noche"
+    },
+    "locationSource": {
+      "gps": "GPS del teléfono",
+      "map_pin": "Punto en el mapa",
+      "coordinates": "Coordenadas pegadas",
+      "google_maps_link": "Enlace de Google Maps",
+      "what3words": "what3words",
+      "admin_intake": "Capturada por un administrador"
+    },
+    "responderApproval": {
+      "pending": "Esperando aprobación",
+      "approved": "Aprobado",
+      "rejected": "No aprobado",
+      "banned": "Bloqueado"
+    },
+    "availability": {
+      "active": "Activo",
+      "paused": "En pausa"
+    },
+    "event": {
+      "created": "Solicitud enviada",
+      "dispatch_started": "Avisando a voluntarios",
+      "ring_escalated": "Ampliando la búsqueda",
+      "responder_notified": "Voluntario avisado",
+      "accepted": "Un voluntario aceptó",
+      "declined": "Un voluntario pasó",
+      "on_site": "El voluntario llegó",
+      "recovered": "Rescatado",
+      "cancelled": "Cancelada",
+      "expired": "Cerrada sin respuesta",
+      "unmatched": "Aún sin voluntario",
+      "reassigned": "Reasignada",
+      "thanked": "Agradecimiento enviado",
+      "admin_note": "Nota del administrador"
+    }
+  },
+  "emergency": {
+    "heading": "¿Hay alguien herido o en peligro?",
+    "body": "Llame primero al 911. Somos voluntarios, no servicios de emergencia.",
+    "call911": "Llamar al 911",
+    "acknowledge": "Nadie está herido, continuar"
+  },
+  "common": {
+    "next": "Siguiente",
+    "back": "Atrás",
+    "cancel": "Cancelar",
+    "submit": "Enviar solicitud",
+    "retry": "Intentar de nuevo",
+    "close": "Cerrar",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "loading": "Cargando",
+    "miles": "{count, plural, one {# milla} other {# millas}}",
+    "minutes": "{count, plural, one {# minuto} other {# minutos}}",
+    "volunteersNotified": "{count, plural, one {# voluntario avisado} other {# voluntarios avisados}}"
+  },
+  "legal": {
+    "reviewBanner": "TEXTO PROVISIONAL — REVISAR CON ABOGADO",
+    "terms": "Términos",
+    "waiver": "Exoneración",
+    "privacy": "Privacidad",
+    "acceptWaiver": "He leído y acepto la exoneración",
+    "acceptRules": "He leído y acepto las reglas básicas"
+  },
+  "privacyNote": {
+    "phone": "Su número de teléfono nunca se muestra públicamente. Solo llega al voluntario que toma su solicitud.",
+    "pin": "Su ubicación exacta solo se comparte con el voluntario que toma su solicitud. El tablero público muestra un punto aproximado, a cerca de una milla."
+  }
+}

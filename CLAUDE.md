@@ -1,0 +1,162 @@
+# TxRecover — project guide for Claude sessions
+
+**Working name.** The product name lives in exactly one place: `APP_NAME` in `src/config/app.ts`.
+Never hard-code the name anywhere else (UI strings use the i18n key `app.name`, which reads that constant).
+
+## What this is
+
+A dispatcher that replaces the Facebook-group workflow of *Texas Off-Road Recovery* (6.8K members)
+and *Houston Area Off-Road Recovery*.
+
+Today: a stuck driver posts a map pin + photo in the group, volunteers with 4x4s/winches/tractors
+comment or call, someone drives out, and the poster edits the post to `#### Recovered ####`.
+
+With TxRecover: a stuck driver fills in one request page, the system texts the nearest matching
+volunteers, the first to reply wins, the requester gets a name + ETA, and a status page closes the
+loop. **Nobody installs anything.**
+
+## Users
+
+- **Requesters** — stuck, on a phone, weak signal, possibly panicking. Not authenticated. They hold
+  an unguessable link (`/r/[token]`). Optimize every decision for them.
+- **Responders** — volunteers with equipment. Phone OTP auth. Must be approved by an admin before
+  they are dispatched to.
+- **Admins** — the owner + the Facebook group admins.
+
+## Stack (fixed — do not re-litigate)
+
+| Concern | Choice |
+|---|---|
+| App | Next.js App Router + TypeScript + Tailwind + shadcn/ui |
+| Data | Supabase Postgres + PostGIS, RLS on **every** table, migrations committed in `/supabase` |
+| Auth | Supabase Auth, **phone OTP** — responders and admins only |
+| Files | Supabase Storage (private bucket, signed URLs only) |
+| SMS | Twilio Programmable SMS — outbound + inbound webhook |
+| Maps | Mapbox GL (pin drag + admin map) |
+| i18n | `next-intl`, **English + Spanish, both from day one** |
+| PWA | manifest, icons, installable, offline shell |
+| Scheduler | **Supabase `pg_cron` calling an Edge Function, every 60 s.** Not Vercel cron. |
+| Hosting | Vercel, deployed from GitHub |
+
+No other paid services without asking the owner first.
+
+## Core flow
+
+1. **`/request`** — one question per screen, thumb-friendly, works on 1 bar of signal.
+   - 911 gate: "Is anyone hurt or in danger? Call 911. We are volunteers, not emergency services."
+     Must be acknowledged (`requests.emergency_ack_at`).
+   - GPS auto-capture with accuracy shown. Fallbacks: drag a pin, paste coordinates, paste a
+     Google Maps link, or what3words (`requests.location_source`).
+   - 1–3 photos, compressed client-side, **EXIF stripped client-side**.
+   - Vehicle (type, make/model, 2WD/4WD), how stuck (mud/sand/water/ditch/rollover/mechanical),
+     how deep (hubs/frame/buried), needs a tractor or second truck?, land type
+     (public / off-road park / private with permission).
+   - Name + phone. **The phone is never public.** It is released only to the accepting responder.
+   - Waiver + rules checkboxes. Waiver text is versioned in the DB; each acceptance stores the
+     waiver row id, timestamp, IP and user agent.
+   - Submit → SMS the requester a link to `/r/[token]`.
+
+2. **Dispatch** — a server-side state machine in Postgres, advanced by a job every 60 s.
+   - Ring 1 = approved + active responders within **15 mi** whose equipment matches. SMS up to
+     **10** of them: short summary + distance + "Reply 1 to take it, 2 to pass".
+   - No acceptance after **7 min** → ring 2 (**30 mi**) → 7 min → ring 3 (**60 mi**).
+   - **25 min** with no acceptance → status `unmatched`: alert admins, show the requester a
+     "No volunteer yet" panel with the admin-editable paid recovery/tow list (`pro_options`).
+   - First `1` reply wins, enforced by a row lock — **a double accept must be impossible**.
+   - Winner gets the requester's phone, the exact pin and the photo links. The requester gets the
+     responder's first name, vehicle and ETA. Everyone else gets "Already covered, thanks".
+   - The inbound webhook handles `1`, `2`, `YES`, `SI`, `NO`, `STOP` and unknown replies.
+
+3. **`/r/[token]`** — requester status page. Timeline (Sent → Notifying volunteers (N within 30 mi)
+   → Accepted by Mike, ETA 40 min → On site → Recovered), "Call responder" once accepted, Cancel,
+   Mark recovered (+ optional thank-you note, texted to the responder). Shareable link.
+
+4. **`/join`** — responder signup: phone OTP, name, home location (geocoded) + radius (15/30/60 mi),
+   equipment checkboxes, vehicle, hours available, active/paused toggle. New responders are
+   `pending` until an admin approves them (keeps out scammers and tow companies posing as
+   volunteers).
+
+5. **`/me`** — responder dashboard: active/paused, current job, past recoveries, stats.
+
+6. **`/board`** — public feed of open requests. No phones; pin blurred to ~1 mi. For people who
+   do not want texts but want to watch it like the Facebook group.
+
+7. **`/post/[id]`** — auto-formatted Facebook post text in the format the group admins already
+   require (location, vehicle, situation, photo, `#### Recovered ####` when done) with a Copy button
+   and the `/r` link. **Facebook's Groups API is gone — never try to auto-post.** Also an admin
+   "intake" form to create a request from a Facebook post.
+
+8. **`/admin`** — live map of open requests + responders, queue, manual dispatch/reassign,
+   approve/ban responders, edit waiver text and the `pro_options` list, audit log.
+
+## Rules (non-negotiable)
+
+- **Phones and exact pins are private until acceptance.** RLS enforces it; there are tests that
+  prove it (`supabase/tests/`). Any new table or column that touches contact info or coordinates
+  needs a matching test.
+- Rate-limit request creation per phone and per IP. Block phone numbers and URLs in public free-text
+  fields (`public.contains_contact_info()` is used in CHECK constraints — use it on every new public
+  text column).
+- **One Postgres function owns the dispatch transitions.** Unit-test ring escalation, double accept,
+  cancel mid-dispatch, and expiry.
+- **Every user-facing string exists in EN and ES.** `messages/en.json` and `messages/es.json` must
+  stay key-for-key identical. Spanish is not an afterthought.
+- Mobile first, large tap targets, high contrast — it has to work on a 3-year-old Android in bright
+  Texas sun.
+- `/terms`, `/waiver`, `/privacy` exist with placeholder text clearly marked
+  **"REVIEW WITH LAWYER"**.
+- Commit after each milestone with a clear message. Keep `README.md` accurate: the exact manual
+  setup steps (Supabase project, Twilio number + A2P 10DLC registration, Mapbox token, Vercel env
+  vars) and a current `.env.example`.
+
+## Database conventions
+
+- Tables live in `public`. **Internal helpers live in schema `app`** so PostgREST can never reach
+  them. Only deliberate RPCs go in `public`, and each one is granted to `anon`/`authenticated`
+  explicitly.
+- Every function is `security definer` with a pinned `set search_path`.
+- PostGIS is installed in schema `extensions`. Migrations start with
+  `set search_path = public, extensions;`.
+- RLS is deny-by-default: `revoke all` first, then narrow grants. Sensitive columns
+  (`requests.requester_phone`, `requests.location`) additionally have **column-level** privileges
+  revoked, so a policy mistake alone cannot leak them.
+- Requesters are anonymous. They reach their data only through token-scoped `security definer`
+  RPCs — never through direct table access.
+- Writes from the app go through RPCs or the service-role server client, never from the browser.
+- Migrations are append-only once applied to production. Fix forward with a new migration.
+
+## Repo layout
+
+```
+src/app/[locale]/...      routes (next-intl locale segment)
+src/config/app.ts         APP_NAME + dispatch tuning mirrored from app_settings
+src/lib/                  supabase clients, sms templates, geo helpers
+messages/{en,es}.json     every user-facing string
+supabase/migrations/      numbered, committed, never edited after being applied to prod
+supabase/tests/           pgTAP — RLS proofs and dispatch state-machine unit tests
+supabase/functions/       Edge Functions (dispatch tick, sms sender, twilio inbound)
+docs/                     decisions + runbooks
+```
+
+## Milestones
+
+- **M1** schema + migrations + RLS + seed data
+- **M2** `/request` + `/r` status page + requester SMS
+- **M3** responder signup + dispatch engine + inbound webhook + tests
+- **M4** `/board`, `/post`, `/admin`
+- **M5** PWA polish, i18n pass, README, deploy to Vercel
+
+## Standing assumptions (change these when the owner decides otherwise, do not guess)
+
+1. The repo root is `txrecover/`, its own git repo, because the parent folder holds unrelated
+   projects.
+2. Requesters are never authenticated. Security rests on the unguessable `public_token`.
+3. Phone numbers are stored E.164, US only (`^\+1[0-9]{10}$`).
+4. One winning responder per request. The schema allows additional "assist" dispatches later, but
+   there is only one `accepted_responder_id`.
+5. `/board` shows the blurred pin **even after acceptance**, controlled by the
+   `board.reveal_exact_after_accept` setting (default `false`). Flip the setting if the owner wants
+   the exact pin public once a volunteer is assigned.
+6. Photos are uploaded through short-lived signed upload URLs minted by the server. The bucket has
+   **no** anon policies.
+7. Display timezone is `America/Chicago`.
