@@ -149,18 +149,38 @@ Each milestone ends with a commit and something you can actually look at or run.
 
 ---
 
-## M5 — PWA, i18n pass, README, deploy
+## M5 — PWA, i18n gate, runbook, deploy  *(code complete, not yet run)*
 
-1. Manifest, maskable icons, installable, offline shell that still shows "call 911" and the last
-   known status page.
-2. Full i18n sweep: a CI check that `en.json` and `es.json` have identical key sets, and a native
-   read-through of the Spanish. No machine-translated leftovers.
-3. Bright-sun pass: contrast, 48 px tap targets, no hover-only affordances, test on a mid-range
-   Android.
-4. Slow-network pass: throttle to 2G, confirm the form still submits and the status page still
-   renders.
-5. README final, `.env.example` final, deploy to Vercel, point Twilio at production, schedule the
-   cron job, run `supabase test db` against the live schema.
+**Shipped**
+
+- `src/app/manifest.ts` — installable, `start_url` is `/request` rather than the landing page,
+  because somebody who installed this expects to need it in a hurry. Shortcuts for help, the
+  board and my jobs.
+- `src/app/icons/[size]/route.tsx` — icons generated with `next/og` at request time. No binary
+  assets in the repo, no design tool in the loop, and the mark tracks the brand colour in
+  `globals.css`. No text in the icon: Satori needs a font file for glyphs, and a rope ring reads
+  better at 48 px than four letters would.
+- `public/sw.js` — caches the content-hashed build output and the offline shell, and nothing
+  else. `/api/`, `/r/`, `/post/`, `/me` and `/admin` are on an explicit never-cache list.
+- `public/offline.html` — standalone, no framework, no fonts, no network. Leads with "call 911"
+  and carries both languages at once, since nothing is available to detect a preference.
+  **Checked in a browser at 375 px — the only thing in this repo that has been.**
+- `src/app/robots.ts` and `src/app/sitemap.ts` — the landing page and the board are worth
+  finding; `/r/`, `/post/`, `/me` and `/admin` are explicitly disallowed.
+- `prebuild` runs the i18n check, so a missing Spanish key fails the build instead of silently
+  falling back to English. Both catalogues are at 529 keys and in step.
+- `docs/runbook.md` — triage for the failures that will actually happen: texts not going out,
+  requests not advancing, a volunteer who never got called, rotating secrets, and the two
+  settings that deserve care before anyone edits them.
+- README: a launch checklist that has to be worked down before 6,800 people are told the link
+  exists.
+
+**Open**
+
+- The bright-sun and 2G passes are listed in the checklist but cannot be done from here: they
+  need a real phone outdoors and a throttled connection.
+- Icons are generated per request rather than at build time. Fine at this traffic; worth
+  pre-rendering if it ever shows up in a trace.
 
 ---
 

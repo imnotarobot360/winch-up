@@ -1,6 +1,6 @@
 {
   "name": "txrecover",
-  "version": "0.2.0",
+  "version": "0.5.0",
   "private": true,
   "engines": {
     "node": ">=20.9.0"
@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "prebuild": "node scripts/check-messages.mjs",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",

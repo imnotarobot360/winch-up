@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import { APP_NAME } from "@/config/app";
 import { routing } from "@/i18n/routing";
 
@@ -25,6 +26,8 @@ export async function generateMetadata({
     title: { default: APP_NAME, template: `%s · ${APP_NAME}` },
     description: t("tagline"),
     applicationName: APP_NAME,
+    manifest: "/manifest.webmanifest",
+    appleWebApp: { capable: true, title: APP_NAME, statusBarStyle: "default" },
   };
 }
 
@@ -55,6 +58,7 @@ export default async function LocaleLayout({
     <html lang={locale}>
       <body className="min-h-dvh bg-surface text-ink antialiased">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <RegisterServiceWorker />
       </body>
     </html>
   );

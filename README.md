@@ -17,18 +17,22 @@ Product rules, flow and conventions live in [CLAUDE.md](./CLAUDE.md). Read that 
 | **M2** | `/request` + `/r` status page + requester SMS | **code complete, not yet run** |
 | **M3** | responder signup + dispatch engine + inbound webhook + tests | **code complete, not yet run** |
 | **M4** | `/board`, `/post`, `/admin` | **code complete, not yet run** |
-| M5 | PWA polish, i18n pass, README, deploy to Vercel | not started |
+| **M5** | PWA polish, i18n pass, README, deploy to Vercel | **code complete, not yet run** |
 
-> **Nothing here has been executed.** M1 and M2 were both written on a machine with no Node.js,
-> no npm, no Docker and no Supabase CLI. That means:
+> **Nothing here has been executed.** All five milestones were written on a machine with no
+> Node.js, no npm, no Docker and no Supabase CLI. That means:
 >
 > - `npm install` has never run, so no dependency version in `package.json` has been resolved
 > - `npm run build` and `tsc --noEmit` have never run, so nothing is type-checked
 > - `supabase db reset` and `supabase test db` have never run, so no migration has been applied
 >   and no test has passed
 >
-> Treat the first run as part of the work, not as a formality. Steps 1–3 below are the next
-> action; expect to fix things.
+> Treat the first run as part of the work, not as a formality. Steps 1–4 below are the next
+> action; expect to fix things. The one thing that *has* been looked at in a browser is
+> `public/offline.html`, which is plain static HTML.
+>
+> Day-to-day operations — what to do when texts stop going out, when a request sits too long,
+> when a volunteer says they never got called — live in [docs/runbook.md](./docs/runbook.md).
 
 ---
 
@@ -257,7 +261,9 @@ src/components/status/        the /r/[token] status page
 src/components/ui/            the small primitive set everything is built from
 src/config/app.ts             APP_NAME and the tuning mirrored from app_settings
 src/i18n/                     next-intl routing, request config, navigation helpers
-src/lib/                      supabase admin client, geo parsing, photos, SMS, validation
+src/components/admin/         the admin console
+src/components/responder/     /join and /me
+src/lib/                      supabase clients, geo parsing, photos, SMS, validation
 messages/{en,es}.json         every user-facing string, key-for-key identical
 scripts/check-messages.mjs    fails the build when en and es drift apart
 supabase/config.toml          local stack config, incl. pinned test OTPs
@@ -265,7 +271,9 @@ supabase/migrations/          numbered, append-only once applied to production
 supabase/seed.sql             reference data, safe to run anywhere, idempotent
 supabase/seeds/demo.sql       demo volunteers and requests, local only
 supabase/tests/               pgTAP — the privacy rules, proven
-docs/                         milestone plan and decisions
+public/sw.js                   service worker: static assets and the offline shell, nothing else
+public/offline.html           standalone offline page, no framework, both languages
+docs/                         milestone plan, decisions and the operational runbook
 ```
 
 ## Database at a glance
@@ -288,6 +296,48 @@ Three layers protect the private fields: RLS policies choose rows, column-level 
 `requester_phone`, `location` and `public_token` do not exist at all for `anon` and
 `authenticated`, and anonymous requesters reach their own data only through token-scoped
 `security definer` RPCs.
+
+## Installable on a phone
+
+The app is a PWA: `src/app/manifest.ts` serves the manifest, `src/app/icons/[size]/route.tsx`
+generates the icons at request time with `next/og` (no binary assets in the repo), and
+`public/sw.js` is the service worker.
+
+The service worker is deliberately narrow. It caches the content-hashed build output under
+`/_next/static` and the offline shell, and **nothing else**. `/api/`, `/r/`, `/post/`, `/me` and
+`/admin` are on a never-cache list: this app exists for people with one bar of signal, and a
+cache that serves a stale recovery status is worse than no cache at all.
+
+`public/offline.html` is standalone HTML with no framework, no fonts and no network calls,
+because it is shown at exactly the moment nothing can be fetched. It leads with "call 911" and
+carries both languages at once, since there is nothing available to detect a preference.
+
+`start_url` is `/request`, not the landing page. Somebody who installed this did it because they
+expect to need it in a hurry.
+
+## Launch checklist
+
+Work down this list before telling 6,800 people the link exists.
+
+- [ ] `npm install && npm run typecheck && npm run build` all pass
+- [ ] `supabase db reset` applies every migration cleanly
+- [ ] `supabase test db` — both suites green. **Do not deploy on a red privacy test.**
+- [ ] `npm run i18n:check` passes (it also runs automatically before every build)
+- [ ] Migrations pushed to the cloud project, reference seed loaded, demo seed **not** loaded
+- [ ] `postgis`, `pg_cron` and `pg_net` enabled on the cloud project
+- [ ] Exposed schemas list `public` only — never `app`
+- [ ] A2P 10DLC brand and campaign **approved**, not just submitted
+- [ ] `SMS_DRY_RUN` unset in production, still `1` in preview
+- [ ] Twilio inbound webhook points at the production domain
+- [ ] `TWILIO_AUTH_TOKEN` set in production, so the webhook rejects unsigned requests
+- [ ] The cron job is scheduled and `cron.job_run_details` shows it succeeding
+- [ ] `contact.admin_phones` has at least one real number in it
+- [ ] `pro_options` has real operators, and the placeholder row is deleted or hidden
+- [ ] At least one admin exists in `user_roles`
+- [ ] `/terms`, `/waiver`, `/privacy` reviewed by a Texas attorney and the placeholder banners
+      removed
+- [ ] Two phones tested against one request, and exactly one of them won
+- [ ] Tested on a real mid-range Android outdoors, in sunlight
 
 ## Legal
 

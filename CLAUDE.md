@@ -156,14 +156,31 @@ docs/                     decisions + runbooks
   uploads the original file.
 - **`public.contains_contact_info()` has a TypeScript twin** in `src/lib/contact-info.ts`. Change
   one, change both.
+- **The service worker caches almost nothing.** `/_next/static` and the offline shell, full stop.
+  `/api/`, `/r/`, `/post/`, `/me` and `/admin` are on a never-cache list, because a cached
+  recovery status is a wrong recovery status. Do not "improve" this by adding pages to it.
+- **`public/offline.html` has no build step.** No framework, no fonts, no network calls — it is
+  shown when nothing can be fetched. Both languages are on screen at once, deliberately.
+- **Admin RPCs are granted to `authenticated`, not `service_role`.** The gate is `auth.uid()` via
+  `app.require_admin()`, so there is no shared key that grants admin. Every mutating admin RPC
+  writes an audit row; keep that true for new ones.
+- **`npm run build` runs the i18n check first** (`prebuild`). A missing Spanish key fails the
+  build rather than silently falling back to English.
 
 ## Milestones
 
-- **M1** schema + migrations + RLS + seed data — *written, never executed*
-- **M2** `/request` + `/r` status page + requester SMS — *written, never executed*
+All five are written. **None of them has ever been executed** — no `npm install`, no build, no
+type-check, no migration applied, no test run. The first real task is `npm install`,
+`npm run typecheck`, `supabase db reset` and `supabase test db`, then fixing what they turn up.
+
+- **M1** schema + migrations + RLS + seed data
+- **M2** `/request` + `/r` status page + requester SMS
 - **M3** responder signup + dispatch engine + inbound webhook + tests
 - **M4** `/board`, `/post`, `/admin`
-- **M5** PWA polish, i18n pass, README, deploy to Vercel
+- **M5** PWA, i18n gate, runbook, deploy
+
+Operational procedures are in `docs/runbook.md`. Keep it current: it is written for whoever is
+holding the phone at 11pm, not for whoever wrote the code.
 
 ## Standing assumptions (change these when the owner decides otherwise, do not guess)
 

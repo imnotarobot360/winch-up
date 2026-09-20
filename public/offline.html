@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Offline · TxRecover</title>
+    <!--
+      Deliberately standalone: no framework, no fonts, no network. This is the page someone sees
+      when their signal has dropped, which is exactly when a page that needs to fetch anything
+      is useless. Both languages are on screen at once, because there is nothing here that can
+      detect a preference.
+    -->
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 24px 16px 48px;
+        font: 18px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        color: #0b0f14;
+        background: #fff;
+      }
+      main { max-width: 34rem; margin: 0 auto; }
+      h1 { font-size: 1.75rem; line-height: 1.2; margin: 0 0 8px; }
+      h2 { font-size: 1.25rem; margin: 32px 0 8px; }
+      p { margin: 0 0 12px; }
+      .muted { color: #3d4754; }
+      .emergency {
+        border-left: 4px solid #b3261e;
+        background: #fdeceb;
+        padding: 16px;
+        border-radius: 12px;
+        margin: 16px 0 24px;
+      }
+      .call {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 3.5rem;
+        border-radius: 12px;
+        background: #b3261e;
+        color: #fff;
+        font-size: 1.25rem;
+        font-weight: 700;
+        text-decoration: none;
+        margin-bottom: 12px;
+      }
+      .retry {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 3.5rem;
+        border-radius: 12px;
+        border: 2px solid #d6dbe3;
+        color: #0b0f14;
+        font-size: 1.125rem;
+        font-weight: 600;
+        text-decoration: none;
+        background: #fff;
+        width: 100%;
+      }
+      hr { border: 0; border-top: 1px solid #d6dbe3; margin: 32px 0; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>You're offline</h1>
+      <p class="muted">
+        We can't reach the network right now. Your request is still on our side — nothing was
+        lost.
+      </p>
+
+      <div class="emergency">
+        <strong>Is anyone hurt or in danger?</strong>
+        <p style="margin: 8px 0 0">
+          Call 911. Emergency calls go through on networks that won't load a web page.
+        </p>
+      </div>
+
+      <a class="call" href="tel:911">Call 911</a>
+      <a class="retry" href="/">Try again</a>
+
+      <p class="muted" style="margin-top: 16px">
+        If you already sent a request, volunteers are still being texted. Keep your phone on — the
+        one who takes it will call you directly.
+      </p>
+
+      <hr />
+
+      <h1>Está sin conexión</h1>
+      <p class="muted">
+        No podemos comunicarnos con la red ahora mismo. Su solicitud sigue de nuestro lado; no se
+        perdió nada.
+      </p>
+
+      <div class="emergency">
+        <strong>¿Hay alguien herido o en peligro?</strong>
+        <p style="margin: 8px 0 0">
+          Llame al 911. Las llamadas de emergencia pasan por redes que no alcanzan a cargar una
+          página web.
+        </p>
+      </div>
+
+      <a class="call" href="tel:911">Llamar al 911</a>
+      <a class="retry" href="/es">Intentar de nuevo</a>
+
+      <p class="muted" style="margin-top: 16px">
+        Si ya envió una solicitud, seguimos avisando a los voluntarios. Mantenga el teléfono
+        encendido: el que la tome lo llamará directamente.
+      </p>
+    </main>
+  </body>
+</html>
