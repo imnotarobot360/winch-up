@@ -16,7 +16,7 @@ Product rules, flow and conventions live in [CLAUDE.md](./CLAUDE.md). Read that 
 | **M1** | schema + migrations + RLS + seed data | **code complete, not yet run** |
 | **M2** | `/request` + `/r` status page + requester SMS | **code complete, not yet run** |
 | **M3** | responder signup + dispatch engine + inbound webhook + tests | **code complete, not yet run** |
-| M4 | `/board`, `/post`, `/admin` | not started |
+| **M4** | `/board`, `/post`, `/admin` | **code complete, not yet run** |
 | M5 | PWA polish, i18n pass, README, deploy to Vercel | not started |
 
 > **Nothing here has been executed.** M1 and M2 were both written on a machine with no Node.js,

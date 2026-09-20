@@ -113,16 +113,39 @@ Each milestone ends with a commit and something you can actually look at or run.
 
 ---
 
-## M4 — `/board`, `/post/[id]`, `/admin`
+## M4 — `/board`, `/post/[code]`, `/admin`  *(code complete, not yet run)*
 
-1. `/board` from `board_requests()`: blurred pins, no names, no phones, live counts, filterable
-   by county. Works logged out.
-2. `/post/[id]`: the Facebook post text the group admins already require, with a Copy button, the
-   `/r` link, and the `#### Recovered ####` variant once closed. No API posting — ever.
-3. Admin intake form: create a request from a pasted Facebook post, `location_source =
-   'admin_intake'`.
-4. `/admin`: live Mapbox map of open requests + volunteers, queue with SLA timers, manual dispatch
-   and reassign, approve/reject/ban volunteers, edit waiver versions and `pro_options`, audit log.
+**Shipped**
+
+- `supabase/migrations/20260920003000_admin.sql` — thirteen `admin_*` RPCs, each one starting
+  with `app.require_admin()` and each mutating one writing an audit row. Granted to
+  `authenticated`, not to a shared key: the console runs in the browser as the signed-in admin
+  and the gate is `auth.uid()`.
+- `/board` — the public feed. Blurred pins, no names, no phones, open/all filter, 30 s polling.
+  Read through the **anon** client on purpose: if the grant on `board_requests()` is ever wrong,
+  the page breaks loudly instead of quietly serving data it should not have.
+- `/post/[code]` — the group post, in the format the admins already require, with the
+  `#### Recovery Needed ####` / `#### Recovered ####` header they scan for, the status link, and
+  a Copy button. `[code]` is the request's own status token, so exactly the people who can open
+  the status page can generate the post. Facebook killed the Groups API; there is no auto-post
+  and the page says so.
+- `/admin` — five tabs behind a server-side role check:
+  - **Queue**, oldest first, with an age in minutes and a loud flag past the unmatched
+    threshold, the requester's phone as a tap-to-call link, and manual dispatch or reassign to a
+    named volunteer.
+  - **Volunteers** — approve, reject, ban, with a reason kept on file.
+  - **Intake** — paste a Facebook post, resolve the location, create a real request that joins
+    the normal dispatch flow as `location_source = 'admin_intake'`.
+  - **Settings** — dispatch tuning as JSON, the paid-recovery list, legal copy (publishing always
+    creates a new version, never edits what people already agreed to), and the blocklist.
+  - **Audit log** — read-only. There is no RPC that edits or deletes an audit row.
+
+**Open**
+
+- The admin map is a list plus per-row "open the pin", not a live Mapbox canvas. The queue answers
+  "what has been sitting too long" better than a map does; a map is worth adding once there is
+  enough concurrent traffic to need one.
+- Still nothing executed.
 
 ---
 
