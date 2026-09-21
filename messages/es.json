@@ -4,6 +4,14 @@
     "motto": "Ningún vehículo se queda atrás.",
     "tagline": "Vecinos con winche, no una factura de grúa."
   },
+  "nav": {
+    "label": "Principal",
+    "home": "Inicio",
+    "board": "Tablero",
+    "getHelp": "Ayuda",
+    "volunteer": "Voluntario",
+    "rules": "Reglas"
+  },
   "home": {
     "stuckCta": "Estoy atascado — necesito ayuda",
     "emergencyNote": "Si hay heridos, si alguien está en el agua o en el tráfico, llame primero al 911. Somos voluntarios, no servicios de emergencia.",

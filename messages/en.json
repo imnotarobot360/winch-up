@@ -4,6 +4,14 @@
     "motto": "No rig left behind.",
     "tagline": "Neighbors with winches, not a tow bill."
   },
+  "nav": {
+    "label": "Main",
+    "home": "Home",
+    "board": "Board",
+    "getHelp": "Get help",
+    "volunteer": "Volunteer",
+    "rules": "Rules"
+  },
   "home": {
     "stuckCta": "I'm stuck — get help",
     "emergencyNote": "If anyone is hurt, in water, or in traffic, call 911 first. We are volunteers, not emergency services.",

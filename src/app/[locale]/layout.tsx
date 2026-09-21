@@ -5,6 +5,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { AppHeader } from "@/components/chrome/app-header";
+import { BottomNav } from "@/components/chrome/bottom-nav";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import { APP_NAME } from "@/config/app";
 import { routing } from "@/i18n/routing";
@@ -73,7 +75,11 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} className={`${inter.variable} ${bebas.variable}`}>
       <body className="min-h-dvh bg-surface text-ink antialiased">
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <AppHeader />
+          {children}
+          <BottomNav />
+        </NextIntlClientProvider>
         <RegisterServiceWorker />
       </body>
     </html>
