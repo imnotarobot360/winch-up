@@ -72,7 +72,7 @@ begin
       'sms_failed', (select count(*) from public.sms_messages where state = 'failed')
     ),
     'queue', coalesce((
-      select jsonb_agg(row_to_json(q) order by q.created_at)
+      select jsonb_agg(to_jsonb(q) order by q.created_at)
         from (
           select
             r.id,
@@ -142,7 +142,7 @@ begin
   perform app.require_admin();
 
   return coalesce((
-    select jsonb_agg(row_to_json(x) order by x.created_at desc)
+    select jsonb_agg(to_jsonb(x) order by x.created_at desc)
       from (
         select
           r.id, r.first_name, r.last_name, r.phone, r.locale,

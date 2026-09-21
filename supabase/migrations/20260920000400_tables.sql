@@ -341,3 +341,47 @@ create table audit_log (
 
 create index audit_log_created_idx on audit_log (created_at desc);
 create index audit_log_entity_idx  on audit_log (entity, entity_id);
+
+-- ===========================================================================
+-- Identity helpers
+--
+-- These live here rather than with the other helpers in 20260920000300 because they read
+-- `user_roles` and `responders`. Postgres parses a `language sql` body at CREATE FUNCTION time
+-- (`check_function_bodies` defaults to on), so defining them before the tables exist would fail
+-- the migration outright.
+--
+-- Both are `security definer` so they can read those tables regardless of the tables' own
+-- policies — which is also what stops the policy-on-user_roles-calls-is_admin recursion.
+-- ===========================================================================
+
+create or replace function app.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, extensions, pg_temp
+as $$
+  select exists (
+    select 1 from public.user_roles
+    where user_id = auth.uid() and role = 'admin'
+  );
+$$;
+
+create or replace function app.current_responder_id()
+returns uuid
+language sql
+stable
+security definer
+set search_path = public, extensions, pg_temp
+as $$
+  select id from public.responders where user_id = auth.uid();
+$$;
+
+-- RLS policy expressions are evaluated with the privileges of the querying role, and the
+-- policies in the next migration call both of these. Without EXECUTE, every policy that uses
+-- them raises instead of returning false.
+revoke execute on function app.is_admin()             from public;
+revoke execute on function app.current_responder_id() from public;
+
+grant execute on function app.is_admin()             to anon, authenticated, service_role;
+grant execute on function app.current_responder_id() to anon, authenticated, service_role;

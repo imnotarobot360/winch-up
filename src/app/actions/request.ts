@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { after } from "next/server";
 
+import { reverseGeocodeCounty } from "@/lib/geocode-server";
 import { drainSmsOutbox } from "@/lib/sms/drain";
 import { clientIpFrom, supabaseAdmin } from "@/lib/supabase/admin";
 import { toRpcPayload, validateRequest } from "@/lib/validation/request";
@@ -50,17 +51,31 @@ export async function createRequestAction(raw: unknown): Promise<CreateRequestRe
   }
 
   const result = data as
-    | { ok: true; token: string; short_code: string; replayed: boolean }
+    | { ok: true; request_id: string; token: string; short_code: string; replayed: boolean }
     | { ok: false; error: string };
 
   if (!result?.ok) {
     return { ok: false, error: result?.error ?? "server_error" };
   }
 
-  // Send the status link straight away rather than waiting up to a minute for the tick.
-  // `after` runs once the response is on its way, so a slow Twilio call does not keep a
+  // Everything below runs once the response is on its way, so a slow third party never keeps a
   // stranded driver staring at a spinner.
   after(async () => {
+    // County first: the volunteer offer text reads much better with it, and the first ring does
+    // not go out until the next tick, so there is time.
+    try {
+      const county = await reverseGeocodeCounty(parsed.data.lat, parsed.data.lng);
+      if (county) {
+        await supabaseAdmin()
+          .from("requests")
+          .update({ county })
+          .eq("id", result.request_id);
+      }
+    } catch (geocodeError) {
+      console.error("[create_request] county lookup failed", geocodeError);
+    }
+
+    // Then the status link, rather than waiting up to a minute for the tick.
     try {
       await drainSmsOutbox(5);
     } catch (drainError) {

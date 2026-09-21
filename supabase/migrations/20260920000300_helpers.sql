@@ -141,31 +141,11 @@ $$;
 -- ---------------------------------------------------------------------------
 -- Identity
 -- ---------------------------------------------------------------------------
-
--- security definer so it can read user_roles regardless of that table's own policies
--- (which prevents the policy-on-user_roles-calls-is_admin recursion).
-create or replace function app.is_admin()
-returns boolean
-language sql
-stable
-security definer
-set search_path = public, extensions, pg_temp
-as $$
-  select exists (
-    select 1 from public.user_roles
-    where user_id = auth.uid() and role = 'admin'
-  );
-$$;
-
-create or replace function app.current_responder_id()
-returns uuid
-language sql
-stable
-security definer
-set search_path = public, extensions, pg_temp
-as $$
-  select id from public.responders where user_id = auth.uid();
-$$;
+--
+-- `app.is_admin()` and `app.current_responder_id()` are NOT here. They read `user_roles` and
+-- `responders`, and Postgres parses a `language sql` body at CREATE FUNCTION time
+-- (`check_function_bodies` is on by default), so defining them before those tables exist fails
+-- the whole migration. They live at the end of 20260920000400_tables.sql instead.
 
 -- ---------------------------------------------------------------------------
 -- Rate limiting
@@ -226,5 +206,6 @@ revoke execute on all functions in schema app from public;
 revoke execute on all functions in schema app from anon, authenticated;
 
 grant execute on all functions in schema app to service_role;
-grant execute on function app.is_admin()             to anon, authenticated;
-grant execute on function app.current_responder_id() to anon, authenticated;
+
+-- The two identity helpers that RLS policies call are granted to anon/authenticated at the end
+-- of 20260920000400_tables.sql, where they are defined.

@@ -429,6 +429,12 @@ begin
     return jsonb_build_object('ok', false, 'error', 'not_found');
   end if;
 
+  -- Closed states first. A request that was accepted and then cancelled still carries a
+  -- responder id, and telling that volunteer "already covered" would be a lie — it is over.
+  if req.status in ('recovered', 'cancelled', 'expired') then
+    return jsonb_build_object('ok', false, 'error', 'already_closed', 'status', req.status);
+  end if;
+
   if req.accepted_responder_id is not null then
     return jsonb_build_object(
       'ok', false,

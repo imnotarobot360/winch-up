@@ -195,3 +195,43 @@ Each milestone ends with a commit and something you can actually look at or run.
 | Admin reads of private columns go through an RPC | Supabase gives admins the same `authenticated` DB role as volunteers, so column grants cannot tell them apart |
 | SMS copy lives in TypeScript, not SQL | the state machine queues a template key and params; the sender renders EN or ES |
 | US-only E.164 phone format | the two Facebook groups are Texas-only |
+
+---
+
+## Static review pass
+
+A read-through of all five milestones hunting for what a compiler, a migration run or a test run
+would have caught. Nothing here was found by executing anything — the toolchain is still absent.
+
+### Fixed
+
+| What | Severity | |
+|---|---|---|
+| `app.is_admin()` and `app.current_responder_id()` were defined in `…0300_helpers.sql` as `language sql`, reading `user_roles` and `responders` — tables created in `…0400`. Postgres parses a SQL function body at `CREATE FUNCTION` time, so migration 0300 would have failed and **nothing would have applied at all**. | blocker | moved to the end of `…0400_tables.sql`, with their grants |
+| `dispatch_test.sql` shared a database with the demo seed, and one demo volunteer lives at exactly the coordinates the fixtures use — so ring counts depended on demo data, and on the time of day, because that volunteer has night calls off. | test would fail, intermittently | the test now parks every non-fixture volunteer first |
+| `create_request` never received `county`; `toRpcPayload` did not send it. Volunteer offer texts would never have said which county a job was in — which is how these groups describe location. | functional gap | reverse-geocoded from Mapbox in `after()`, so it lands before the first ring goes out and costs the requester no latency |
+| `/admin/settings` fetched with the service-role key. Next renders layouts and pages in parallel, so that query ran even for signed-out visitors about to be shown the sign-in screen. | minor | reads through the session client; the `pro_options` policy already expresses the rule |
+| `app.accept_request` returned `already_covered` for a request that had been accepted and *then* cancelled. | wrong message | closed states are checked first |
+| Icon route positioned a child absolutely inside a parent with no `position`, which Satori ignores. | cosmetic | parent is `relative` |
+| No root `app/not-found.tsx`. Paths the middleware skips (anything with a file extension) would render the bare root layout, which has no `<html>`. | edge case | added, rendering its own document |
+| `jsonb_agg(row_to_json(...))` in two admin RPCs. | works, but relies on an implicit json→jsonb conversion | `to_jsonb` |
+
+### Checked and clean
+
+- **Every literal translation key** in `src/` resolves in `messages/en.json`, and both catalogues
+  hold the same 529 keys with matching ICU placeholders.
+- **Every `rpc()` call** — 32 call sites, including the ones routed through `adminAction`,
+  `useAdminData` and local `run()` wrappers — names a function that exists in the migrations,
+  with parameter names that exist on it.
+- **All 30 functions created after the blanket `revoke execute … from public` in `…0700`** have
+  their own explicit revoke. None silently inherits PUBLIC execute.
+- No client component reads a non-`NEXT_PUBLIC_` environment variable or imports a `server-only`
+  module.
+- Every `params` in a page or route handler is typed as a `Promise` (Next 15).
+- No stray control bytes in any tracked file.
+
+### Still unverified, and only running it will tell
+
+Dependency resolution, type-checking, JSX correctness, whether next-intl v4 and Tailwind v4 behave
+as written, whether the pgTAP assertions hold, and every runtime path. The review narrows the
+odds; it does not replace `npm install && npm run build` and `supabase test db`.

@@ -1,14 +1,20 @@
 import { AdminSettings } from "@/components/admin/admin-settings";
-import { supabaseAdmin } from "@/lib/supabase/admin";
+import { supabaseServer } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 /**
- * The paid-recovery list is loaded server-side because it includes rows that are hidden from
- * the public board, which the anon client cannot read.
+ * Read through the session client, not the service role.
+ *
+ * Next renders layouts and pages in parallel, so this runs even when the admin layout is about
+ * to replace it with the sign-in screen. The `pro_options` policy already says the right thing —
+ * active rows for anyone, every row for an admin — so letting RLS decide means an unauthenticated
+ * request does no privileged work at all.
  */
 export default async function AdminSettingsPage() {
-  const { data } = await supabaseAdmin()
+  const supabase = await supabaseServer();
+
+  const { data } = await supabase
     .from("pro_options")
     .select("id, name, phone, url, blurb_en, blurb_es, is_active, sort_order")
     .order("sort_order");

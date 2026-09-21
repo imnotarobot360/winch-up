@@ -31,6 +31,15 @@ select no_plan();
 
 create temporary table t_ids (name text primary key, id uuid not null);
 
+-- Park everybody else first.
+--
+-- `supabase db reset` loads the demo seed into the same database, and one of those volunteers
+-- lives at exactly the coordinates these fixtures use. Without this, ring counts depend on the
+-- demo data — and on the time of day, since that volunteer has night calls switched off. The
+-- rollback at the end puts them all back.
+update responders set availability = 'paused'
+ where id::text not like 'aaaa0001%';
+
 insert into responders (
   id, phone, first_name, home_location, radius_miles, equipment,
   vehicle_class, drivetrain, approval, approved_at, availability, night_ok, is_test

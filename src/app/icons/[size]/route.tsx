@@ -34,6 +34,8 @@ export async function GET(
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          // Satori only honours an absolutely positioned child inside a positioned parent.
+          position: "relative",
           background: "#e2560f",
         }}
       >
