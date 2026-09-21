@@ -31,20 +31,43 @@ Product rules, flow and conventions live in [CLAUDE.md](./CLAUDE.md). Read that 
 | all 11 migrations + both seeds | apply clean from an empty database |
 | `privacy_rls_test.sql` | **58 / 58** |
 | `dispatch_test.sql` | **59 / 59** |
-| Browser | landing, `/request` (through the 911 gate into the location step, resolving a pasted Google Maps URL), `/board`, `/es`, and the offline page |
+| Browser | landing, `/board`, `/es`, the offline page, and the complete requester journey below |
 
-The database work was verified against a local PostgreSQL 17.7 + PostGIS 3.6 + pgTAP, with the
-Supabase-specific objects (`auth.uid()`, `auth.users`, `storage.*`, the `anon` /`authenticated` /
-`service_role` roles and Supabase's default privileges) stubbed in. That is close but **not
-identical** to a real Supabase instance.
+**A whole recovery, start to finish**, against a real Postgres through real PostgREST:
+
+1. Filled in all eight `/request` screens. Pasting a phone number into the public notes field was
+   caught and blocked before submit.
+2. Submitted → `create_request` → **TX-JBZZ**, redirected to the status page.
+3. `[sms:dry-run] to=+19365550177 … Status: http://…/r/DNA0SL6v…` — phone normalised to E.164,
+   real token in the link.
+4. Ran the tick. Ring 1 reached Rosa at **13.33 mi**, who got it in Spanish:
+   *"Troca atascado a 13.33 mi de usted. Lodo, Hasta el chasis… Responda 1 para tomarlo."*
+5. Posted `Body=1 45` to the Twilio webhook as Rosa. She held two open offers; it landed on the
+   right one — the `queued_at` fix earning its keep.
+6. Rosa got the requester's name, number and **exact** pin. The requester got
+   *"Rosa is coming, about 45 min out. Ram 3500 dually, tractor on trailer. Call (936) 555-0102."*
+7. Status page: "Volunteer on the way", tap-to-call, timeline in order.
+8. Marked recovered with a thank-you → Rosa received
+   *"Dale le da las gracias — …"* in Spanish. Her recovery count went 31 → 32.
+
+The database work ran against a local PostgreSQL 17.7 + PostGIS 3.6 + pgTAP, and the app against
+PostgREST 16.3 behind a gateway reproducing Supabase's `/rest/v1` layout — see
+[scripts/local-stack](./scripts/local-stack/README.md). Real RLS, real JWT role switching, real
+PostgREST. Still **not** a Supabase instance.
 
 ### Still unverified
 
 - `supabase start` / `db reset` / `test db` through the real CLI — needs Docker, which needs
   admin rights this machine does not have.
-- Anything that talks to the Supabase REST API at runtime: submitting a request end to end,
-  phone OTP, Storage uploads, `/me`, `/admin`.
+- **Phone OTP and photo upload**, so `/join`, `/me` and `/admin` are unexercised: GoTrue and
+  storage-api are not part of the local stack.
 - Twilio, Mapbox, and the `pg_cron` → Edge Function tick — all need live third-party accounts.
+- `county` is never populated locally (no Mapbox token), so offer texts omit it. It degrades
+  cleanly, as intended.
+
+If this machine cannot run Docker, `scripts/local-stack/README.md` assembles enough of
+Supabase (PostgREST against a local Postgres) to develop and test the whole requester and
+dispatch path without it.
 
 Day-to-day operations — what to do when texts stop going out, when a request sits too long,
 when a volunteer says they never got called — live in [docs/runbook.md](./docs/runbook.md).

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useNow, useTranslations } from "next-intl";
 
 import { Callout, Card } from "@/components/ui/primitives";
 import { BOARD } from "@/config/app";
@@ -43,6 +43,11 @@ export function BoardList({ initial }: { initial: BoardRow[] }) {
   const t = useTranslations("board");
   const tEnum = useTranslations("enum");
   const format = useFormatter();
+
+  // Relative times need an explicit `now`. Without one the server and the client each compute
+  // their own and next-intl warns about the hydration mismatch that follows. The update interval
+  // matches the poll below, so "3 minutes ago" ticks over with the data.
+  const now = useNow({ updateInterval: POLL_MS });
 
   const [rows, setRows] = useState(initial);
   const [filter, setFilter] = useState<"open" | "all">("open");
@@ -132,7 +137,7 @@ export function BoardList({ initial }: { initial: BoardRow[] }) {
               <p className="text-base text-ink-soft">
                 {row.county ? t("county", { county: row.county, state: row.state }) : row.state}
                 {" · "}
-                {format.relativeTime(new Date(row.created_at))}
+                {format.relativeTime(new Date(row.created_at), now)}
               </p>
 
               {row.needs_tractor ? (

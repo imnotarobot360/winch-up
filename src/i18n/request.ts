@@ -15,5 +15,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     locale,
     messages: (await import(`../../messages/${locale}.json`)).default,
     timeZone: DISPLAY_TIME_ZONE,
+    // Pin the instant the server rendered at, so relative times hydrate to the same value.
+    now: new Date(),
   };
 });
