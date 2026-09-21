@@ -18,16 +18,16 @@ export default function GlobalNotFound() {
           margin: 0,
           padding: "48px 16px",
           font: '18px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
-          color: "#0b0f14",
+          color: "#f2f5f3",
           background: "#fff",
           textAlign: "center",
         }}
       >
         <main style={{ maxWidth: "32rem", margin: "0 auto" }}>
           <h1 style={{ fontSize: "1.75rem", margin: "0 0 8px" }}>Page not found</h1>
-          <p style={{ color: "#3d4754" }}>Página no encontrada</p>
+          <p style={{ color: "#b6c6bd" }}>Página no encontrada</p>
           <p style={{ marginTop: 24 }}>
-            <Link href="/" style={{ color: "#bc4d00", fontWeight: 700 }}>
+            <Link href="/" style={{ color: "#ff9147", fontWeight: 700 }}>
               Go to Winch Up
             </Link>
           </p>

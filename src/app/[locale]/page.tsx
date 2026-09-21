@@ -39,7 +39,7 @@ export default async function HomePage({
             priority
           />
         </h1>
-        <p className="mt-2 text-lg text-white">{tApp("tagline")}</p>
+        <p className="mt-2 text-lg text-ink">{tApp("tagline")}</p>
       </header>
 
       {/* The only thing on this page that matters to someone who is actually stuck. */}

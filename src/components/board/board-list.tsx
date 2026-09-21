@@ -126,7 +126,7 @@ export function BoardList({ initial }: { initial: BoardRow[] }) {
                 <span
                   className={`shrink-0 rounded-full px-3 py-1 text-sm font-semibold ${
                     OPEN.includes(row.status)
-                      ? "bg-brand-tint text-brand-dark"
+                      ? "bg-brand-tint text-brand-text"
                       : "bg-good-tint text-good"
                   }`}
                 >

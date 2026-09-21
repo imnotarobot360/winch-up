@@ -31,7 +31,11 @@ export function Button({
         // label that wraps -- which Spanish does and English often does not -- left-aligns its
         // second line.
         "inline-flex w-full items-center justify-center gap-2 rounded-field text-center font-semibold",
-        "transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+        "transition-colors disabled:cursor-not-allowed",
+        // A disabled control gets an inert fill, not reduced opacity. Half-opacity orange over
+        // the dark page blends to #844008, which reads as a brown button rather than a disabled
+        // one, and drops its charcoal label to 2.25:1. An explicit fill holds 6.10:1.
+        "disabled:border-2 disabled:border-line disabled:bg-surface-sunk disabled:text-ink-faint",
         size === "lg" ? "tap-target px-6 text-lg" : "min-h-12 px-4 text-base",
         variant === "primary" && "bg-brand text-on-brand hover:bg-brand-hover active:bg-brand-hover",
         variant === "secondary" &&

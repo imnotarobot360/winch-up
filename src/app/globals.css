@@ -9,42 +9,47 @@
 
 @theme {
   /*
-   * Winch Up brand system: Trail Green, Recovery Orange, Charcoal, Summit Gray, Sand.
+   * Winch Up, dark. Every screen in the brand mockups is dark, anchored on Trail Green.
    *
-   * One rule governs the orange. Recovery Orange is a FILL, never text on a light background:
-   * #ff6a00 on white is 2.87:1, which fails even the large-text threshold. Labels sitting on it
-   * are charcoal (6.06:1), and where the orange has to carry text on a light surface we use
-   * --color-brand-dark instead (5.00:1 on white, 4.67:1 on sand).
+   * Derived from the brand colours rather than sampled from the mockup render, because that
+   * render carries shadows and gradients that would bake artefacts into the tokens. Every
+   * pairing below is measured; the numbers are in the comments.
+   *
+   * The known tension: the brief asks for readability on a three-year-old Android in direct
+   * Texas sun, and dark UI is the harder case for that. Contrast here is therefore pushed well
+   * past the minimum -- body text sits at 17:1, not at the 4.5:1 floor.
    */
 
-  --color-ink: #1a1a1a;
-  --color-ink-soft: #4a4a4a;
-  --color-ink-faint: #6e6e6e;
+  /* Text. */
+  --color-ink: #f2f5f3;        /* 17.01:1 on page, 14.84:1 on card */
+  --color-ink-soft: #b6c6bd;   /* 10.49:1 on page */
+  --color-ink-faint: #8fa398;  /*  6.99:1 on page */
 
-  --color-surface: #ffffff;
-  --color-surface-sunk: #f9f7f2;
-  --color-line: #949494;
+  /* Surfaces. A card is delineated by its border, not its fill: no fill light enough to reach
+     3:1 against the page would still read as a dark surface. */
+  --color-surface: #08150f;
+  --color-surface-sunk: #10241a;
+  --color-line: #44795d;       /* 3.21:1 against the card, per WCAG 1.4.11 */
 
-  /* Trail Green. Dark surfaces, the app icon, and anywhere the orange has to sing:
-     orange on Trail Green is 5.19:1, white on it is 14.90:1. */
   --color-trail: #0b2d1f;
   --color-trail-soft: #14402d;
   --color-trail-line: #1e4d38;
 
-  /* Recovery Orange. The one loud accent, reserved for the action that matters. */
+  /* Recovery Orange. On this page it finally works as text (6.50:1) -- on white it was 2.87:1
+     and unusable. Labels on an orange fill stay charcoal (6.06:1); white on orange is 2.87:1
+     and fails at any size. */
   --color-brand: #ff6a00;
   --color-brand-hover: #e85f00;
-  --color-brand-dark: #bc4d00;
-  --color-brand-tint: #fff1e6;
+  --color-brand-text: #ff9147;  /* 7.69:1 on brand-tint */
+  --color-brand-tint: #2b1608;
   --color-on-brand: #1a1a1a;
 
-  --color-danger: #b3261e;
-  --color-danger-tint: #fdeceb;
-  --color-good: #146c43;
-  --color-good-tint: #e7f4ed;
+  /* Status colours lightened for a dark page: the light-theme values were 2.86:1 and 2.90:1. */
+  --color-danger: #ff6b61;      /* 6.69:1 on page */
+  --color-danger-tint: #2a1311;
+  --color-good: #5fd39b;        /* 10.03:1 on page */
+  --color-good-tint: #0d2a1e;
 
-  /* Bebas Neue for headlines, Inter for everything read under stress. Both carry latin-ext,
-     so Spanish accents and inverted punctuation render in the display face too. */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: var(--font-bebas), "Arial Narrow", ui-sans-serif, sans-serif;
 
@@ -52,7 +57,7 @@
 }
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 html {
