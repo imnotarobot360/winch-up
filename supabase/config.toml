@@ -15,8 +15,13 @@ major_version = 15
 
 [db.seed]
 enabled = true
-# Reference data first, then local-only demo data.
-sql_paths = ["./seed.sql", "./seeds/demo.sql"]
+# Reference data ONLY.
+#
+# `supabase db push --include-seed` runs this list against whatever project is on the other end,
+# including production. seeds/demo.sql creates auth users with a password that is written down in
+# the README, so it must never be reachable that way. Load it deliberately for local work:
+#   psql "$LOCAL_DB_URL" -f supabase/seeds/demo.sql
+sql_paths = ["./seed.sql"]
 
 [studio]
 enabled = true

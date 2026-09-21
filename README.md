@@ -142,9 +142,16 @@ supabase start
 supabase db reset
 ```
 
-That applies every migration in `supabase/migrations/` in order, then loads
-`supabase/seed.sql` (settings, versioned waiver text, the paid-options placeholder) followed by
-`supabase/seeds/demo.sql` (demo volunteers and five demo requests, local only).
+That applies every migration in `supabase/migrations/` in order, then loads `supabase/seed.sql`
+(settings, versioned waiver text, the paid-options placeholder).
+
+The demo data is deliberately NOT in the seed list, because `supabase db push --include-seed`
+would then run it against production, and it creates auth users whose password is printed below.
+Load it by hand when you want it locally:
+
+```bash
+psql "$LOCAL_DB_URL" -f supabase/seeds/demo.sql
+```
 
 Demo logins created by the seed — **local only**, password `recovery-demo-2026`:
 
