@@ -3,6 +3,10 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { LegalDocument } from "@/components/legal/legal-document";
 
+// The waiver text is versioned in the database. An admin who publishes a new version needs it
+// live now, not at the next deploy, so this page is never prerendered.
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: {

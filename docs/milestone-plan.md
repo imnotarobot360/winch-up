@@ -235,3 +235,40 @@ would have caught. Nothing here was found by executing anything — the toolchai
 Dependency resolution, type-checking, JSX correctness, whether next-intl v4 and Tailwind v4 behave
 as written, whether the pgTAP assertions hold, and every runtime path. The review narrows the
 odds; it does not replace `npm install && npm run build` and `supabase test db`.
+
+---
+
+## First execution
+
+Node turned out to be on the machine all along at `C:\nodejs` (v20.18), referenced by the
+workspace's own `launch.json` — it was simply not on `PATH` and not in any of the usual
+locations. Node 24.21 LTS is now installed properly and everything below was run against it.
+
+Docker still is not available (it needs admin rights), so the Supabase CLI could not run. The
+database was instead verified against a local PostgreSQL 17.7 + PostGIS 3.6 + pgTAP with the
+Supabase-specific objects stubbed: `auth.users`, `auth.uid()`, `auth.jwt()`, `storage.buckets`,
+`storage.objects`, the three roles, and — importantly — Supabase's blanket default privileges on
+`public`, without which the `revoke all` in the RLS migration would have been a no-op and the
+privacy tests would have passed for the wrong reason.
+
+### What running it found
+
+| Bug | How bad | Found by |
+|---|---|---|
+| `CASE WHEN … THEN 'responder' ELSE 'system' END` resolves to `text`, and there is no implicit text → enum cast, so the timeline trigger threw on **every status change**. The dispatch engine could not advance a single request; the product was dead on arrival. | fatal | `dispatch_test.sql`, first assertion that changes a status |
+| The middleware matcher was written `"/((?!api\|_next\|_vercel\|.*\..*).*)"` with a single backslash. In a JS string `"\."` collapses to `"."`, so the pattern became `.*..*` and excluded every path of two or more characters. The locale middleware only ever ran for `/`; every unprefixed English URL 404'd, including the `/r/<token>` link texted to a stranded driver. | fatal | opening `/request` in a browser |
+| `to_jsonb(r) \|\| jsonb_build_object(...) - 'location'` — Postgres binds binary `-` tighter than `\|\|`, so the key removal applied to the small lat/lng object and the admin RPC returned raw WKB geography blobs. | wrong output | `privacy_rls_test.sql`, the assertion written for exactly this |
+| `dispatches.queued_at` defaulted to `now()`, which is the **transaction** timestamp — so every offer created in one dispatch tick shared a timestamp and "the most recent open offer" was a coin flip. A volunteer replying `1` could accept a different job than the one they were texted about. | wrong behaviour | `dispatch_test.sql` inbound-SMS section |
+| `/terms` and `/waiver` were prerendered at build time, so a newly published waiver version would not appear until the next deploy — defeating the point of versioning the copy in the database. They also used the service-role key for a page that reads a publicly-readable row. | design bug | `next build` failing on missing env |
+| The Deno Edge Function was being swept into the Next.js `tsc` run. | noise | `tsc --noEmit` |
+| `not-found.tsx` used a raw `<a>`. | lint | `next build` |
+| `check-messages.mjs` — the i18n gate itself — flagged every correctly translated ICU plural, because its regex treated single-word plural branches like `=0 {Open}` as placeholders. | false alarms on a build gate | running it |
+
+Five of those eight are things no amount of re-reading had caught, including both fatal ones.
+
+### Where it stands
+
+Everything that can be executed on this machine passes: install, typecheck, lint, build, the
+i18n gate, all 11 migrations, both seeds, and 117 pgTAP assertions. The parts that need Docker,
+Supabase's REST layer, Twilio, Mapbox or a real phone remain unverified and are listed in the
+README.

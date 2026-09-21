@@ -42,5 +42,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   // Everything except API routes, Next internals and files with an extension.
-  matcher: ["/((?!api|_next|_vercel|.*\..*).*)"],
+  //
+  // The backslash must be doubled: this is a JS string, so "\\." is what the regex engine
+  // receives as `\.`. Written as "\." it collapses to ".", the pattern becomes `.*..*`, and the
+  // matcher then excludes every path of two or more characters — which silently 404s every
+  // unprefixed URL in the app while the bare "/" keeps working.
+  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
 };

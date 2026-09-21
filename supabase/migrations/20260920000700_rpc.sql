@@ -96,7 +96,7 @@ begin
     'timeline', coalesce((
       select jsonb_agg(jsonb_build_object(
                'type', e.event_type, 'at', e.created_at, 'data', e.data
-             ) order by e.created_at)
+             ) order by e.created_at, e.id)
         from public.request_events e
        where e.request_id = r.id and e.is_public
     ), '[]'::jsonb),
@@ -324,12 +324,14 @@ begin
     return null;
   end if;
 
-  return to_jsonb(r)
+  -- The parentheses matter: Postgres binds binary `-` tighter than `||`, so without them the
+  -- key removal applies to the little lat/lng object instead of the row, and the raw geography
+  -- blobs stay in the payload.
+  return (to_jsonb(r) - 'location' - 'approx_location')
          || jsonb_build_object(
               'lat', extensions.st_y(r.location::extensions.geometry),
               'lng', extensions.st_x(r.location::extensions.geometry)
-            )
-         - 'location' - 'approx_location';
+            );
 end;
 $$;
 

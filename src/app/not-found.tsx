@@ -8,6 +8,8 @@
  *
  * No translations here: there is no locale to read at this point in the tree.
  */
+import Link from "next/link";
+
 export default function GlobalNotFound() {
   return (
     <html lang="en">
@@ -25,9 +27,9 @@ export default function GlobalNotFound() {
           <h1 style={{ fontSize: "1.75rem", margin: "0 0 8px" }}>Page not found</h1>
           <p style={{ color: "#3d4754" }}>Página no encontrada</p>
           <p style={{ marginTop: 24 }}>
-            <a href="/" style={{ color: "#e2560f", fontWeight: 700 }}>
+            <Link href="/" style={{ color: "#e2560f", fontWeight: 700 }}>
               Go to TxRecover
-            </a>
+            </Link>
           </p>
         </main>
       </body>

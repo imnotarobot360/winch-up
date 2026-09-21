@@ -13,26 +13,41 @@ Product rules, flow and conventions live in [CLAUDE.md](./CLAUDE.md). Read that 
 
 | Milestone | Scope | Status |
 |---|---|---|
-| **M1** | schema + migrations + RLS + seed data | **code complete, not yet run** |
-| **M2** | `/request` + `/r` status page + requester SMS | **code complete, not yet run** |
-| **M3** | responder signup + dispatch engine + inbound webhook + tests | **code complete, not yet run** |
-| **M4** | `/board`, `/post`, `/admin` | **code complete, not yet run** |
-| **M5** | PWA polish, i18n pass, README, deploy to Vercel | **code complete, not yet run** |
+| **M1** | schema + migrations + RLS + seed data | built and verified |
+| **M2** | `/request` + `/r` status page + requester SMS | built, partly verified |
+| **M3** | responder signup + dispatch engine + inbound webhook + tests | built and verified |
+| **M4** | `/board`, `/post`, `/admin` | built, partly verified |
+| **M5** | PWA polish, i18n pass, README, deploy to Vercel | built, partly verified |
 
-> **Nothing here has been executed.** All five milestones were written on a machine with no
-> Node.js, no npm, no Docker and no Supabase CLI. That means:
->
-> - `npm install` has never run, so no dependency version in `package.json` has been resolved
-> - `npm run build` and `tsc --noEmit` have never run, so nothing is type-checked
-> - `supabase db reset` and `supabase test db` have never run, so no migration has been applied
->   and no test has passed
->
-> Treat the first run as part of the work, not as a formality. Steps 1–4 below are the next
-> action; expect to fix things. The one thing that *has* been looked at in a browser is
-> `public/offline.html`, which is plain static HTML.
->
-> Day-to-day operations — what to do when texts stop going out, when a request sits too long,
-> when a volunteer says they never got called — live in [docs/runbook.md](./docs/runbook.md).
+### What has actually been run
+
+| | |
+|---|---|
+| `npm install` | 367 packages, every version in `package.json` resolved |
+| `tsc --noEmit` | clean |
+| `next lint` | no warnings or errors |
+| `next build` | compiles, 32 pages generated — **with no `.env.local` present**, which proves nothing privileged runs at build time |
+| `check-messages.mjs` | 472 keys, EN and ES in step |
+| all 11 migrations + both seeds | apply clean from an empty database |
+| `privacy_rls_test.sql` | **58 / 58** |
+| `dispatch_test.sql` | **59 / 59** |
+| Browser | landing, `/request` (through the 911 gate into the location step, resolving a pasted Google Maps URL), `/board`, `/es`, and the offline page |
+
+The database work was verified against a local PostgreSQL 17.7 + PostGIS 3.6 + pgTAP, with the
+Supabase-specific objects (`auth.uid()`, `auth.users`, `storage.*`, the `anon` /`authenticated` /
+`service_role` roles and Supabase's default privileges) stubbed in. That is close but **not
+identical** to a real Supabase instance.
+
+### Still unverified
+
+- `supabase start` / `db reset` / `test db` through the real CLI — needs Docker, which needs
+  admin rights this machine does not have.
+- Anything that talks to the Supabase REST API at runtime: submitting a request end to end,
+  phone OTP, Storage uploads, `/me`, `/admin`.
+- Twilio, Mapbox, and the `pg_cron` → Edge Function tick — all need live third-party accounts.
+
+Day-to-day operations — what to do when texts stop going out, when a request sits too long,
+when a volunteer says they never got called — live in [docs/runbook.md](./docs/runbook.md).
 
 ---
 

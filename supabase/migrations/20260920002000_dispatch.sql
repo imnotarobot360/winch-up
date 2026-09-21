@@ -55,7 +55,10 @@ begin
       values (
         new.id,
         evt,
-        case when new.status in ('accepted', 'on_site') then 'responder' else 'system' end,
+        -- Both branches need the cast: a CASE over two bare string literals resolves to text,
+        -- and there is no implicit text -> enum cast, so this threw on every status change.
+        case when new.status in ('accepted', 'on_site')
+             then 'responder'::actor_kind else 'system'::actor_kind end,
         new.accepted_responder_id,
         jsonb_strip_nulls(jsonb_build_object(
           'from', old.status,
@@ -1013,7 +1016,7 @@ begin
    where d.responder_id = resp.id
      and d.state in ('queued', 'sent', 'delivered')
      and r.status in ('submitted', 'dispatching', 'unmatched')
-   order by d.queued_at desc
+   order by coalesce(d.sent_at, d.queued_at) desc, d.queued_at desc
    limit 1;
 
   if word in ('1', 'YES', 'Y', 'SI', 'SÍ', 'OK', 'TAKE') then

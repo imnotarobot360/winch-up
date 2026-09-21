@@ -269,7 +269,10 @@ create table dispatches (
   distance_miles numeric(6, 2) not null check (distance_miles >= 0),
   state          dispatch_state not null default 'queued',
   is_manual      boolean not null default false,   -- admin pushed this one
-  queued_at      timestamptz not null default now(),
+  -- clock_timestamp(), not now(): now() is the TRANSACTION start time, so every offer created
+  -- in one dispatch tick would share a timestamp and 'the most recent offer' would be a
+  -- coin flip.
+  queued_at      timestamptz not null default clock_timestamp(),
   sent_at        timestamptz,
   responded_at   timestamptz,
   response_text  text,
