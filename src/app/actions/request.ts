@@ -6,6 +6,7 @@ import { after } from "next/server";
 import { reverseGeocodeCounty } from "@/lib/geocode-server";
 import { drainSmsOutbox } from "@/lib/sms/drain";
 import { clientIpFrom, supabaseAdmin } from "@/lib/supabase/admin";
+import { supabaseServer } from "@/lib/supabase/server";
 import { toRpcPayload, validateRequest } from "@/lib/validation/request";
 
 export type CreateRequestResult =
@@ -17,6 +18,10 @@ export type CreateRequestResult =
  *
  * Runs server-side with the service-role key so that the IP used for rate limiting and stored
  * with the waiver acceptance is one we derived, not one the client handed us.
+ *
+ * The account id comes from the server's view of the session for the same reason. If the browser
+ * supplied it, one signed-in user could file requests in another's name -- and the waiver
+ * acceptance recorded against that row is a legal record of who agreed to what.
  */
 export async function createRequestAction(raw: unknown): Promise<CreateRequestResult> {
   const parsed = validateRequest(raw);
@@ -30,6 +35,12 @@ export async function createRequestAction(raw: unknown): Promise<CreateRequestRe
     };
   }
 
+  const {
+    data: { user },
+  } = await (await supabaseServer()).auth.getUser();
+
+  if (!user) return { ok: false, error: "account_required" };
+
   const headerList = await headers();
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
@@ -39,6 +50,9 @@ export async function createRequestAction(raw: unknown): Promise<CreateRequestRe
     ip: clientIpFrom(headerList),
     userAgent: headerList.get("user-agent"),
   });
+
+  // Never from the request body: see above.
+  (payload as Record<string, unknown>).requester_user_id = user.id;
 
   const { data, error } = await supabaseAdmin().rpc("create_request", {
     p_payload: payload,

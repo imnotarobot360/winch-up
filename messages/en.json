@@ -593,7 +593,8 @@
       "rate_limited_ip": "Too many requests from this connection. Wait a few minutes and try again.",
       "server_error": "Something broke on our end. Try again — your answers are saved.",
       "validation_failed": "Something in the form isn't right. Go back and check.",
-      "contact_info_not_allowed": "Take the phone number or link out — this part is shown publicly."
+      "contact_info_not_allowed": "Take the phone number or link out — this part is shown publicly.",
+      "account_required": "You need an account to send a request. Sign in and we'll bring you back here."
     }
   },
   "status": {

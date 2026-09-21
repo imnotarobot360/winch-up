@@ -593,7 +593,8 @@
       "rate_limited_ip": "Demasiadas solicitudes desde esta conexión. Espere unos minutos e intente de nuevo.",
       "server_error": "Algo falló de nuestro lado. Intente de nuevo; sus respuestas están guardadas.",
       "validation_failed": "Algo en el formulario no está bien. Regrese y revise.",
-      "contact_info_not_allowed": "Quite el número de teléfono o el enlace: esta parte se muestra públicamente."
+      "contact_info_not_allowed": "Quite el número de teléfono o el enlace: esta parte se muestra públicamente.",
+      "account_required": "Necesita una cuenta para enviar una solicitud. Inicie sesión y lo traemos de vuelta aquí."
     }
   },
   "status": {

@@ -149,5 +149,35 @@ select is(
   'the profile itself is removed with the account'
 );
 
+-- ---------------------------------------------------------------------------
+-- 7. A recovery request belongs to an account
+-- ---------------------------------------------------------------------------
+
+select is(
+  public.create_request(
+    jsonb_build_object('name','Test','phone','+15125550901','lat',30.2,'lng',-97.7,
+      'vehicle_class','truck','stuck_type','mud','land_type','public','locale','en'),
+    'https://example.com') ->> 'error',
+  'account_required',
+  'create_request refuses a request with no account behind it'
+);
+
+select is(
+  public.create_request(
+    jsonb_build_object('name','Test','phone','+15125550902','lat',30.2,'lng',-97.7,
+      'vehicle_class','truck','stuck_type','mud','land_type','public','locale','en',
+      'requester_user_id','00000000-0000-4000-8000-000000000002'),
+    'https://example.com') ->> 'ok',
+  'true',
+  'create_request accepts one that carries an account'
+);
+
+select is(
+  (select (requester_user_id is not null) from requests
+    where requester_phone = '+15125550902'),
+  true,
+  'the account is stored on the row, not just checked'
+);
+
 select * from finish();
 rollback;
