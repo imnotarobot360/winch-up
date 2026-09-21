@@ -44,14 +44,16 @@ export const config = {
   // Everything except API routes, the generated icons, Next internals, and files with an
   // extension.
   //
-  // `icons` has to be here: it lives outside `[locale]`, so without the exclusion the locale
-  // rewrite sends an unprefixed asset URL into the locale tree where no route exists. Every URL in the
-  // manifest then 404s and the app will not install. Files with an extension — the manifest,
-  // robots.txt, sitemap.xml, offline.html — are already covered by the extension rule.
+  // `auth` has to be here: /auth/callback lives outside `[locale]`, because the redirect URL is
+  // registered once in the Supabase dashboard and cannot vary per language. Without the
+  // exclusion the locale rewrite sends it into the locale tree where no route exists, and every
+  // emailed confirmation and password-reset link 404s on arrival. Files with an extension — the
+  // manifest, robots.txt, sitemap.xml, offline.html, /brand/*.png — are covered by the
+  // extension rule already.
   //
   // The backslash must be doubled: this is a JS string, so "\\." is what the regex engine
   // receives as `\.`. Written as "\." it collapses to ".", the pattern becomes `.*..*`, and the
   // matcher then excludes every path of two or more characters — which silently 404s every
   // unprefixed URL in the app while the bare "/" keeps working.
-  matcher: ["/((?!api|icons|_next|_vercel|.*\\..*).*)"],
+  matcher: ["/((?!api|auth|_next|_vercel|.*\\..*).*)"],
 };
