@@ -8,24 +8,45 @@
  */
 
 @theme {
-  --color-ink: #0b0f14;
-  --color-ink-soft: #3d4754;
-  --color-ink-faint: #6b7686;
-  --color-surface: #ffffff;
-  --color-surface-sunk: #f2f4f7;
-  --color-line: #d6dbe3;
+  /*
+   * Winch Up brand system: Trail Green, Recovery Orange, Charcoal, Summit Gray, Sand.
+   *
+   * One rule governs the orange. Recovery Orange is a FILL, never text on a light background:
+   * #ff6a00 on white is 2.87:1, which fails even the large-text threshold. Labels sitting on it
+   * are charcoal (6.06:1), and where the orange has to carry text on a light surface we use
+   * --color-brand-dark instead (5.00:1 on white, 4.67:1 on sand).
+   */
 
-  /* Safety orange. Used for the primary action and nothing else. */
-  --color-brand: #e2560f;
-  --color-brand-dark: #b94109;
-  --color-brand-tint: #fff1e9;
+  --color-ink: #1a1a1a;
+  --color-ink-soft: #4a4a4a;
+  --color-ink-faint: #6e6e6e;
+
+  --color-surface: #ffffff;
+  --color-surface-sunk: #f9f7f2;
+  --color-line: #949494;
+
+  /* Trail Green. Dark surfaces, the app icon, and anywhere the orange has to sing:
+     orange on Trail Green is 5.19:1, white on it is 14.90:1. */
+  --color-trail: #0b2d1f;
+  --color-trail-soft: #14402d;
+  --color-trail-line: #1e4d38;
+
+  /* Recovery Orange. The one loud accent, reserved for the action that matters. */
+  --color-brand: #ff6a00;
+  --color-brand-hover: #e85f00;
+  --color-brand-dark: #bc4d00;
+  --color-brand-tint: #fff1e6;
+  --color-on-brand: #1a1a1a;
 
   --color-danger: #b3261e;
   --color-danger-tint: #fdeceb;
   --color-good: #146c43;
   --color-good-tint: #e7f4ed;
 
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Bebas Neue for headlines, Inter for everything read under stress. Both carry latin-ext,
+     so Spanish accents and inverted punctuation render in the display face too. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-bebas), "Arial Narrow", ui-sans-serif, sans-serif;
 
   --radius-field: 0.75rem;
 }
@@ -65,4 +86,17 @@ body {
 
 @utility tap-target {
   min-height: 3.5rem;
+}
+
+/*
+ * Bebas Neue is all-caps and condensed: a headline face, not a text face. It is opt-in through
+ * this utility rather than bound to every heading, because status pages and legal copy need
+ * sentence case to stay readable.
+ */
+@utility display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 0.95;
+  text-transform: uppercase;
 }

@@ -118,7 +118,7 @@ export function AdminIntake() {
         </Callout>
         <a
           href={`/r/${result.token}`}
-          className="tap-target flex w-full items-center justify-center rounded-field bg-brand text-lg font-bold text-white"
+          className="tap-target flex w-full items-center justify-center rounded-field bg-brand text-lg font-bold text-on-brand"
         >
           {t("openStatus")}
         </a>

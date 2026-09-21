@@ -18,13 +18,21 @@ export default async function HomePage({
 
   return (
     <main className="mx-auto w-full max-w-xl px-4 py-8">
-      <h1 className="text-3xl font-bold">{APP_NAME}</h1>
-      <p className="mt-2 text-lg text-ink-soft">{tApp("tagline")}</p>
+      {/*
+        * The launch panel from the brand board: Trail Green field, wordmark in the display face,
+        * motto in Recovery Orange. This is the one place orange carries text, because on Trail
+        * Green it is 5.19:1 -- on white the same orange would be 2.87:1 and illegible in sun.
+        */}
+      <header className="-mx-4 -mt-8 mb-8 bg-trail px-4 pt-10 pb-8">
+        <h1 className="display text-5xl text-white">{APP_NAME}</h1>
+        <p className="display mt-1 text-2xl text-brand">{tApp("motto")}</p>
+        <p className="mt-4 text-lg text-white">{tApp("tagline")}</p>
+      </header>
 
       {/* The only thing on this page that matters to someone who is actually stuck. */}
       <Link
         href="/request"
-        className="tap-target mt-8 flex w-full items-center justify-center rounded-field bg-brand px-6 text-xl font-bold text-white"
+        className="tap-target mt-8 flex w-full items-center justify-center rounded-field bg-brand px-6 text-xl font-bold text-on-brand"
       >
         {t("stuckCta")}
       </Link>

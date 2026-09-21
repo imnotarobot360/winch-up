@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Bebas_Neue, Inter } from "next/font/google";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -7,6 +8,21 @@ import type { ReactNode } from "react";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import { APP_NAME } from "@/config/app";
 import { routing } from "@/i18n/routing";
+
+// Self-hosted by next/font at build time: no request to Google at runtime, no layout shift, and
+// latin-ext so Spanish accents and inverted punctuation are present in both faces.
+const inter = Inter({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const bebas = Bebas_Neue({
+  subsets: ["latin", "latin-ext"],
+  weight: "400",
+  variable: "--font-bebas",
+  display: "swap",
+});
 
 import "../globals.css";
 
@@ -36,7 +52,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   // The form is full of large tap targets; pinch-zoom still has to work for anyone who needs it.
   maximumScale: 5,
-  themeColor: "#e2560f",
+  themeColor: "#0b2d1f",
 };
 
 export default async function LocaleLayout({
@@ -55,7 +71,7 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
 
   return (
-    <html lang={locale}>
+    <html lang={locale} className={`${inter.variable} ${bebas.variable}`}>
       <body className="min-h-dvh bg-surface text-ink antialiased">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
         <RegisterServiceWorker />

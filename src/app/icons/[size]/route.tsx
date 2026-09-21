@@ -10,6 +10,10 @@ const ALLOWED = new Set([180, 192, 512]);
  * No binary assets in the repo, no design tool in the loop, and the mark stays in step with the
  * brand colour in globals.css. Text is avoided on purpose: Satori needs a font file for glyphs,
  * and a ring of rope reads better at 48px than four letters would anyway.
+ *
+ * Recovery Orange on Trail Green is 5.19:1, so the mark holds up at 48px on a cluttered
+ * home screen. The full illustrated logo from the brand board is not reproducible in Satori
+ * and belongs in public/ as a real asset when the vector arrives.
  */
 export async function GET(
   _request: Request,
@@ -38,7 +42,7 @@ export async function GET(
           justifyContent: "center",
           // Satori only honours an absolutely positioned child inside a positioned parent.
           position: "relative",
-          background: "#e2560f",
+          background: "#0b2d1f",
         }}
       >
         <div
@@ -46,7 +50,7 @@ export async function GET(
             width: ring,
             height: ring,
             borderRadius: "50%",
-            border: `${stroke}px solid #ffffff`,
+            border: `${stroke}px solid #ff6a00`,
             display: "flex",
           }}
         />
@@ -55,7 +59,7 @@ export async function GET(
             position: "absolute",
             width: stroke,
             height: Math.round(size * 0.26),
-            background: "#ffffff",
+            background: "#ff6a00",
             borderRadius: stroke,
             top: Math.round(size * 0.16),
             display: "flex",

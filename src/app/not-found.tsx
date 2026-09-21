@@ -27,7 +27,7 @@ export default function GlobalNotFound() {
           <h1 style={{ fontSize: "1.75rem", margin: "0 0 8px" }}>Page not found</h1>
           <p style={{ color: "#3d4754" }}>Página no encontrada</p>
           <p style={{ marginTop: 24 }}>
-            <Link href="/" style={{ color: "#e2560f", fontWeight: 700 }}>
+            <Link href="/" style={{ color: "#bc4d00", fontWeight: 700 }}>
               Go to Winch Up
             </Link>
           </p>

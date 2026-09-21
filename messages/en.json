@@ -1,6 +1,7 @@
 {
   "app": {
     "name": "Winch Up",
+    "motto": "No rig left behind.",
     "tagline": "Neighbors with winches, not a tow bill."
   },
   "home": {
@@ -401,14 +402,30 @@
     "send": "Send request",
     "sending": "Sending…",
     "steps": {
-      "emergency": { "title": "First things first" },
-      "location": { "title": "Where are you?" },
-      "photos": { "title": "Add a photo" },
-      "vehicle": { "title": "What are you driving?" },
-      "situation": { "title": "How are you stuck?" },
-      "land": { "title": "Where is this?" },
-      "contact": { "title": "How do we reach you?" },
-      "consent": { "title": "Last thing" }
+      "emergency": {
+        "title": "First things first"
+      },
+      "location": {
+        "title": "Where are you?"
+      },
+      "photos": {
+        "title": "Add a photo"
+      },
+      "vehicle": {
+        "title": "What are you driving?"
+      },
+      "situation": {
+        "title": "How are you stuck?"
+      },
+      "land": {
+        "title": "Where is this?"
+      },
+      "contact": {
+        "title": "How do we reach you?"
+      },
+      "consent": {
+        "title": "Last thing"
+      }
     },
     "location": {
       "haveIt": "Got your location",

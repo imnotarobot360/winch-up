@@ -154,7 +154,7 @@ export function StatusView({
 
           <a
             href={`tel:${data.responder.phone}`}
-            className="tap-target flex w-full items-center justify-center rounded-field bg-brand text-lg font-bold text-white"
+            className="tap-target flex w-full items-center justify-center rounded-field bg-brand text-lg font-bold text-on-brand"
           >
             {t("callResponder", { phone: formatUsPhone(data.responder.phone) })}
           </a>

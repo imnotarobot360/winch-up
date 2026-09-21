@@ -1,6 +1,7 @@
 {
   "app": {
     "name": "Winch Up",
+    "motto": "Ningún vehículo se queda atrás.",
     "tagline": "Vecinos con winche, no una factura de grúa."
   },
   "home": {
@@ -401,14 +402,30 @@
     "send": "Enviar solicitud",
     "sending": "Enviando…",
     "steps": {
-      "emergency": { "title": "Primero lo primero" },
-      "location": { "title": "¿Dónde está?" },
-      "photos": { "title": "Agregue una foto" },
-      "vehicle": { "title": "¿Qué está manejando?" },
-      "situation": { "title": "¿Cómo se atascó?" },
-      "land": { "title": "¿Dónde es esto?" },
-      "contact": { "title": "¿Cómo lo contactamos?" },
-      "consent": { "title": "Último paso" }
+      "emergency": {
+        "title": "Primero lo primero"
+      },
+      "location": {
+        "title": "¿Dónde está?"
+      },
+      "photos": {
+        "title": "Agregue una foto"
+      },
+      "vehicle": {
+        "title": "¿Qué está manejando?"
+      },
+      "situation": {
+        "title": "¿Cómo se atascó?"
+      },
+      "land": {
+        "title": "¿Dónde es esto?"
+      },
+      "contact": {
+        "title": "¿Cómo lo contactamos?"
+      },
+      "consent": {
+        "title": "Último paso"
+      }
     },
     "location": {
       "haveIt": "Ya tenemos su ubicación",

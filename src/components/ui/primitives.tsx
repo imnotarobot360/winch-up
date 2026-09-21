@@ -30,7 +30,7 @@ export function Button({
         "inline-flex w-full items-center justify-center gap-2 rounded-field font-semibold",
         "transition-colors disabled:cursor-not-allowed disabled:opacity-50",
         size === "lg" ? "tap-target px-6 text-lg" : "min-h-12 px-4 text-base",
-        variant === "primary" && "bg-brand text-white hover:bg-brand-dark active:bg-brand-dark",
+        variant === "primary" && "bg-brand text-on-brand hover:bg-brand-hover active:bg-brand-hover",
         variant === "secondary" &&
           "border-2 border-line bg-surface text-ink hover:bg-surface-sunk",
         variant === "quiet" && "text-ink-soft underline underline-offset-4",
