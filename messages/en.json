@@ -46,6 +46,42 @@
       "missing_code": "That link was incomplete. Ask for a new one."
     }
   },
+  "account": {
+    "title": "Your account",
+    "body": "Your details, what we tell you about, and who can see you.",
+    "emailLabel": "Sign-in",
+    "emailHint": "Contact an admin if you need this changed.",
+    "nameLabel": "Display name",
+    "nameHint": "What volunteers see when you're matched. No phone numbers or links.",
+    "regionLabel": "Home area",
+    "regionHint": "A town or county. Not your address.",
+    "notifyTitle": "Notifications",
+    "notifyRecovery": "Recovery alerts",
+    "notifyRecoveryHint": "Requests near you, and updates on your own. Turning this off means you won't hear about a job.",
+    "notifyCommunity": "Community activity",
+    "notifyMarketing": "News and offers",
+    "notifyMarketingHint": "Off unless you turn it on.",
+    "privacyTitle": "Privacy",
+    "profilePublic": "Show my profile to other members",
+    "profilePublicHint": "Off by default. Your exact location is never shown either way.",
+    "save": "Save changes",
+    "saved": "Saved.",
+    "working": "Working…",
+    "deleteTitle": "Delete your account",
+    "deleteBody": "Removes your profile and sign-in. Recovery records stay, without your name on them.",
+    "deleteStart": "Delete my account",
+    "deleteConfirm": "This cannot be undone. You'll be signed out and your profile removed.",
+    "deleteYes": "Yes, delete it",
+    "deleteNo": "Keep my account",
+    "errors": {
+      "save_failed": "We couldn't save that. Try again.",
+      "contact_in_name": "Display names can't contain a phone number or a link.",
+      "open_request": "You have a recovery open. Cancel or finish it first.",
+      "active_job": "You've accepted a job. Finish or hand it back first.",
+      "not_signed_in": "You're signed out. Sign in and try again.",
+      "server_error": "Something broke on our end. Try again."
+    }
+  },
   "home": {
     "stuckCta": "I'm stuck — get help",
     "emergencyNote": "If anyone is hurt, in water, or in traffic, call 911 first. We are volunteers, not emergency services.",

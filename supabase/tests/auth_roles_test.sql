@@ -117,5 +117,37 @@ select ok(
   'a phone number in a display name is caught by the same check public text uses'
 );
 
+-- ---------------------------------------------------------------------------
+-- 6. An account can actually be deleted
+--
+-- Seven columns referenced auth.users with no ON DELETE clause. The delete raised a foreign key
+-- violation for any admin who had ever acted, and for any volunteer who had ever accepted a job
+-- -- exactly the accounts most likely to ask for deletion.
+-- ---------------------------------------------------------------------------
+
+select is(
+  (select count(*)::int
+     from pg_constraint c
+    where c.contype = 'f'
+      and c.confrelid = 'auth.users'::regclass
+      and c.confdeltype = 'a'),
+  0,
+  'no foreign key to auth.users blocks account deletion'
+);
+
+select is(
+  (select confdeltype::text from pg_constraint
+    where conname = 'audit_log_actor_user_id_fkey'),
+  'n',
+  'audit rows survive deletion with a null actor rather than being erased'
+);
+
+select is(
+  (select confdeltype::text from pg_constraint
+    where conname = 'profiles_user_id_fkey'),
+  'c',
+  'the profile itself is removed with the account'
+);
+
 select * from finish();
 rollback;

@@ -46,6 +46,42 @@
       "missing_code": "Ese enlace estaba incompleto. Pida uno nuevo."
     }
   },
+  "account": {
+    "title": "Su cuenta",
+    "body": "Sus datos, lo que le avisamos y quién puede verlo.",
+    "emailLabel": "Inicio de sesión",
+    "emailHint": "Contacte a un administrador si necesita cambiarlo.",
+    "nameLabel": "Nombre visible",
+    "nameHint": "Lo que ven los voluntarios cuando se le asigna. Sin teléfonos ni enlaces.",
+    "regionLabel": "Zona de residencia",
+    "regionHint": "Un pueblo o condado. No su dirección.",
+    "notifyTitle": "Notificaciones",
+    "notifyRecovery": "Avisos de rescate",
+    "notifyRecoveryHint": "Solicitudes cerca de usted y novedades de la suya. Si lo apaga, no se enterará de un trabajo.",
+    "notifyCommunity": "Actividad de la comunidad",
+    "notifyMarketing": "Novedades y ofertas",
+    "notifyMarketingHint": "Apagado salvo que usted lo encienda.",
+    "privacyTitle": "Privacidad",
+    "profilePublic": "Mostrar mi perfil a otros miembros",
+    "profilePublicHint": "Apagado por defecto. Su ubicación exacta nunca se muestra, en ningún caso.",
+    "save": "Guardar cambios",
+    "saved": "Guardado.",
+    "working": "Trabajando…",
+    "deleteTitle": "Eliminar su cuenta",
+    "deleteBody": "Elimina su perfil y su inicio de sesión. Los registros de rescates quedan, sin su nombre.",
+    "deleteStart": "Eliminar mi cuenta",
+    "deleteConfirm": "Esto no se puede deshacer. Se cerrará su sesión y se eliminará su perfil.",
+    "deleteYes": "Sí, eliminarla",
+    "deleteNo": "Conservar mi cuenta",
+    "errors": {
+      "save_failed": "No pudimos guardar eso. Intente de nuevo.",
+      "contact_in_name": "El nombre visible no puede contener un teléfono ni un enlace.",
+      "open_request": "Tiene un rescate abierto. Cancélelo o termínelo primero.",
+      "active_job": "Aceptó un trabajo. Termínelo o devuélvalo primero.",
+      "not_signed_in": "Su sesión está cerrada. Inicie sesión e intente de nuevo.",
+      "server_error": "Algo falló de nuestro lado. Intente de nuevo."
+    }
+  },
   "home": {
     "stuckCta": "Estoy atascado — necesito ayuda",
     "emergencyNote": "Si hay heridos, si alguien está en el agua o en el tráfico, llame primero al 911. Somos voluntarios, no servicios de emergencia.",
