@@ -26,6 +26,8 @@ full launch checklist is at the bottom of the main README.
 
 ## 1. Supabase project
 
+**This project:** `icpwyepfwkguaocbkawe` — <https://icpwyepfwkguaocbkawe.supabase.co>
+
 1. <https://supabase.com/dashboard> → new project. Pick the region closest to Texas
    (`us-east-1`). **Note which one** — step 3 matches Vercel's functions to it.
 2. **Database → Extensions**: enable `postgis`, `pg_cron`, `pg_net`.
@@ -35,7 +37,7 @@ full launch checklist is at the bottom of the main README.
 5. **Authentication → Providers → Phone**: enable, provider Twilio, credentials from step 4.
 
 ```bash
-supabase link --project-ref YOUR_PROJECT_REF
+supabase link --project-ref icpwyepfwkguaocbkawe
 ```
 
 ```bash
@@ -55,10 +57,10 @@ Then prove the privacy rules hold on the real thing, not just locally:
 supabase test db --linked
 ```
 
-## 2. GitHub
+## 2. GitHub — <https://github.com/imnotarobot360/winch-up>
 
 ```bash
-git remote add origin git@github.com:YOUR_USER/txrecover.git
+git remote add origin https://github.com/imnotarobot360/winch-up.git
 ```
 
 ```bash
@@ -126,7 +128,7 @@ select cron.schedule(
   'txrecover-dispatch-tick',
   '* * * * *',
   $$select net.http_post(
-      url := 'https://YOUR_PROJECT_REF.supabase.co/functions/v1/dispatch-tick',
+      url := 'https://icpwyepfwkguaocbkawe.supabase.co/functions/v1/dispatch-tick',
       headers := '{"Content-Type":"application/json","Authorization":"Bearer YOUR_DISPATCH_TICK_SECRET"}'::jsonb
     )$$
 );
