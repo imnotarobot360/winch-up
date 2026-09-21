@@ -1,4 +1,4 @@
-# TxRecover milestone plan
+# Winch Up milestone plan
 
 Each milestone ends with a commit and something you can actually look at or run.
 

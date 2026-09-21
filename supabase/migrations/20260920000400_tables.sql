@@ -1,4 +1,4 @@
--- TxRecover M1 :: tables + indexes
+-- Winch Up M1 :: tables + indexes
 --
 -- RLS is turned on for every table in 20260920000600_rls.sql. Nothing here grants access.
 

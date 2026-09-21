@@ -11,7 +11,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const secret =
-  process.env.LOCAL_JWT_SECRET ?? "txrecover-local-dev-jwt-secret-at-least-32-chars";
+  process.env.LOCAL_JWT_SECRET ?? "winchup-local-dev-jwt-secret-at-least-32-chars";
 
 const b64 = (value) => Buffer.from(JSON.stringify(value)).toString("base64url");
 

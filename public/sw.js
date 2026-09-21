@@ -1,5 +1,5 @@
 /*
- * TxRecover service worker.
+ * Winch Up service worker.
  *
  * The job here is narrow and the restraint is the point: this app exists for people with one bar
  * of signal, and a cache that serves a stale recovery status is worse than no cache at all.
@@ -15,7 +15,7 @@
  *   - Supabase and Twilio calls
  */
 
-const VERSION = "txrecover-v1";
+const VERSION = "winchup-v1";
 const SHELL_CACHE = `${VERSION}-shell`;
 const STATIC_CACHE = `${VERSION}-static`;
 const OFFLINE_URL = "/offline.html";

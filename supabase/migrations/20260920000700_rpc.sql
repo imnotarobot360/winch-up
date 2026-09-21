@@ -1,4 +1,4 @@
--- TxRecover M1 :: read RPCs
+-- Winch Up M1 :: read RPCs
 --
 -- These are the only doors into the data for anonymous requesters and for volunteers who need
 -- more than the column grants allow. Each one redacts at the source: there is no code path where

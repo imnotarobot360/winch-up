@@ -73,7 +73,7 @@ async function resolveShortLink(url: string) {
     const response = await fetch(target.toString(), {
       redirect: "follow",
       signal: AbortSignal.timeout(6000),
-      headers: { "user-agent": "Mozilla/5.0 (compatible; TxRecover/1.0)" },
+      headers: { "user-agent": "Mozilla/5.0 (compatible; Winch Up/1.0)" },
     });
 
     const resolved = parseLocationInput(response.url);

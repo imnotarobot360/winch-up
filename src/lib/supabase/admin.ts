@@ -24,7 +24,7 @@ export function supabaseAdmin(): SupabaseClient {
 
   cached = createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
-    global: { headers: { "x-txrecover-client": "server" } },
+    global: { headers: { "x-winchup-client": "server" } },
   });
 
   return cached;

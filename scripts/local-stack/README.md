@@ -60,11 +60,11 @@ node scripts/local-stack/mint-keys.mjs
 Rebuild the database — stubs, every migration in order, both seeds:
 
 ```bash
-psql -h 127.0.0.1 -p 55432 -U postgres -d postgres -c "drop database if exists txrecover (force);" -c "create database txrecover;"
+psql -h 127.0.0.1 -p 55432 -U postgres -d postgres -c "drop database if exists winchup (force);" -c "create database winchup;"
 ```
 
 ```bash
-psql -h 127.0.0.1 -p 55432 -U postgres -d txrecover -v ON_ERROR_STOP=1 -f scripts/local-stack/supabase-stubs.sql
+psql -h 127.0.0.1 -p 55432 -U postgres -d winchup -v ON_ERROR_STOP=1 -f scripts/local-stack/supabase-stubs.sql
 ```
 
 Then apply `supabase/migrations/*.sql` in filename order, followed by `supabase/seed.sql` and

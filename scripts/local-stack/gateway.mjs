@@ -21,14 +21,18 @@ import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
 
+// psql field separator. Built from a char code rather than written as an escape, because a
+// literal control byte in the source makes git treat this file as binary.
+const FS = String.fromCharCode(1);
+
 const PORT = 54321;
 const POSTGREST = "http://127.0.0.1:54322";
 const JWT_SECRET =
-  process.env.LOCAL_JWT_SECRET ?? "txrecover-local-dev-jwt-secret-at-least-32-chars";
+  process.env.LOCAL_JWT_SECRET ?? "winchup-local-dev-jwt-secret-at-least-32-chars";
 const TEST_OTP = process.env.LOCAL_TEST_OTP ?? "123456";
 const PSQL = process.env.PSQL_BIN ?? "psql";
 const PGURI =
-  process.env.LOCAL_PG_URI ?? "postgres://postgres:postgres@127.0.0.1:55432/txrecover";
+  process.env.LOCAL_PG_URI ?? "postgres://postgres:postgres@127.0.0.1:55432/winchup";
 
 // ---------------------------------------------------------------------------
 // JWT
@@ -71,12 +75,12 @@ function verifyJwt(token) {
 // ---------------------------------------------------------------------------
 
 async function sql(statement) {
-  const { stdout } = await execFileAsync(PSQL, [PGURI, "-t", "-A", "-F", "", "-c", statement]);
+  const { stdout } = await execFileAsync(PSQL, [PGURI, "-t", "-A", "-F", FS, "-c", statement]);
   return stdout
     .trim()
     .split("\n")
     .filter(Boolean)
-    .map((line) => line.split(""));
+    .map((line) => line.split(FS));
 }
 
 const quote = (value) => `'${String(value).replace(/'/g, "''")}'`;

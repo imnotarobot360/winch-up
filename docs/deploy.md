@@ -125,7 +125,7 @@ Then schedule it, in the Supabase SQL editor:
 
 ```sql
 select cron.schedule(
-  'txrecover-dispatch-tick',
+  'winchup-dispatch-tick',
   '* * * * *',
   $$select net.http_post(
       url := 'https://icpwyepfwkguaocbkawe.supabase.co/functions/v1/dispatch-tick',

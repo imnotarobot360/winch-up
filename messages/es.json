@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "TxRecover",
+    "name": "Winch Up",
     "tagline": "Vecinos con winche, no una factura de grúa."
   },
   "home": {
@@ -154,7 +154,7 @@
     "notes": "Notas",
     "statusLink": "Estado en vivo",
     "helper": "Voluntario",
-    "postedVia": "Publicado con TxRecover",
+    "postedVia": "Publicado con Winch Up",
     "photos": "Fotos",
     "attachPhotos": "Fotos para adjuntar",
     "attachPhotosHint": "Guárdelas y adjúntelas a la publicación. El texto no lleva imágenes.",

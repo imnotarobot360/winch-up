@@ -1,4 +1,4 @@
-# TxRecover
+# Winch Up
 
 A dispatcher for volunteer off-road vehicle recovery in Texas. It replaces the Facebook-group
 workflow used by *Texas Off-Road Recovery* and *Houston Area Off-Road Recovery*: a stuck driver
@@ -64,7 +64,7 @@ PostgREST. Still **not** a Supabase instance.
 4. `/admin` as that volunteer — *"That number is signed in, but it isn't an admin."*
 5. Signed in as the admin → queue with ages, rings and requester phones; 2 awaiting approval.
 6. Approved him. The audit log recorded
-   `responder.approval · admin@txrecover.test · {"approval":"approved"}`.
+   `responder.approval · admin@winchup.test · {"approval":"approved"}`.
 7. `/me` again — **"You're on call"**, and a job 2.18 mi away appeared with
    *"approximate pin until you take it"*.
 8. Took it → the current-job card released the requester's name, note and phone.
@@ -150,10 +150,10 @@ Demo logins created by the seed — **local only**, password `recovery-demo-2026
 
 | Who | Email | Phone | Role |
 |---|---|---|---|
-| Admin | admin@txrecover.test | +1 713 555 0100 | admin |
-| Mike | mike@txrecover.test | +1 281 555 0101 | approved volunteer |
-| Rosa | rosa@txrecover.test | +1 936 555 0102 | approved volunteer (Spanish) |
-| Trey | pending@txrecover.test | +1 409 555 0103 | volunteer awaiting approval |
+| Admin | admin@winchup.test | +1 713 555 0100 | admin |
+| Mike | mike@winchup.test | +1 281 555 0101 | approved volunteer |
+| Rosa | rosa@winchup.test | +1 936 555 0102 | approved volunteer (Spanish) |
+| Trey | pending@winchup.test | +1 409 555 0103 | volunteer awaiting approval |
 
 Local phone OTP codes are pinned to `123456` in `supabase/config.toml`, so signing in locally
 never sends a real text.
@@ -191,7 +191,7 @@ Open http://127.0.0.1:3000. With `SMS_DRY_RUN=1` (the default in `.env.example`)
 sent — the message is printed to the terminal instead:
 
 ```
-[sms:dry-run] to=+12815550123 body="TxRecover TX-8K4M: we got it. ..."
+[sms:dry-run] to=+12815550123 body="Winch Up TX-8K4M: we got it. ..."
 ```
 
 Copy the `/r/...` link out of that line to reach the status page, the same way a requester would.
@@ -256,8 +256,8 @@ supabase db execute --file supabase/seed.sql --linked
    - Register a Campaign. Use case: *Public Service Announcement* or *Mixed*, whichever the
      reviewer accepts for a volunteer dispatch service.
    - Sample messages to submit — they must match what the app actually sends:
-     - `TxRecover: stuck truck 12 mi from you, mud to the frame, FM 1097 area. Reply 1 to take it, 2 to pass. Reply STOP to opt out.`
-     - `TxRecover: Mike is on the way, ETA 40 min. Call (281) 555-0101. Track: https://example.com/r/abc123`
+     - `Winch Up: stuck truck 12 mi from you, mud to the frame, FM 1097 area. Reply 1 to take it, 2 to pass. Reply STOP to opt out.`
+     - `Winch Up: Mike is on the way, ETA 40 min. Call (281) 555-0101. Track: https://example.com/r/abc123`
    - Describe opt-in honestly: volunteers opt in at `/join` by entering their phone and confirming
      an OTP, and every message carries STOP instructions. Screenshot `/join` for the submission.
    - Expect 1–10 business days. Until it is approved, leave `SMS_DRY_RUN=1`.
@@ -293,7 +293,7 @@ Scheduled from Postgres, not Vercel:
 
 ```sql
 select cron.schedule(
-  'txrecover-dispatch-tick',
+  'winchup-dispatch-tick',
   '* * * * *',
   $$select net.http_post(
       url := 'https://YOUR_PROJECT_REF.supabase.co/functions/v1/dispatch-tick',

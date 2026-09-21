@@ -1,4 +1,4 @@
-// TxRecover :: dispatch tick
+// Winch Up :: dispatch tick
 //
 // Scheduled by pg_cron every 60 seconds (see the README). It holds no dispatch logic of its own:
 // it calls the Postgres function that owns every transition, then pokes the app to drain the SMS

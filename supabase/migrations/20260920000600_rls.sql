@@ -1,4 +1,4 @@
--- TxRecover M1 :: row level security
+-- Winch Up M1 :: row level security
 --
 -- Three layers, on purpose:
 --   1. RLS policies decide which ROWS a role can see.

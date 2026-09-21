@@ -1,4 +1,4 @@
--- TxRecover M1 :: enums
+-- Winch Up M1 :: enums
 --
 -- Every enum value that reaches a screen has a matching i18n key in messages/{en,es}.json
 -- under `enum.<type>.<value>`. Adding a value here means adding both translations.

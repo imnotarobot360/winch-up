@@ -28,7 +28,7 @@ export default function GlobalNotFound() {
           <p style={{ color: "#3d4754" }}>Página no encontrada</p>
           <p style={{ marginTop: 24 }}>
             <Link href="/" style={{ color: "#e2560f", fontWeight: 700 }}>
-              Go to TxRecover
+              Go to Winch Up
             </Link>
           </p>
         </main>

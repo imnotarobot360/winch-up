@@ -1,4 +1,4 @@
--- TxRecover M3 :: the dispatch state machine
+-- Winch Up M3 :: the dispatch state machine
 --
 -- One function owns every transition: `app.advance_one(request_id)` for the timed moves, and a
 -- small set of `app.*` action functions for the ones a person triggers. Everything takes a row

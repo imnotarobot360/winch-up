@@ -1,4 +1,4 @@
--- TxRecover :: reference seed
+-- Winch Up :: reference seed
 --
 -- Safe to run against any environment, including production. Idempotent.
 -- Demo volunteers and demo requests live in supabase/seeds/demo.sql (local dev only).

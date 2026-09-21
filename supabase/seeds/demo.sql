@@ -1,4 +1,4 @@
--- TxRecover :: demo data (LOCAL DEVELOPMENT ONLY)
+-- Winch Up :: demo data (LOCAL DEVELOPMENT ONLY)
 --
 -- Loaded automatically by `supabase db reset` via [db.seed].sql_paths in config.toml.
 -- Never run this against production: it creates auth users with known credentials.
@@ -11,10 +11,10 @@ set search_path = public, extensions;
 
 -- ===========================================================================
 -- Auth users (local only)
---   admin@txrecover.test   / +17135550100  -> admin
---   mike@txrecover.test    / +12815550101  -> approved responder
---   rosa@txrecover.test    / +19365550102  -> approved responder
---   pending@txrecover.test / +14095550103  -> pending responder
+--   admin@winchup.test   / +17135550100  -> admin
+--   mike@winchup.test    / +12815550101  -> approved responder
+--   rosa@winchup.test    / +19365550102  -> approved responder
+--   pending@winchup.test / +14095550103  -> pending responder
 -- Password for all of them: recovery-demo-2026
 -- ===========================================================================
 
@@ -26,7 +26,7 @@ declare
     '00000000-0000-4000-8000-000000000003'::uuid,
     '00000000-0000-4000-8000-000000000004'::uuid
   ];
-  emails text[] := array['admin@txrecover.test','mike@txrecover.test','rosa@txrecover.test','pending@txrecover.test'];
+  emails text[] := array['admin@winchup.test','mike@winchup.test','rosa@winchup.test','pending@winchup.test'];
   phones text[] := array['+17135550100','+12815550101','+19365550102','+14095550103'];
   i integer;
 begin

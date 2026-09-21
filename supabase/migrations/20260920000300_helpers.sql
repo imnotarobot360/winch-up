@@ -1,4 +1,4 @@
--- TxRecover M1 :: helper functions
+-- Winch Up M1 :: helper functions
 --
 -- Everything here is internal (schema `app`) except `public.contains_contact_info`, which is used
 -- inside CHECK constraints and therefore has to be executable by whoever performs the insert.

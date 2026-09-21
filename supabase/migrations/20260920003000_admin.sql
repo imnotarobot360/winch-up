@@ -1,4 +1,4 @@
--- TxRecover M4 :: admin console
+-- Winch Up M4 :: admin console
 --
 -- Every function here starts by checking `app.is_admin()` and raising if it fails, and every one
 -- that changes something writes an audit row. Admins are the only people in the system who can

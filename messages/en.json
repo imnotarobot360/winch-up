@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "TxRecover",
+    "name": "Winch Up",
     "tagline": "Neighbors with winches, not a tow bill."
   },
   "home": {
@@ -154,7 +154,7 @@
     "notes": "Notes",
     "statusLink": "Live status",
     "helper": "Volunteer",
-    "postedVia": "Posted via TxRecover",
+    "postedVia": "Posted via Winch Up",
     "photos": "Photos",
     "attachPhotos": "Photos to attach",
     "attachPhotosHint": "Save these and attach them to the post. The text does not carry images.",

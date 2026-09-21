@@ -4,10 +4,10 @@
  * Rename here and everywhere follows: the i18n key `app.name` interpolates it, and no other
  * file is allowed to hard-code it.
  */
-export const APP_NAME = "TxRecover";
+export const APP_NAME = "Winch Up";
 
 /** Short form used in SMS, where every character costs money. */
-export const APP_SHORT_NAME = "TxRecover";
+export const APP_SHORT_NAME = "Winch Up";
 
 export const SUPPORTED_LOCALES = ["en", "es"] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];

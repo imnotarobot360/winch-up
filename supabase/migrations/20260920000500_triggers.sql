@@ -1,4 +1,4 @@
--- TxRecover M1 :: triggers
+-- Winch Up M1 :: triggers
 --
 -- Invariants that must hold no matter which client wrote the row live here, not in the app.
 

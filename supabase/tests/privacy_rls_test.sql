@@ -1,4 +1,4 @@
--- TxRecover :: proof that phones and exact pins stay private
+-- Winch Up :: proof that phones and exact pins stay private
 --
 -- Run with:  supabase test db
 -- Depends on supabase/seeds/demo.sql having been loaded (supabase db reset does this).

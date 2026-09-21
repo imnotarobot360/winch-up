@@ -1,4 +1,4 @@
-# TxRecover — project guide for Claude sessions
+# Winch Up — project guide for Claude sessions
 
 **Working name.** The product name lives in exactly one place: `APP_NAME` in `src/config/app.ts`.
 Never hard-code the name anywhere else (UI strings use the i18n key `app.name`, which reads that constant).
@@ -11,7 +11,7 @@ and *Houston Area Off-Road Recovery*.
 Today: a stuck driver posts a map pin + photo in the group, volunteers with 4x4s/winches/tractors
 comment or call, someone drives out, and the poster edits the post to `#### Recovered ####`.
 
-With TxRecover: a stuck driver fills in one request page, the system texts the nearest matching
+With Winch Up: a stuck driver fills in one request page, the system texts the nearest matching
 volunteers, the first to reply wins, the requester gets a name + ETA, and a status page closes the
 loop. **Nobody installs anything.**
 

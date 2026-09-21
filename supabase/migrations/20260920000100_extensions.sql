@@ -1,4 +1,4 @@
--- TxRecover M1 :: extensions + internal schema
+-- Winch Up M1 :: extensions + internal schema
 --
 -- Convention: application tables live in `public` (PostgREST reaches them).
 -- Internal helpers live in `app`, which PostgREST cannot see at all.
@@ -22,4 +22,4 @@ grant usage on schema app to postgres, service_role;
 grant usage on schema app to anon, authenticated;
 
 comment on schema app is
-  'TxRecover internal helpers. Not exposed over PostgREST. Only the two identity helpers used by RLS policies are executable by anon/authenticated.';
+  'Winch Up internal helpers. Not exposed over PostgREST. Only the two identity helpers used by RLS policies are executable by anon/authenticated.';
