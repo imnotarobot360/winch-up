@@ -151,7 +151,7 @@ export function MeDashboard() {
         <p className="text-lg text-ink-soft">{t("signedOutBody")}</p>
         <Link
           href="/join"
-          className="tap-target inline-flex w-full items-center justify-center rounded-field bg-brand px-6 text-lg font-bold text-on-brand"
+          className="tap-target inline-flex w-full items-center justify-center rounded-field text-center bg-brand px-6 text-lg font-bold text-on-brand"
         >
           {t("goJoin")}
         </Link>
@@ -230,7 +230,7 @@ export function MeDashboard() {
               ) : null}
               <a
                 href={`tel:${contact.requester_phone}`}
-                className="tap-target flex w-full items-center justify-center rounded-field bg-brand text-lg font-bold text-on-brand"
+                className="tap-target flex w-full items-center justify-center rounded-field text-center bg-brand text-lg font-bold text-on-brand"
               >
                 {t("callRequester", { phone: formatUsPhone(contact.requester_phone) })}
               </a>
@@ -238,7 +238,7 @@ export function MeDashboard() {
                 href={mapAppUrl(contact.lat, contact.lng)}
                 target="_blank"
                 rel="noreferrer"
-                className="tap-target flex w-full items-center justify-center rounded-field border-2 border-line text-lg font-semibold"
+                className="tap-target flex w-full items-center justify-center rounded-field text-center border-2 border-line text-lg font-semibold"
               >
                 {t("navigate")}
               </a>

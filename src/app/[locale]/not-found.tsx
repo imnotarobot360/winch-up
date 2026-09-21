@@ -11,7 +11,7 @@ export default async function NotFound() {
       <p className="text-lg text-ink-soft">{t("body")}</p>
       <Link
         href="/request"
-        className="tap-target mt-6 inline-flex w-full items-center justify-center rounded-field bg-brand px-6 text-lg font-bold text-on-brand"
+        className="tap-target mt-6 inline-flex w-full items-center justify-center rounded-field text-center bg-brand px-6 text-lg font-bold text-on-brand"
       >
         {t("cta")}
       </Link>

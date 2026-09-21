@@ -118,13 +118,13 @@ export function AdminIntake() {
         </Callout>
         <a
           href={`/r/${result.token}`}
-          className="tap-target flex w-full items-center justify-center rounded-field bg-brand text-lg font-bold text-on-brand"
+          className="tap-target flex w-full items-center justify-center rounded-field text-center bg-brand text-lg font-bold text-on-brand"
         >
           {t("openStatus")}
         </a>
         <a
           href={`/post/${result.token}`}
-          className="tap-target flex w-full items-center justify-center rounded-field border-2 border-line text-lg font-semibold"
+          className="tap-target flex w-full items-center justify-center rounded-field text-center border-2 border-line text-lg font-semibold"
         >
           {t("openPost")}
         </a>

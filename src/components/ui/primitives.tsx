@@ -27,7 +27,10 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex w-full items-center justify-center gap-2 rounded-field font-semibold",
+        // text-center matters: justify-center centres the line box, not the text inside it, so a
+        // label that wraps -- which Spanish does and English often does not -- left-aligns its
+        // second line.
+        "inline-flex w-full items-center justify-center gap-2 rounded-field text-center font-semibold",
         "transition-colors disabled:cursor-not-allowed disabled:opacity-50",
         size === "lg" ? "tap-target px-6 text-lg" : "min-h-12 px-4 text-base",
         variant === "primary" && "bg-brand text-on-brand hover:bg-brand-hover active:bg-brand-hover",

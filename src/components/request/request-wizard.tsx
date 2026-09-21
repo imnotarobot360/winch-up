@@ -515,7 +515,7 @@ function EmergencyStep({
 
       <a
         href="tel:911"
-        className="tap-target flex w-full items-center justify-center rounded-field border-2 border-danger bg-danger-tint text-xl font-bold text-danger"
+        className="tap-target flex w-full items-center justify-center rounded-field text-center border-2 border-danger bg-danger-tint text-xl font-bold text-danger"
       >
         {t("call911")}
       </a>

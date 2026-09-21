@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { Callout, Card } from "@/components/ui/primitives";
@@ -19,20 +20,32 @@ export default async function HomePage({
   return (
     <main className="mx-auto w-full max-w-xl px-4 py-8">
       {/*
-        * The launch panel from the brand board: Trail Green field, wordmark in the display face,
-        * motto in Recovery Orange. This is the one place orange carries text, because on Trail
-        * Green it is 5.19:1 -- on white the same orange would be 2.87:1 and illegible in sun.
+        * The launch panel from the brand board. The lockup is real artwork with its own alpha,
+        * so it sits directly on the Trail Green field.
+        *
+        * The motto is part of the artwork and therefore English-only. The translated app.motto
+        * string is deliberately not repeated here -- an English reader would see it twice -- so
+        * a Spanish lockup is the thing that closes that gap.
         */}
       <header className="-mx-4 -mt-8 mb-8 bg-trail px-4 pt-10 pb-8">
-        <h1 className="display text-5xl text-white">{APP_NAME}</h1>
-        <p className="display mt-1 text-2xl text-brand">{tApp("motto")}</p>
-        <p className="mt-4 text-lg text-white">{tApp("tagline")}</p>
+        <h1 className="m-0">
+          <Image
+            src="/brand/logo-lockup.png"
+            alt={APP_NAME}
+            width={1024}
+            height={632}
+            sizes="(max-width: 640px) 90vw, 420px"
+            className="h-auto w-full max-w-[420px]"
+            priority
+          />
+        </h1>
+        <p className="mt-2 text-lg text-white">{tApp("tagline")}</p>
       </header>
 
       {/* The only thing on this page that matters to someone who is actually stuck. */}
       <Link
         href="/request"
-        className="tap-target mt-8 flex w-full items-center justify-center rounded-field bg-brand px-6 text-xl font-bold text-on-brand"
+        className="tap-target mt-8 flex w-full items-center justify-center rounded-field text-center bg-brand px-6 text-xl font-bold text-on-brand"
       >
         {t("stuckCta")}
       </Link>
@@ -55,7 +68,7 @@ export default async function HomePage({
         <p className="text-base text-ink-soft">{t("volunteerSoon")}</p>
         <Link
           href="/join"
-          className="tap-target flex w-full items-center justify-center rounded-field border-2 border-line px-4 text-lg font-semibold"
+          className="tap-target flex w-full items-center justify-center rounded-field text-center border-2 border-line px-4 text-lg font-semibold"
         >
           {t("volunteerCta")}
         </Link>
@@ -66,7 +79,7 @@ export default async function HomePage({
         <p className="text-base text-ink-soft">{t("boardBody")}</p>
         <Link
           href="/board"
-          className="tap-target flex w-full items-center justify-center rounded-field border-2 border-line px-4 text-lg font-semibold"
+          className="tap-target flex w-full items-center justify-center rounded-field text-center border-2 border-line px-4 text-lg font-semibold"
         >
           {t("boardCta")}
         </Link>
