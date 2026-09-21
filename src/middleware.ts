@@ -45,7 +45,7 @@ export const config = {
   // extension.
   //
   // `icons` has to be here: it lives outside `[locale]`, so without the exclusion the locale
-  // rewrite sends /icons/192 into the locale tree where no route exists. Every icon URL in the
+  // rewrite sends an unprefixed asset URL into the locale tree where no route exists. Every URL in the
   // manifest then 404s and the app will not install. Files with an extension — the manifest,
   // robots.txt, sitemap.xml, offline.html — are already covered by the extension rule.
   //

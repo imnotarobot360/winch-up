@@ -45,7 +45,19 @@ export async function generateMetadata({
     description: t("tagline"),
     applicationName: APP_NAME,
     manifest: "/manifest.webmanifest",
-    appleWebApp: { capable: true, title: APP_NAME, statusBarStyle: "default" },
+    appleWebApp: {
+      capable: true,
+      title: APP_NAME,
+      // Trail Green chrome rather than a white bar above a dark app.
+      statusBarStyle: "black-translucent",
+    },
+    icons: {
+      icon: [
+        { url: "/brand/icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: "/brand/icon-512.png", sizes: "512x512", type: "image/png" },
+      ],
+      apple: [{ url: "/brand/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    },
   };
 }
 

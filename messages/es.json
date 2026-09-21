@@ -145,7 +145,12 @@
     "takenBy": "{name} ya va",
     "approxArea": "Abrir la zona aproximada en mapas",
     "exactArea": "Abrir el punto en mapas",
-    "autoRefresh": "Se actualiza cada {seconds} segundos."
+    "autoRefresh": "Se actualiza cada {seconds} segundos.",
+    "viewLabel": "Cómo mostrar el tablero",
+    "viewList": "Lista",
+    "viewMap": "Mapa",
+    "mapLabel": "Mapa de solicitudes abiertas",
+    "mapUnavailable": "El mapa aún no está configurado. La lista muestra las mismas solicitudes."
   },
   "post": {
     "title": "Publicar esto en el grupo",

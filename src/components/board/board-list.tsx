@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 
+import { BoardMap } from "@/components/board/board-map";
 import { Callout, Card } from "@/components/ui/primitives";
 import { BOARD } from "@/config/app";
 import { mapAppUrl } from "@/lib/geo";
@@ -51,6 +52,7 @@ export function BoardList({ initial }: { initial: BoardRow[] }) {
 
   const [rows, setRows] = useState(initial);
   const [filter, setFilter] = useState<"open" | "all">("open");
+  const [view, setView] = useState<"list" | "map">("list");
 
   const refresh = useCallback(async () => {
     try {
@@ -81,6 +83,22 @@ export function BoardList({ initial }: { initial: BoardRow[] }) {
 
       <Callout tone="neutral">{t("privacyNote", { miles: BOARD.blurMiles })}</Callout>
 
+      <div className="flex gap-2" role="group" aria-label={t("viewLabel")}>
+        {(["list", "map"] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => setView(v)}
+            aria-pressed={view === v}
+            className={`min-h-12 flex-1 rounded-field border-2 px-3 font-semibold ${
+              view === v ? "border-brand bg-brand-tint" : "border-line"
+            }`}
+          >
+            {t(v === "list" ? "viewList" : "viewMap")}
+          </button>
+        ))}
+      </div>
+
       <div className="flex gap-2">
         <button
           type="button"
@@ -104,7 +122,9 @@ export function BoardList({ initial }: { initial: BoardRow[] }) {
         </button>
       </div>
 
-      {visible.length === 0 ? (
+      {view === "map" ? (
+        <BoardMap rows={visible} />
+      ) : visible.length === 0 ? (
         <Card>
           <p className="text-center text-lg text-ink-soft">{t("empty")}</p>
         </Card>

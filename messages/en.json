@@ -145,7 +145,12 @@
     "takenBy": "{name} is on it",
     "approxArea": "Open the approximate area in maps",
     "exactArea": "Open the pin in maps",
-    "autoRefresh": "Updates every {seconds} seconds."
+    "autoRefresh": "Updates every {seconds} seconds.",
+    "viewLabel": "How to show the board",
+    "viewList": "List",
+    "viewMap": "Map",
+    "mapLabel": "Map of open requests",
+    "mapUnavailable": "The map is not set up yet. The list shows the same requests."
   },
   "post": {
     "title": "Post this to the group",
