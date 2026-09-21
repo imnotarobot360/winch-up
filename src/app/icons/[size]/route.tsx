@@ -22,8 +22,10 @@ export async function GET(
     return new Response("not found", { status: 404 });
   }
 
-  const ring = Math.round(size * 0.62);
-  const stroke = Math.round(size * 0.1);
+  // The manifest declares this maskable, and Android crops maskable icons to a circle with a
+  // 10% safe margin. Everything below stays inside the middle 80% so nothing is clipped.
+  const ring = Math.round(size * 0.5);
+  const stroke = Math.round(size * 0.088);
 
   return new ImageResponse(
     (
@@ -52,10 +54,10 @@ export async function GET(
           style={{
             position: "absolute",
             width: stroke,
-            height: Math.round(size * 0.34),
+            height: Math.round(size * 0.26),
             background: "#ffffff",
             borderRadius: stroke,
-            top: Math.round(size * 0.06),
+            top: Math.round(size * 0.16),
             display: "flex",
           }}
         />

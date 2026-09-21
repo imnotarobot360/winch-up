@@ -17,7 +17,7 @@ Product rules, flow and conventions live in [CLAUDE.md](./CLAUDE.md). Read that 
 | **M2** | `/request` + `/r` status page + requester SMS | built and verified |
 | **M3** | responder signup + dispatch engine + inbound webhook + tests | built and verified |
 | **M4** | `/board`, `/post`, `/admin` | built and verified |
-| **M5** | PWA polish, i18n pass, README, deploy to Vercel | built, partly verified |
+| **M5** | PWA polish, i18n pass, README, deploy to Vercel | built and verified; deploy is yours to run |
 
 ### What has actually been run
 
@@ -85,6 +85,9 @@ PostgREST. Still **not** a Supabase instance.
 If this machine cannot run Docker, `scripts/local-stack/README.md` assembles enough of
 Supabase (PostgREST against a local Postgres) to develop and test the whole requester and
 dispatch path without it.
+
+Deployment is written up step by step in [docs/deploy.md](./docs/deploy.md) — read the warning at
+the top of it before putting a public URL on this.
 
 Day-to-day operations — what to do when texts stop going out, when a request sits too long,
 when a volunteer says they never got called — live in [docs/runbook.md](./docs/runbook.md).
