@@ -13,6 +13,7 @@ import {
   TextInput,
   Toggle,
 } from "@/components/ui/primitives";
+import { EQUIPMENT_ICONS } from "@/components/ui/icons";
 import { ENUMS } from "@/config/app";
 import { Link, useRouter } from "@/i18n/navigation";
 import { geocodeAddress } from "@/lib/geocode";
@@ -304,16 +305,25 @@ export function JoinForm() {
 
           <Field label={t("equipmentLabel")} hint={t("equipmentHint")}>
             <div className="space-y-2">
-              {ENUMS.equipment.map((item) => (
-                <Checkbox
-                  key={item}
-                  id={`equipment-${item}`}
-                  checked={equipment.includes(item)}
-                  onChange={() => toggleEquipment(item)}
-                >
-                  {tEnum(`equipment.${item}`)}
-                </Checkbox>
-              ))}
+              {ENUMS.equipment.map((item) => {
+                // Eight near-identical rows read as a wall of text. The icon is what lets someone
+                // find "winch" without reading all eight, and it is decorative: the label stays
+                // the accessible name.
+                const Glyph = EQUIPMENT_ICONS[item];
+                return (
+                  <Checkbox
+                    key={item}
+                    id={`equipment-${item}`}
+                    checked={equipment.includes(item)}
+                    onChange={() => toggleEquipment(item)}
+                  >
+                    <span className="flex items-center gap-3">
+                      <Glyph size={26} className="shrink-0 text-ink-faint" />
+                      {tEnum(`equipment.${item}`)}
+                    </span>
+                  </Checkbox>
+                );
+              })}
             </div>
           </Field>
 
