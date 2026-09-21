@@ -14,9 +14,9 @@ Product rules, flow and conventions live in [CLAUDE.md](./CLAUDE.md). Read that 
 | Milestone | Scope | Status |
 |---|---|---|
 | **M1** | schema + migrations + RLS + seed data | built and verified |
-| **M2** | `/request` + `/r` status page + requester SMS | built, partly verified |
+| **M2** | `/request` + `/r` status page + requester SMS | built and verified |
 | **M3** | responder signup + dispatch engine + inbound webhook + tests | built and verified |
-| **M4** | `/board`, `/post`, `/admin` | built, partly verified |
+| **M4** | `/board`, `/post`, `/admin` | built and verified |
 | **M5** | PWA polish, i18n pass, README, deploy to Vercel | built, partly verified |
 
 ### What has actually been run
@@ -55,12 +55,29 @@ PostgREST 16.3 behind a gateway reproducing Supabase's `/rest/v1` layout — see
 [scripts/local-stack](./scripts/local-stack/README.md). Real RLS, real JWT role switching, real
 PostgREST. Still **not** a Supabase instance.
 
+**The volunteer and admin side**, driven through the UI with a real session:
+
+1. `/join` — requested a code, wrong code refused, right code accepted, profile form filled.
+2. Saved the profile → landed **`pending`**, with the phone taken from the verified OTP claim
+   rather than the form.
+3. `/me` — "Waiting for approval", no on-call toggle, no offers. Correct for a pending volunteer.
+4. `/admin` as that volunteer — *"That number is signed in, but it isn't an admin."*
+5. Signed in as the admin → queue with ages, rings and requester phones; 2 awaiting approval.
+6. Approved him. The audit log recorded
+   `responder.approval · admin@txrecover.test · {"approval":"approved"}`.
+7. `/me` again — **"You're on call"**, and a job 2.18 mi away appeared with
+   *"approximate pin until you take it"*.
+8. Took it → the current-job card released the requester's name, note and phone.
+9. Admin **Settings** and **Intake** exercised through their RPCs; intake created **TX-BYZR**.
+
 ### Still unverified
 
 - `supabase start` / `db reset` / `test db` through the real CLI — needs Docker, which needs
   admin rights this machine does not have.
-- **Phone OTP and photo upload**, so `/join`, `/me` and `/admin` are unexercised: GoTrue and
-  storage-api are not part of the local stack.
+- **Photo upload** — storage-api is not in the local stack.
+- **The address lookup on `/join`** — it calls Mapbox from the browser and needs a real token.
+  Without one it says "We couldn't find that place", which is the right degradation but blocks
+  finishing the signup form in a browser.
 - Twilio, Mapbox, and the `pg_cron` → Edge Function tick — all need live third-party accounts.
 - `county` is never populated locally (no Mapbox token), so offer texts omit it. It degrades
   cleanly, as intended.

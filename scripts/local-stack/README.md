@@ -6,25 +6,34 @@ have them, this assembles enough of Supabase to develop and test against:
 ```
 Next.js  ->  gateway.mjs (54321)  ->  PostgREST (54322)  ->  Postgres (55432)
                   |
-                  +-- /auth/v1 and /storage/v1 answer 501, honestly
+                  +-- /auth/v1    -> a small OTP shim over the real auth.users
+                  +-- /storage/v1 -> 501, honestly
 ```
 
 PostgREST is the same binary Supabase runs, pointed at the same schema, doing the same JWT role
-switching against the same RLS policies. What is **not** here is GoTrue (phone OTP) and
-storage-api, so anything that needs sign-in or photo upload cannot be tested this way. Those two
-return `501 not_implemented_locally` rather than a fake success, so a test that needs them fails
-loudly instead of passing for the wrong reason.
+switching against the same RLS policies.
+
+The `/auth/v1` shim is NOT GoTrue. It implements only the four endpoints supabase-js calls during
+a phone-OTP sign-in, against the real `auth.users` table, so `/join`, `/me` and `/admin` run their
+actual code paths. It accepts one fixed code and does no rate limiting, so it belongs nowhere
+near production. storage-api is not here at all and returns `501 not_implemented_locally` rather
+than a fake success, so a test that needs it fails loudly instead of passing for the wrong reason.
 
 ## What works
 
 The whole requester and dispatch path: submit a request, get the status link, run the tick, ring
 escalation, a volunteer accepting by SMS, the status page updating, mark recovered, the
-thank-you. Plus `/board` and every RPC.
+thank-you. Plus `/board`, and — with the auth shim — `/join` sign-in, `/me` end to end, and the
+whole of `/admin`.
 
 ## What does not
 
-`/join`, `/me` and `/admin` (all need auth), and photo upload (needs storage). For those, use a
-real Supabase project — see step 5 of the main README.
+- **Photo upload**, which needs storage-api.
+- **The address lookup on `/join`**, which calls Mapbox from the browser and needs a real
+  `NEXT_PUBLIC_MAPBOX_TOKEN`. Without one the field says "We could not find that place", which is
+  the correct degradation but does block finishing the signup form.
+
+For those, use a real Supabase project and a Mapbox token — see step 5 of the main README.
 
 ## One-time setup
 
@@ -96,6 +105,18 @@ curl -X POST http://127.0.0.1:3100/api/twilio/inbound -d "From=%2B19365550102" -
 
 > The inbound route only skips Twilio signature verification when `TWILIO_AUTH_TOKEN` is unset
 > **and** `NODE_ENV` is not production. In production an unsigned webhook is refused.
+
+## Signing in
+
+The shim accepts one code: `123456`. Any phone works; an unknown one creates an `auth.users` row
+the way a first sign-in would.
+
+| Who | Phone | Gets you |
+|---|---|---|
+| Admin | `(713) 555-0100` | the whole of `/admin` |
+| Mike | `(281) 555-0101` | an approved volunteer on `/me` |
+| Rosa | `(936) 555-0102` | an approved volunteer, Spanish |
+| anything else | — | a new signup, landing as `pending` |
 
 ## Honesty about what this proves
 

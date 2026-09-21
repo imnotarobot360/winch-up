@@ -80,7 +80,9 @@ export function MeDashboard() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [feed, setFeed] = useState<FeedRow[]>([]);
   const [contact, setContact] = useState<JobContact | null>(null);
-  const [eta, setEta] = useState("");
+  // Keyed by request: a volunteer holding two offers must not see the ETA they typed for one
+  // pre-filled into the other, or accept the second with the first ones number.
+  const [etas, setEtas] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -297,10 +299,15 @@ export function MeDashboard() {
                 <TextInput
                   id={`eta-${row.request_id}`}
                   inputMode="numeric"
-                  value={eta}
+                  value={etas[row.request_id] ?? ""}
                   maxLength={3}
                   placeholder="40"
-                  onChange={(event) => setEta(event.target.value.replace(/\D/g, ""))}
+                  onChange={(event) =>
+                    setEtas((current) => ({
+                      ...current,
+                      [row.request_id]: event.target.value.replace(/\D/g, ""),
+                    }))
+                  }
                 />
               </Field>
 
@@ -310,7 +317,7 @@ export function MeDashboard() {
                 onClick={() =>
                   run("accept_request", {
                     p_request_id: row.request_id,
-                    p_eta_minutes: eta ? Number(eta) : null,
+                    p_eta_minutes: etas[row.request_id] ? Number(etas[row.request_id]) : null,
                   })
                 }
               >
