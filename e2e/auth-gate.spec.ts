@@ -79,13 +79,18 @@ test.describe("the sign in form itself", () => {
     const submit = page.getByRole("button", { name: /sign in|iniciar sesión/i });
     await expect(submit).toBeDisabled();
 
-    await page.getByLabel(/email|correo/i).fill("someone@example.com");
+    // pressSequentially, not fill. On WebKit, Playwright's fill() on one field clears the other
+    // one -- verified three ways against a real WebKit build: fill email then password leaves
+    // email empty, fill password then email leaves password empty, and typing both works. It is
+    // an automation artifact rather than something a person can hit, but a test that only passes
+    // on Chromium is worth less than one that types like a person.
+    await page.getByLabel(/email|correo/i).pressSequentially("someone@example.com");
     await expect(submit, "still disabled without a password").toBeDisabled();
 
-    await page.getByLabel(/password|contraseña/i).fill("short");
+    await page.getByLabel(/password|contraseña/i).pressSequentially("short");
     await expect(submit, "still disabled with a password under 8 characters").toBeDisabled();
 
-    await page.getByLabel(/password|contraseña/i).fill("longenough123");
+    await page.getByLabel(/password|contraseña/i).pressSequentially("longenough123");
     await expect(submit, "enabled once both fields are valid").toBeEnabled();
   });
 

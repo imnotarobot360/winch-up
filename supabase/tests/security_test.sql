@@ -310,5 +310,45 @@ select matches(app.redacted_phone(), '^\+1[0-9]{10}$',
 select ok(app.redacted_phone() !~ '^\+1[2-9]',
   'and starts with an unassignable area code, so nobody can dial it by accident');
 
+-- ---------------------------------------------------------------------------
+-- 7. A test can never text a real community member
+--
+-- Phase 15's one safety rule. It used to be a comment at the top of the demo seed; it is now
+-- the database refusing, and it fails closed -- an unmarked database calls itself production.
+-- ---------------------------------------------------------------------------
+
+update app_settings set value = '"production"'::jsonb where key = 'deploy.environment';
+
+select ok(app.is_production(), 'a database marked production knows it');
+
+select throws_ok(
+  $q$select app.refuse_if_production('the demo seed')$q$,
+  '42501', null,
+  'and refuses anything that would create accounts and text real volunteers'
+);
+
+delete from app_settings where key = 'deploy.environment';
+
+select ok(
+  app.is_production(),
+  'a database with no marker at all is treated as production, which is the safe way round'
+);
+
+insert into app_settings (key, value) values ('deploy.environment', '"nonsense"'::jsonb);
+
+select ok(
+  app.is_production(),
+  'and so is one marked with something nobody recognises'
+);
+
+update app_settings set value = '"local"'::jsonb where key = 'deploy.environment';
+
+select ok(not app.is_production(), 'only an explicit local marker unlocks it');
+
+select lives_ok(
+  $q$select app.refuse_if_production('the demo seed')$q$,
+  'at which point the demo seed is allowed to run'
+);
+
 select * from finish();
 rollback;

@@ -156,6 +156,11 @@ docs/                     decisions + runbooks
 - **Photos are stripped client-side.** `createImageBitmap(file, {imageOrientation: "from-image"})`
   then canvas then JPEG. The re-encode is what drops EXIF, including GPS. Never add a path that
   uploads the original file.
+- **The demo seed refuses to run against production, and production is the default.**
+  `deploy.environment` says what a database is, and anything unmarked counts as production.
+  `scripts/local-stack/mark-local.sql` is the only way out, and there is deliberately no file
+  that sets it back. Phase 15's rule is "never send test recovery alerts to real community
+  members", and it used to be a comment.
 - **Deleting an account scrubs the columns beside the foreign key, not just the key.** A
   `BEFORE DELETE` trigger on `auth.users` blanks phone, name, exact pin, home location and shared
   position, and cancels any live recovery. This was a real finding: the FKs were doing their job
@@ -256,7 +261,7 @@ long done. Work since then has followed the owner's 16-phase spec:
 | 8 Community | done — feed, comments, reactions, blocking, reports, moderation queue. Groups, events and photo attachments deferred |
 | 11 Super admin | done in part — admin MFA, system health, the `moderator` role now has powers |
 | 13 Notifications | done — in-app inbox, producers as triggers, retry, dedupe, delivery log, consent and priority |
-| 15 QA | partly done — unit, component and E2E suites exist; no integration tests yet |
+| 15 QA | done — the whole recovery lifecycle as one integration suite, error conditions, a navigation crawl, four viewports across Chromium and WebKit |
 | 9 Trails & resources | done — trail directory with sourced access claims, condition reports, saved trails, member submissions; plus six public bilingual resource guides |
 | 10 Advertising | mostly done — business accounts, campaigns, per-advert approval, labelled serving, real counting. **Stripe is not wired**: it needs the owner's account and keys |
 | 12 Database & backend | done — schema audited and the findings fixed; the entities the spec names all exist |
@@ -277,8 +282,8 @@ Four layers. Run all of them before claiming anything works.
 ```
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
 npm test            94 unit + component tests (vitest)
-npm run test:e2e    70 Playwright tests, mobile + desktop
-supabase test db    574 pgTAP assertions across fourteen suites
+npm run test:e2e    168 Playwright tests — android, iphone, tablet, desktop
+supabase test db    622 pgTAP assertions across fifteen suites
 ```
 
 `prebuild` runs the i18n check, the contact-info parity check and the claims check -- three
@@ -293,6 +298,16 @@ and the build gate's `--check` catches you if you forget.
 
 E2E runs against `next build && next start`, not `next dev`, with `workers: 2`. Both are
 explained in `playwright.config.ts` and both were learned the hard way.
+
+Four projects: android and desktop on Chromium, iphone and tablet on real WebKit
+(`npx playwright install webkit` once). WebKit is not decoration — it found two failures the
+Chromium run did not, both of them in the tests rather than the product. Playwright's `fill()`
+clears a sibling field on WebKit, so forms are typed with `pressSequentially`; and reading a
+page before its client component resolves looks exactly like a blank-page bug.
+
+`supabase/tests/lifecycle_test.sql` is the integration suite: one recovery from an account that
+does not exist yet to a thank-you note, in order, through the functions the app actually calls.
+Every other suite tests one thing in isolation, and in a dispatcher the sequence is the product.
 
 The suites assume a database built the documented way: every migration in order, then
 `supabase/seed.sql` and `supabase/seeds/demo.sql`. Five of them fail on migrations alone. Two

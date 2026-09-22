@@ -67,6 +67,16 @@ psql -h 127.0.0.1 -p 55432 -U postgres -d postgres -c "drop database if exists w
 psql -h 127.0.0.1 -p 55432 -U postgres -d winchup -v ON_ERROR_STOP=1 -f scripts/local-stack/supabase-stubs.sql
 ```
 
+**Mark the database as local before seeding demo data**, or the demo seed refuses:
+
+```bash
+psql -h 127.0.0.1 -p 55432 -U postgres -d winchup -f scripts/local-stack/mark-local.sql
+```
+
+A database that has not been marked calls itself production and will not accept demo data,
+which creates accounts with known passwords and recovery requests that would text real
+volunteers. Production is the default on purpose; there is no file that sets it back.
+
 Then apply `supabase/migrations/*.sql` in filename order, followed by `supabase/seed.sql` and
 `supabase/seeds/demo.sql`.
 

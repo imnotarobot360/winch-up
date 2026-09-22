@@ -27,8 +27,18 @@ export default defineConfig({
     ...devices["Pixel 5"],
   },
 
+  /**
+   * Four shapes, because the spec asks for desktop, tablet, iPhone and Android and because this
+   * app is read one-handed in a truck at least as often as it is read at a desk.
+   *
+   * Pixel 5 and iPhone 13 are not interchangeable here: the iPhone is narrower, and Safari lays
+   * out the fixed tab bar and the safe-area inset differently. Tablet is the width where a
+   * one-question-per-screen wizard starts to look empty rather than focused.
+   */
   projects: [
-    { name: "mobile", use: { ...devices["Pixel 5"] } },
+    { name: "android", use: { ...devices["Pixel 5"] } },
+    { name: "iphone", use: { ...devices["iPhone 13"] } },
+    { name: "tablet", use: { ...devices["iPad (gen 7)"] } },
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
   ],
 

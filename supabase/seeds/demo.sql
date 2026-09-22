@@ -6,6 +6,19 @@
 -- Phone numbers all use the 555-01xx range reserved for fiction.
 -- Demo requests are flagged is_test = false on purpose so that /board and the admin map have
 -- something to render locally.
+-- ---------------------------------------------------------------------------
+-- Refuse to run against production.
+--
+-- This used to be a comment. A comment does not stop a tired person pasting the wrong file into
+-- the wrong SQL editor at eleven at night, and what follows creates accounts with known
+-- passwords and recovery requests that would text real volunteers.
+--
+-- The database defaults to calling itself production, so an unmarked one refuses. Mark a local
+-- database with scripts/local-stack/mark-local.sql.
+-- ---------------------------------------------------------------------------
+
+select app.refuse_if_production('supabase/seeds/demo.sql');
+
 
 set search_path = public, extensions;
 
