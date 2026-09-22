@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 
+import { AdSlot } from "@/components/ads/ad-slot";
 import { Button, Callout, Card, ChoiceList, TextArea } from "@/components/ui/primitives";
 import { IconCheck } from "@/components/ui/icons";
 import { supabaseBrowser } from "@/lib/supabase/client";
@@ -156,8 +157,14 @@ export function CommunityFeed() {
         </Card>
       ) : (
         <ul className="space-y-4">
-          {posts.map((post) => (
+          {posts.map((post, index) => (
             <li key={post.id}>
+              {/* One slot, a few posts down, never at the top. Whether it renders at all is the
+                  database's decision -- the component asks and gets nothing when there is
+                  nothing to show. */}
+              {index === Math.min(3, posts.length - 1) ? (
+                <AdSlot surface="community_feed" className="mb-4" />
+              ) : null}
               <PostCard
                 post={post}
                 onChanged={() => void load()}

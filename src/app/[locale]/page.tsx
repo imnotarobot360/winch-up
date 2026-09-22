@@ -115,6 +115,9 @@ export default async function HomePage({
         <Link href="/waiver" className="underline underline-offset-4">
           {tLegal("waiver")}
         </Link>
+        <Link href="/business" className="underline underline-offset-4">
+          {t("advertiseLink")}
+        </Link>
         <Link href="/privacy" className="underline underline-offset-4">
           {tLegal("privacy")}
         </Link>

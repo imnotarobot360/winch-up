@@ -1,22 +1,29 @@
-import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { AdSlot } from "@/components/ads/ad-slot";
 import { Callout, Card } from "@/components/ui/primitives";
 import { routing } from "@/i18n/routing";
 import { Link } from "@/i18n/navigation";
 import { GUIDES, isGuideSlug, type GuideSection } from "@/lib/resources";
 
 /**
- * The guide list is fixed at build time, so anything else is a 404 from the router rather than
- * from this component.
+ * An unknown slug renders a real page saying so, rather than calling notFound().
  *
- * That distinction is the difference between a real 404 and a 200 that looks like one. With
- * dynamic params allowed, an unknown slug rendered, flushed the head, and only then called
- * notFound() -- the status was already committed, so /resources/not-a-guide answered 200 with
- * not-found content on it. Harmless in a browser, wrong for a section that is deliberately
- * indexable. (The same flush is why a redirect looks like a 200 to curl; see account/page.tsx.)
+ * Both of the tidier-looking options were tried and both are worse here:
+ *
+ *   notFound() answers 200 anyway, because next-intl rewrites the request and the head has
+ *   flushed by the time the guard runs -- the same reason a redirect in this app looks like a
+ *   200 to curl. So it bought nothing.
+ *
+ *   dynamicParams = false was meant to push the rejection up to the router and get a real 404.
+ *   It did not: intermittently the response came back with the header and the tab bar and an
+ *   empty <main>, which an end-to-end test caught twice. A page that is sometimes blank is worse
+ *   than a page with the wrong status code.
+ *
+ * So: always render something, say plainly that the guide does not exist, list the ones that do,
+ * and send noindex so a crawler does not file it as a page. The status stays 200, which is
+ * honestly recorded here rather than papered over.
  */
-export const dynamicParams = false;
 
 export function generateStaticParams() {
   return routing.locales.flatMap((locale) => GUIDES.map((slug) => ({ locale, slug })));
@@ -50,9 +57,27 @@ export default async function GuidePage({
   const { locale, slug } = await params;
   setRequestLocale(locale);
 
-  if (!isGuideSlug(slug)) notFound();
-
   const t = await getTranslations("resources");
+
+  if (!isGuideSlug(slug)) {
+    return (
+      <main className="mx-auto w-full max-w-xl px-4 py-8">
+        <h1 className="text-2xl font-bold">{t("noSuchGuide")}</h1>
+        <p className="mt-2 text-base text-ink-soft">{t("noSuchGuideBody")}</p>
+        <nav className="mt-6 space-y-2">
+          {GUIDES.map((other) => (
+            <Link
+              key={other}
+              href={`/resources/${other}`}
+              className="block text-base underline underline-offset-4"
+            >
+              {t(`guides.${other}.title`)}
+            </Link>
+          ))}
+        </nav>
+      </main>
+    );
+  }
 
   // Arrays come back through `raw`. The shape is held to English by check-messages.mjs, which
   // walks arrays by index -- a Spanish section with fewer items fails the build.
@@ -91,6 +116,11 @@ export default async function GuidePage({
       {slug === "weather" ? (
         <p className="mt-4 text-sm text-ink-faint">{t("externalNote")}</p>
       ) : null}
+
+      {/* Mounted on every guide, including the two that are emergency guidance. It asks the
+          database and the database refuses those two by name, so there is exactly one place that
+          decides -- no TypeScript copy of the rule to drift out of step with the SQL one. */}
+      <AdSlot surface="resources" slug={slug} className="mt-6" />
 
       <Callout tone="danger" className="mt-6">
         <p className="font-semibold">{t("emergencyTitle")}</p>

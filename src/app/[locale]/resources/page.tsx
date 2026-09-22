@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { AdSlot } from "@/components/ads/ad-slot";
 import { Callout } from "@/components/ui/primitives";
 import { Link } from "@/i18n/navigation";
 import { GUIDES } from "@/lib/resources";
@@ -51,6 +52,8 @@ export default async function ResourcesPage({
           </li>
         ))}
       </ul>
+
+      <AdSlot surface="resources" className="mt-6" />
     </main>
   );
 }

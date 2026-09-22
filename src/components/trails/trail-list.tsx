@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 
+import { AdSlot } from "@/components/ads/ad-slot";
 import { Button, Callout, Card, Field, TextArea, TextInput } from "@/components/ui/primitives";
 import { Link } from "@/i18n/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
@@ -268,6 +269,8 @@ export function TrailList() {
           ))}
         </ul>
       )}
+
+      <AdSlot surface="trails" />
 
       <SuggestTrail onDone={() => void load()} />
     </div>

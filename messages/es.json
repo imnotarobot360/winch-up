@@ -154,7 +154,8 @@
     "trailsLink": "Ver caminos",
     "resourcesTitle": "Qué llevar, y cómo no salir lastimado",
     "resourcesBody": "Listas de equipo, qué revisar antes de dejar el pavimento, y la lista corta de lo que lastima gente durante un rescate. Gratis y sin cuenta.",
-    "resourcesLink": "Leer las guías"
+    "resourcesLink": "Leer las guías",
+    "advertiseLink": "Anuncia tu negocio"
   },
   "notFound": {
     "title": "No encontramos eso",
@@ -335,7 +336,8 @@
       "incidents": "Seguridad",
       "security": "Seguridad",
       "system": "Sistema",
-      "trails": "Caminos"
+      "trails": "Caminos",
+      "ads": "Anuncios"
     },
     "signin": {
       "title": "Entrar como administrador",
@@ -617,6 +619,43 @@
         "not_found": "Ese camino ya no está.",
         "failed": "No se guardó. Inténtalo otra vez."
       }
+    },
+    "ads": {
+      "title": "Publicidad",
+      "body": "Tres decisiones aparte: si el negocio es real, si la campaña debe correr donde dice, y si esas palabras exactas deben ir junto al nombre de este grupo.",
+      "ruleTitle": "Antes de aprobar algo",
+      "rule1": "Nada puede dar a entender que un anunciante de paga es más seguro, más calificado o más confiable que un voluntario.",
+      "rule2": "Nada puede sugerir que pagar consigue un rescate más rápido, ni prioridad de ningún tipo.",
+      "rule3": "Un anunciante de rescate o grúa lleva la línea extra automáticamente. Revisa que se lea honesta junto a su texto.",
+      "filters": {
+        "pending": "Pendientes",
+        "approved": "Aprobados",
+        "rejected": "Rechazados"
+      },
+      "loading": "Cargando…",
+      "none": "No hay nada aquí.",
+      "someone": "Alguien",
+      "businesses": "Negocios",
+      "campaigns": "Campañas",
+      "creatives": "Anuncios",
+      "verification": "¿Qué revisaste?",
+      "verificationHint": "Una frase de la que alguien pueda responder: \"LLC registrada en Texas, contestaron el teléfono, la dirección coincide con el corralón\".",
+      "verificationRequired": "Una aprobación necesita esto. Una palomita sola no es una revisión.",
+      "note": "Nota para el anunciante",
+      "approve": "Aprobar",
+      "reject": "Rechazar",
+      "ongoing": "sin fecha de fin",
+      "monthly": "${amount} al mes",
+      "towingWarning": "Rescate o grúa. Esta es la categoría donde confundir a un anunciante con un voluntario le cuesta dinero a alguien en el camino. Lee el texto con cuidado.",
+      "adLabelPreview": "Publicidad pagada",
+      "notAVolunteerPreview": "Este es un anunciante de paga, no un voluntario de Winch Up. Ellos cobran por el rescate. Los voluntarios de Winch Up nunca cobran.",
+      "errors": {
+        "verification_note_required": "Di qué revisaste antes de aprobar.",
+        "bad_status": "Ese no es un estado.",
+        "bad_kind": "No funcionó.",
+        "not_found": "Eso ya no está.",
+        "failed": "No funcionó. Inténtalo otra vez."
+      }
     }
   },
   "enum": {
@@ -753,6 +792,23 @@
       "flooded": "Inundado",
       "impassable": "Intransitable",
       "access_blocked": "Puerta o camino bloqueado"
+    },
+    "businessCategory": {
+      "recovery_towing": "Rescate o grúa (de paga)",
+      "offroad_shop": "Taller off-road",
+      "tires_wheels": "Llantas y rines",
+      "fabrication": "Fabricación y soldadura",
+      "parts": "Refacciones",
+      "powersports": "Powersports",
+      "land_access": "Terrenos, parques y acceso",
+      "food_lodging": "Comida y hospedaje",
+      "insurance": "Seguros",
+      "other": "Otra cosa"
+    },
+    "adSurface": {
+      "community_feed": "Comunidad",
+      "trails": "Caminos",
+      "resources": "Guías"
     }
   },
   "emergency": {
@@ -1486,6 +1542,89 @@
           }
         ]
       }
+    },
+    "noSuchGuide": "Esa guía no existe",
+    "noSuchGuideBody": "Ese enlace apunta a una guía que no tenemos. Estas son las que sí:"
+  },
+  "ads": {
+    "label": "Publicidad pagada",
+    "notAVolunteer": "Este es un anunciante de paga, no un voluntario de Winch Up. Ellos cobran por el rescate. Los voluntarios de Winch Up nunca cobran.",
+    "defaultCta": "Ver"
+  },
+  "business": {
+    "title": "Anuncia tu negocio",
+    "intro": "Talleres, fabricantes y operadores locales pueden comprar un espacio identificado en la comunidad, las páginas de caminos y las guías.",
+    "freeTitle": "Winch Up sigue siendo gratis para los miembros.",
+    "freeBody": "Nadie paga por pedir ayuda y nadie paga por ser voluntario. La publicidad nunca compra prioridad en la asignación, nunca aparece en una solicitud, un rescate en curso ni una conversación, y nunca hace que un anunciante parezca voluntario.",
+    "loading": "Cargando…",
+    "noBusiness": "Todavía no has registrado un negocio.",
+    "register": "Registrar un negocio",
+    "name": "Nombre del negocio",
+    "slug": "Nombre en la URL",
+    "slugHint": "Minúsculas y guiones. Se llena solo con el nombre si lo dejas vacío.",
+    "category": "¿A qué te dedicas?",
+    "towingNote": "Los anuncios de rescate y grúa llevan una línea extra que dice que eres un operador de paga y no un voluntario de Winch Up. Esa línea no es opcional ni negociable.",
+    "description": "Sobre el negocio",
+    "website": "Sitio web",
+    "websiteHint": "Empezando con https://",
+    "contactEmail": "Correo de contacto",
+    "contactPhone": "Teléfono de contacto",
+    "statuses": {
+      "draft": "Borrador",
+      "pending": "Esperando revisión",
+      "approved": "Aprobado",
+      "rejected": "No aprobado",
+      "suspended": "Suspendido",
+      "paused": "En pausa",
+      "ended": "Terminado"
+    },
+    "reviewNote": "Lo que dijo quien revisó",
+    "submitBusiness": "Mandar a revisión",
+    "editBusiness": "Editar el negocio",
+    "editSendsBack": "Guardar cambios lo manda otra vez a revisión antes de volver a publicarse.",
+    "campaignsAfterApproval": "Podrás crear campañas cuando el negocio esté aprobado.",
+    "campaigns": "Campañas",
+    "noCampaigns": "Todavía no hay campañas.",
+    "addCampaign": "Nueva campaña",
+    "campaignName": "Nombre de la campaña",
+    "surfaces": "¿Dónde debe aparecer?",
+    "surfacesHint": "Nunca en una solicitud, un rescate en curso, una conversación, ni en las dos guías escritas para quien está atascado en este momento.",
+    "startsOn": "Empieza",
+    "endsOn": "Termina",
+    "ongoing": "sin fecha de fin",
+    "monthlyPrice": "Precio mensual",
+    "monthlyPriceHint": "En dólares. Un espacio mensual fijo, no por vista.",
+    "schedule": "{from} → {to}",
+    "monthly": "${amount} al mes",
+    "counts": "{impressions} vistas · {clicks} clics",
+    "submitCampaign": "Mandar a revisión",
+    "pause": "Pausar",
+    "resume": "Reanudar",
+    "edit": "Editar",
+    "creatives": "Anuncios",
+    "noCreatives": "Todavía no hay anuncios.",
+    "addCreative": "Nuevo anuncio",
+    "creativeEditSendsBack": "Cambiar el texto manda este anuncio otra vez a revisión. Se aprueba lo que dice, no el espacio.",
+    "headline": "Título",
+    "body": "Texto",
+    "ctaLabel": "Texto del botón",
+    "ctaUrl": "A dónde lleva",
+    "ctaUrlHint": "Empezando con https://",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "cancel": "Cancelar",
+    "errors": {
+      "not_signed_in": "Inicia sesión primero.",
+      "not_found": "Eso no es tuyo.",
+      "bad_slug": "Solo minúsculas, números y guiones.",
+      "bad_category": "Elige una categoría.",
+      "bad_surface": "Ahí no pueden aparecer anuncios.",
+      "no_surfaces": "Elige al menos un lugar donde aparezca.",
+      "bad_targeting": "Da un punto y un radio, o ninguno de los dos.",
+      "bad_url": "El enlace tiene que empezar con http:// o https://",
+      "slug_taken": "Otro negocio ya usa ese nombre en la URL.",
+      "rate_limited": "Son muchos negocios de golpe. Inténtalo mañana.",
+      "failed": "No funcionó. Inténtalo otra vez."
     }
   }
 }

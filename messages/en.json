@@ -154,7 +154,8 @@
     "trailsLink": "Open trails",
     "resourcesTitle": "What to carry, and how not to get hurt",
     "resourcesBody": "Checklists, what to do before you leave pavement, and the short list of things that hurt people during a recovery. Free, no account needed.",
-    "resourcesLink": "Read the guides"
+    "resourcesLink": "Read the guides",
+    "advertiseLink": "Advertise your business"
   },
   "notFound": {
     "title": "We couldn't find that",
@@ -335,7 +336,8 @@
       "incidents": "Safety",
       "security": "Security",
       "system": "System",
-      "trails": "Trails"
+      "trails": "Trails",
+      "ads": "Ads"
     },
     "signin": {
       "title": "Admin sign in",
@@ -617,6 +619,43 @@
         "not_found": "That trail is gone.",
         "failed": "That didn't save. Try again."
       }
+    },
+    "ads": {
+      "title": "Advertising",
+      "body": "Three separate decisions: is the business real, should the campaign run where it says, and should these exact words sit next to this group's name.",
+      "ruleTitle": "Before you approve anything",
+      "rule1": "Nothing may imply that a paid advertiser is safer, better qualified or more reliable than a volunteer.",
+      "rule2": "Nothing may suggest that paying gets a faster recovery, or any priority at all.",
+      "rule3": "A recovery or towing advertiser carries the extra line automatically. Check it reads honestly with their copy.",
+      "filters": {
+        "pending": "Waiting",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "loading": "Loading…",
+      "none": "Nothing here.",
+      "someone": "Someone",
+      "businesses": "Businesses",
+      "campaigns": "Campaigns",
+      "creatives": "Adverts",
+      "verification": "What did you check?",
+      "verificationHint": "A sentence somebody could be held to: \"LLC registered in Texas, phone answered, address matches the yard\".",
+      "verificationRequired": "An approval needs this. A green tick on its own is not a check.",
+      "note": "Note for the advertiser",
+      "approve": "Approve",
+      "reject": "Reject",
+      "ongoing": "no end date",
+      "monthly": "${amount} a month",
+      "towingWarning": "Recovery or towing. This is the category where a reader mistaking an advertiser for a volunteer costs them money at the roadside. Read the copy carefully.",
+      "adLabelPreview": "Paid advertisement",
+      "notAVolunteerPreview": "This is a paid advertiser, not a Winch Up volunteer. They charge for recovery. Winch Up volunteers never do.",
+      "errors": {
+        "verification_note_required": "Say what you checked before approving.",
+        "bad_status": "That isn't a status.",
+        "bad_kind": "That didn't work.",
+        "not_found": "That's gone.",
+        "failed": "That didn't work. Try again."
+      }
     }
   },
   "enum": {
@@ -753,6 +792,23 @@
       "flooded": "Flooded",
       "impassable": "Impassable",
       "access_blocked": "Gate or road blocked"
+    },
+    "businessCategory": {
+      "recovery_towing": "Recovery or towing (paid)",
+      "offroad_shop": "Off-road shop",
+      "tires_wheels": "Tyres and wheels",
+      "fabrication": "Fabrication and welding",
+      "parts": "Parts",
+      "powersports": "Powersports",
+      "land_access": "Land, parks and access",
+      "food_lodging": "Food and lodging",
+      "insurance": "Insurance",
+      "other": "Something else"
+    },
+    "adSurface": {
+      "community_feed": "Community feed",
+      "trails": "Trails",
+      "resources": "Guides"
     }
   },
   "emergency": {
@@ -1486,6 +1542,89 @@
           }
         ]
       }
+    },
+    "noSuchGuide": "No such guide",
+    "noSuchGuideBody": "That link points at a guide we do not have. These are the ones we do:"
+  },
+  "ads": {
+    "label": "Paid advertisement",
+    "notAVolunteer": "This is a paid advertiser, not a Winch Up volunteer. They charge for recovery. Winch Up volunteers never do.",
+    "defaultCta": "Visit"
+  },
+  "business": {
+    "title": "Advertise your business",
+    "intro": "Local shops, fabricators and operators can buy a labelled placement in the community feed, the trail pages and the guides.",
+    "freeTitle": "Winch Up stays free for members.",
+    "freeBody": "Nobody pays to ask for help and nobody pays to volunteer. Advertising never buys priority in matching, never appears on a request, a live recovery or a message thread, and never makes an advertiser look like a volunteer.",
+    "loading": "Loading…",
+    "noBusiness": "You haven't registered a business yet.",
+    "register": "Register a business",
+    "name": "Business name",
+    "slug": "URL name",
+    "slugHint": "Lowercase and hyphens. Filled in from the name if you leave it.",
+    "category": "What do you do?",
+    "towingNote": "Recovery and towing ads carry an extra line saying you're a paid operator and not a Winch Up volunteer. That line is not optional and is not negotiable.",
+    "description": "About the business",
+    "website": "Website",
+    "websiteHint": "Starting with https://",
+    "contactEmail": "Contact email",
+    "contactPhone": "Contact phone",
+    "statuses": {
+      "draft": "Draft",
+      "pending": "Waiting for review",
+      "approved": "Approved",
+      "rejected": "Not approved",
+      "suspended": "Suspended",
+      "paused": "Paused",
+      "ended": "Ended"
+    },
+    "reviewNote": "What the reviewer said",
+    "submitBusiness": "Send for review",
+    "editBusiness": "Edit the business",
+    "editSendsBack": "Saving changes sends this back for review before it runs again.",
+    "campaignsAfterApproval": "You can set up campaigns once the business has been approved.",
+    "campaigns": "Campaigns",
+    "noCampaigns": "No campaigns yet.",
+    "addCampaign": "New campaign",
+    "campaignName": "Campaign name",
+    "surfaces": "Where should it run?",
+    "surfacesHint": "Never on a request, a live recovery, a message thread, or the two guides written for somebody who is stuck right now.",
+    "startsOn": "Starts",
+    "endsOn": "Ends",
+    "ongoing": "no end date",
+    "monthlyPrice": "Monthly price",
+    "monthlyPriceHint": "In dollars. A flat monthly placement, not per view.",
+    "schedule": "{from} → {to}",
+    "monthly": "${amount} a month",
+    "counts": "{impressions} seen · {clicks} clicks",
+    "submitCampaign": "Send for review",
+    "pause": "Pause",
+    "resume": "Resume",
+    "edit": "Edit",
+    "creatives": "Adverts",
+    "noCreatives": "No adverts yet.",
+    "addCreative": "New advert",
+    "creativeEditSendsBack": "Changing the words sends this advert back for review. Approval is of what it says, not of the slot.",
+    "headline": "Headline",
+    "body": "Body",
+    "ctaLabel": "Button text",
+    "ctaUrl": "Where it goes",
+    "ctaUrlHint": "Starting with https://",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "errors": {
+      "not_signed_in": "Sign in first.",
+      "not_found": "That isn't yours.",
+      "bad_slug": "Lowercase letters, numbers and hyphens only.",
+      "bad_category": "Pick a category.",
+      "bad_surface": "That isn't a place ads can run.",
+      "no_surfaces": "Pick at least one place for it to run.",
+      "bad_targeting": "Give a point and a radius, or neither.",
+      "bad_url": "The link has to start with http:// or https://",
+      "slug_taken": "Another business already uses that URL name.",
+      "rate_limited": "That's a lot of businesses at once. Try again tomorrow.",
+      "failed": "That didn't work. Try again."
     }
   }
 }

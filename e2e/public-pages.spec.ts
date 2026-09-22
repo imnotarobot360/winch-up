@@ -82,8 +82,8 @@ test.describe("the resources section", () => {
     // crawler filing it as a real page.
     await page.goto("/resources/not-a-guide");
 
-    const text = await page.locator("body").innerText();
-    expect(text).toMatch(/couldn't find|no encontramos|404/i);
+    const text = await page.locator("main").innerText();
+    expect(text).toMatch(/No such guide|Esa guía no existe/i);
     expect(text, "the guide's own content must not render").not.toMatch(/Turn around, don't drown/);
 
     const robots = await page

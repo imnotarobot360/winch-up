@@ -156,6 +156,21 @@ docs/                     decisions + runbooks
 - **Photos are stripped client-side.** `createImageBitmap(file, {imageOrientation: "from-image"})`
   then canvas then JPEG. The re-encode is what drops EXIF, including GPS. Never add a path that
   uploads the original file.
+- **Ads cannot reach anything urgent, and it is the enum that stops them.** `ad_surface` has
+  three values — community feed, trails, guides — and none of them is a request, a live recovery
+  or a message thread. `app.ad_slot_allowed()` additionally refuses the two resource guides that
+  are emergency guidance (`stuck`, `safety`). There is no TypeScript copy of that rule: the
+  `AdSlot` component mounts everywhere and asks the database, so there is one place to change.
+- **Nothing in the dispatch path may ever read an advertising table.** A test reads the source of
+  `app.candidates()`, `advance_dispatch()`, `app.decline_dispatch()` and
+  `admin_manual_dispatch()` and fails if any of them so much as names one. Nobody buys priority.
+- **`ad_daily_stats` has no column that could identify a person** and must not grow one. That is
+  the whole privacy position of the ad system — counts per creative per surface per day, belonging
+  to nobody — and a test asserts the exact column list. IP is used for rate limiting in
+  `/api/ads/event` and never stored.
+- **Approval attaches to the words, not the row.** Editing an approved creative or business sends
+  it straight back to pending and clears the verification note. Otherwise "approve the shop, then
+  rename it to a tow company" is a two-step way past review.
 - **The resources section is content, not a CMS.** The six guides live in `messages/{en,es}.json`
   and are rendered from `src/lib/resources.ts`. `check-messages.mjs` walks arrays **by index**, so
   an English checklist of seven items and a Spanish one of five fails the build — which matters
@@ -211,7 +226,8 @@ long done. Work since then has followed the owner's 16-phase spec:
 | 13 Deployment | done in part — deployed and green; the 10DLC pack is written, not submitted |
 | 15 QA | partly done — unit, component and E2E suites exist; no integration tests yet |
 | 9 Trails & resources | done — trail directory with sourced access claims, condition reports, saved trails, member submissions; plus six public bilingual resource guides |
-| 10, 12, 14, 16 | not started (advertising, database tooling, notifications, launch) |
+| 10 Advertising | mostly done — business accounts, campaigns, per-advert approval, labelled serving, real counting. **Stripe is not wired**: it needs the owner's account and keys |
+| 12, 14, 16 | not started (database tooling, notifications, launch) |
 
 **Proven working in production**, not just built: a signed-in person files a request, the tick
 escalates it through all three rings, it reaches `unmatched` with nobody available, and the public
@@ -227,8 +243,8 @@ Four layers. Run all of them before claiming anything works.
 ```
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
 npm test            94 unit + component tests (vitest)
-npm run test:e2e    66 Playwright tests, mobile + desktop
-supabase test db    368 pgTAP assertions across nine suites
+npm run test:e2e    68 Playwright tests, mobile + desktop
+supabase test db    432 pgTAP assertions across ten suites
 ```
 
 `prebuild` runs the i18n and contact-info parity checks only -- two plain node scripts with no
