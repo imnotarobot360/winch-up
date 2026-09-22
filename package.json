@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "prebuild": "node scripts/check-messages.mjs",
+    "prebuild": "node scripts/check-messages.mjs && node scripts/gen-contact-info-parity.mjs --check && vitest run",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
@@ -17,7 +17,10 @@
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",
     "db:push": "supabase db push",
-    "db:types": "supabase gen types typescript --local --schema public > src/lib/types/database.ts"
+    "db:types": "supabase gen types typescript --local --schema public > src/lib/types/database.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:db": "supabase test db"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",
@@ -43,6 +46,7 @@
     "eslint": "^9.36.0",
     "eslint-config-next": "^15.5.4",
     "tailwindcss": "^4.1.13",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.7"
   }
 }

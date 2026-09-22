@@ -245,3 +245,23 @@ export function segmentCount(body: string): number {
   if (body.length <= perSegment) return 1;
   return Math.ceil(body.length / perSegmentMulti);
 }
+
+/**
+ * Does a rendered body show signs of a missing parameter?
+ *
+ * Templates interpolate whatever they are handed. A param absent from the queued row arrives on
+ * somebody's phone as the literal word "undefined" -- including inside the map link, as
+ * `query=undefined,undefined`, which is a pin in the Gulf of Guinea.
+ *
+ * Nothing upstream guarantees the params are complete: they are written as jsonb by whichever
+ * database function queued the message. This is the last point where that can be caught, and a
+ * logged failure an admin can see beats a confusing text to a volunteer who is deciding whether
+ * to drive out in the dark.
+ */
+export function renderLooksBroken(body: string): string | null {
+  if (/\bundefined\b/.test(body)) return "rendered body contains 'undefined'";
+  if (/\bNaN\b/.test(body)) return "rendered body contains 'NaN'";
+  // An unreplaced {placeholder}: a template and its params disagree.
+  if (/\{[a-z_]+\}/i.test(body)) return "rendered body contains an unreplaced placeholder";
+  return null;
+}

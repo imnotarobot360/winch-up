@@ -1,0 +1,49 @@
+{
+  "_comment": [
+    "Shared truth for public.contains_contact_info() and its TypeScript twin in",
+    "src/lib/contact-info.ts. Both are tested against this one file: the Vitest suite reads it",
+    "directly, and scripts/gen-contact-info-parity.mjs turns it into a pgTAP suite. If the two",
+    "implementations ever drift, one of them fails.",
+    "",
+    "CLAUDE.md says 'change one, change both'. This is what makes that enforceable rather than",
+    "remembered."
+  ],
+  "blocked": [
+    { "text": "call me at 512-555-0134", "why": "plain 3-3-4 with dashes" },
+    { "text": "512.555.0134", "why": "dots instead of dashes" },
+    { "text": "(512) 555-0134", "why": "parentheses" },
+    { "text": "5125550134", "why": "no punctuation at all" },
+    { "text": "+1 512 555 0134", "why": "leading country code" },
+    { "text": "1-512-555-0134", "why": "leading 1 with dashes" },
+    { "text": "reach me on 15125550134 any time", "why": "11-digit run inside a sentence" },
+    { "text": "my number is 512 555 0134 thanks", "why": "spaces, mid-sentence" },
+    { "text": "see https://example.com/help", "why": "explicit https URL" },
+    { "text": "http://towing.example", "why": "explicit http URL" },
+    { "text": "go to www.cheaptows.com", "why": "www prefix" },
+    { "text": "we are at bigtruckrecovery.com", "why": "bare domain, .com" },
+    { "text": "find us at recovery.net, open late", "why": "bare domain followed by a comma" },
+    { "text": "book at quicktow.io?ref=fb", "why": "bare domain with a query string" },
+    { "text": "visit MyShop.SHOP now", "why": "uppercase TLD, case-insensitive match" },
+    { "text": "contact 999999999999", "why": "12-digit run" }
+  ],
+  "allowed": [
+    { "text": "", "why": "empty string" },
+    { "text": "Stuck in mud past the hubs", "why": "ordinary description" },
+    { "text": "Buried to the frame off FM 1431", "why": "road number, only 4 digits" },
+    { "text": "2019 Ford F-250, 35 inch tires", "why": "year and size, no phone shape" },
+    { "text": "About 200 yards past the second gate", "why": "distance" },
+    { "text": "I have 35s and a winch", "why": "short digit run" },
+    { "text": "Need a tractor, truck is 8000 lb", "why": "4-digit weight" },
+    { "text": "Water is maybe 18 inches deep", "why": "measurement" },
+    { "text": "Off CR 340 near the river crossing", "why": "county road" },
+    { "text": "Took 45 minutes to get here", "why": "duration" },
+    { "text": "Mike with the blue Jeep", "why": "a name" },
+    { "text": "Rained 3 days straight so it is soft", "why": "digits with words" }
+  ],
+  "_known_limits": [
+    "These cases document behaviour, including behaviour that is arguably too eager. A 10-digit",
+    "run is blocked wherever it appears, so a very long VIN or a GPS string pasted into a public",
+    "notes field is rejected too. That is the intended trade: the field is public, and a false",
+    "rejection costs somebody one edit while a false accept publishes a phone number."
+  ]
+}

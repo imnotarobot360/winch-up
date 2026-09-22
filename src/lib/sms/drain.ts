@@ -2,7 +2,7 @@ import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
-import { renderSms, segmentCount } from "./templates";
+import { renderLooksBroken, renderSms, segmentCount } from "./templates";
 import { sendSms } from "./twilio";
 
 type QueuedMessage = {
@@ -56,6 +56,21 @@ export async function drainSmsOutbox(limit = 20): Promise<DrainSummary> {
       await db.rpc("mark_sms_failed", {
         p_id: message.id,
         p_error: `Unknown template key: ${message.template_key}`,
+      });
+      continue;
+    }
+
+    // Refuse rather than send. A text reading "es suyo. undefined, undefined" tells a
+    // volunteer nothing and costs the trust the next one depends on; a failed row tells an
+    // admin exactly which template and which request to look at.
+    const broken = renderLooksBroken(body);
+
+    if (broken) {
+      summary.failed += 1;
+      summary.errors.push(`${message.template_key}: ${broken}`);
+      await db.rpc("mark_sms_failed", {
+        p_id: message.id,
+        p_error: `${broken} (template: ${message.template_key})`,
       });
       continue;
     }
