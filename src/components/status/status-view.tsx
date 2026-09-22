@@ -16,6 +16,7 @@ import {
   TextArea,
 } from "@/components/ui/primitives";
 import { ReportForm } from "@/components/incident/report-form";
+import { RequestThread } from "@/components/messages/request-thread";
 import { mapAppUrl } from "@/lib/geo";
 import { isClosed, type StatusView as StatusViewData } from "@/lib/types/status";
 import { formatUsPhone } from "@/lib/utils";
@@ -338,6 +339,17 @@ export function StatusView({
       <p className="sr-only" aria-live="polite">
         {tEnum(`requestStatus.${data.status}`)}
       </p>
+
+      {data.id ? (
+
+        <div className="mt-8">
+
+          <RequestThread requestId={data.id} closed={isClosed(data.status)} />
+
+        </div>
+
+      ) : null}
+
 
       {/* Quiet, and last. Most people never need it, and a report form sitting open on a
 

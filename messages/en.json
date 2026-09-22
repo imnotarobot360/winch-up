@@ -850,6 +850,26 @@
       "server_error": "Something broke on our end. Try again."
     }
   },
+  "thread": {
+    "title": "Messages",
+    "privateNote": "Just you and the volunteer on this job. Nobody else can see this, including anyone you shared the status link with.",
+    "empty": "Nothing yet. Say where you are, or what the ground is like.",
+    "placeholder": "Gate code is 4412, blue Tacoma past the cattle guard…",
+    "composeLabel": "Your message",
+    "send": "Send",
+    "sending": "Sending…",
+    "read": "Seen",
+    "closedNote": "This recovery is finished, so messages are closed. If something went wrong, use the report link below.",
+    "errors": {
+      "not_found": "This conversation isn't available.",
+      "empty": "Type something first.",
+      "too_long": "That's too long. Keep it under 2000 characters.",
+      "closed": "This recovery is finished, so messages are closed.",
+      "rate_limited": "That's a lot of messages. Give it a minute.",
+      "bad_attachment_type": "Only photos can be attached.",
+      "failed": "That didn't send. Try again."
+    }
+  },
   "common": {
     "next": "Next",
     "back": "Back",

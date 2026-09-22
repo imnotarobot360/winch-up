@@ -54,6 +54,7 @@ export type ProOption = {
 };
 
 export type StatusPayload = {
+  id: string;
   short_code: string;
   status: RequestStatus;
   locale: "en" | "es";

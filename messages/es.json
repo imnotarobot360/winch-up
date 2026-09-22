@@ -850,6 +850,26 @@
       "server_error": "Algo falló de nuestro lado. Intente de nuevo."
     }
   },
+  "thread": {
+    "title": "Mensajes",
+    "privateNote": "Solo usted y el voluntario de este trabajo. Nadie más lo ve, ni siquiera quien reciba el enlace de estado.",
+    "empty": "Nada todavía. Diga dónde está, o cómo está el terreno.",
+    "placeholder": "El código del portón es 4412, Tacoma azul pasando el guardaganado…",
+    "composeLabel": "Su mensaje",
+    "send": "Enviar",
+    "sending": "Enviando…",
+    "read": "Visto",
+    "closedNote": "Este rescate ya terminó, así que los mensajes están cerrados. Si algo salió mal, use el enlace de reporte abajo.",
+    "errors": {
+      "not_found": "Esta conversación no está disponible.",
+      "empty": "Escriba algo primero.",
+      "too_long": "Es demasiado largo. Manténgalo bajo 2000 caracteres.",
+      "closed": "Este rescate ya terminó, así que los mensajes están cerrados.",
+      "rate_limited": "Son muchos mensajes. Espere un minuto.",
+      "bad_attachment_type": "Solo se pueden adjuntar fotos.",
+      "failed": "No se envió. Intente de nuevo."
+    }
+  },
   "common": {
     "next": "Siguiente",
     "back": "Atrás",

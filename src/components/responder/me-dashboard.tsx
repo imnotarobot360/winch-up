@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { Button, Callout, Card, Field, TextInput } from "@/components/ui/primitives";
 import { ReportForm } from "@/components/incident/report-form";
+import { RequestThread } from "@/components/messages/request-thread";
 import { LocationShare } from "@/components/responder/location-share";
 import { Link } from "@/i18n/navigation";
 import { mapAppUrl } from "@/lib/geo";
@@ -382,6 +383,10 @@ export function MeDashboard() {
       >
         {t("signOut")}
       </Button>
+      {profile.current_job ? (
+        <RequestThread requestId={profile.current_job.request_id} />
+      ) : null}
+
       <LocationShare
 
         sharing={profile.share_location}
