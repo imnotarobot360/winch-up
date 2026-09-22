@@ -682,5 +682,111 @@ select is(
   'a volunteer with no account still matches on their declared list alone'
 );
 
+-- ---------------------------------------------------------------------------
+-- Matching measures from where a volunteer is, not only where they live
+--
+-- Phase 6: recent permissioned location beats an assumption about home. Own fixtures, because
+-- everything above has already moved people around.
+-- ---------------------------------------------------------------------------
+
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, recovery_token, email_change, email_change_token_new
+) values (
+  '00000000-0000-0000-0000-000000000000', 'dddddddd-0000-4000-8000-00000000000d',
+  'authenticated', 'authenticated', 'loc-test@example.invalid', 'x', now(),
+  '{}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', ''
+);
+
+-- Lives 185 miles away, has the gear, 60 mile radius.
+insert into responders (
+  id, user_id, phone, first_name, home_location, radius_miles,
+  equipment, approval, availability, night_ok, sms_opt_in, max_active_jobs
+) values (
+  'dddddddd-1111-4111-8111-00000000000d', 'dddddddd-0000-4000-8000-00000000000d',
+  '+15125559101', 'LocTest',
+  extensions.st_setsrid(extensions.st_point(-100.5, 31.5), 4326)::extensions.geography,
+  60, '{tractor}', 'approved', 'active', true, true, 1
+);
+
+insert into requests (
+  requester_name, requester_phone, location, vehicle_class, stuck_type, land_type,
+  needs_tractor, status, emergency_ack_at, rules_accepted, waiver_id, waiver_accepted_at
+) values (
+  'Loc Match', '+15125559102',
+  extensions.st_setsrid(extensions.st_point(-97.7431, 30.2672), 4326)::extensions.geography,
+  'truck', 'mud', 'public', true, 'dispatching', now(), true,
+  (select id from waivers where slug = 'requester_waiver' and is_current), now()
+);
+
+select is(
+  (select count(*)::int
+     from app.candidates((select id from requests where requester_phone = '+15125559102'), 60, 50) c
+    where c.responder_id = 'dddddddd-1111-4111-8111-00000000000d'),
+  0,
+  'a volunteer whose home is 185 miles away does not match'
+);
+
+-- Out on the trail, two miles from the stuck truck, shared just now.
+update responders
+   set share_location = true,
+       last_location = extensions.st_setsrid(extensions.st_point(-97.71, 30.29), 4326)::extensions.geography,
+       last_location_at = now()
+ where id = 'dddddddd-1111-4111-8111-00000000000d';
+
+select is(
+  (select count(*)::int
+     from app.candidates((select id from requests where requester_phone = '+15125559102'), 60, 50) c
+    where c.responder_id = 'dddddddd-1111-4111-8111-00000000000d'),
+  1,
+  'and does match once they share where they actually are'
+);
+
+select cmp_ok(
+  (select distance_miles
+     from app.candidates((select id from requests where requester_phone = '+15125559102'), 60, 50) c
+    where c.responder_id = 'dddddddd-1111-4111-8111-00000000000d'),
+  '<', 10::numeric,
+  'the distance reported is the real one, not the distance from home'
+);
+
+-- Same point, shared three days ago.
+update responders set last_location_at = now() - interval '3 days'
+ where id = 'dddddddd-1111-4111-8111-00000000000d';
+
+select is(
+  (select count(*)::int
+     from app.candidates((select id from requests where requester_phone = '+15125559102'), 60, 50) c
+    where c.responder_id = 'dddddddd-1111-4111-8111-00000000000d'),
+  0,
+  'a stale position is ignored and matching falls back to home: stale beats wrong'
+);
+
+-- Sharing turned off entirely, with a fresh point still on the row.
+update responders set share_location = false, last_location_at = now()
+ where id = 'dddddddd-1111-4111-8111-00000000000d';
+
+select is(
+  (select count(*)::int
+     from app.candidates((select id from requests where requester_phone = '+15125559102'), 60, 50) c
+    where c.responder_id = 'dddddddd-1111-4111-8111-00000000000d'),
+  0,
+  'and a volunteer who turned sharing off is matched from home even if a point remains'
+);
+
+-- forget_my_location() removes it rather than merely ignoring it.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"dddddddd-0000-4000-8000-00000000000d","role":"authenticated"}';
+select is(public.forget_my_location() ->> 'ok', 'true', 'a volunteer can forget their position');
+reset role;
+
+select is(
+  (select last_location is null and share_location = false
+     from responders where id = 'dddddddd-1111-4111-8111-00000000000d'),
+  true,
+  'and the point is actually gone, not just switched off'
+);
+
 select * from finish();
 rollback;

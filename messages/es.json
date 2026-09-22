@@ -245,6 +245,24 @@
       "no_open_offer": "No hay ninguna oferta abierta que contestar.",
       "already_yours": "Este ya es suyo.",
       "bad_value": "No entendimos eso."
+    },
+    "location": {
+      "title": "Dónde está ahora",
+      "body": "Por defecto lo buscamos desde su domicilio. Si ya anda en la brecha, comparta dónde está de verdad y lo buscaremos desde ahí.",
+      "share": "Compartir dónde estoy",
+      "update": "Actualizar mi posición",
+      "forget": "Dejar de compartir",
+      "working": "Trabajando…",
+      "sharedAt": "Compartiendo su posición, actualizada {when}.",
+      "note": "Una sola posición, guardada cuando usted presiona el botón. Nada corre en segundo plano y nada lo rastrea. Se ignora después de un par de horas y volvemos a su domicilio.",
+      "errors": {
+        "denied": "Su navegador bloqueó la ubicación. Tendrá que permitirla en la configuración del navegador.",
+        "unavailable": "No pudimos obtener una posición. Intente afuera o con mejor señal.",
+        "unsupported": "Este navegador no puede compartir ubicación.",
+        "too_inaccurate": "Esa posición fue demasiado imprecisa. Intente afuera.",
+        "not_a_responder": "Todavía no está registrado como voluntario.",
+        "failed": "No funcionó. Intente de nuevo."
+      }
     }
   },
   "board": {

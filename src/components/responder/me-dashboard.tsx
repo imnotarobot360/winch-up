@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { Button, Callout, Card, Field, TextInput } from "@/components/ui/primitives";
 import { ReportForm } from "@/components/incident/report-form";
+import { LocationShare } from "@/components/responder/location-share";
 import { Link } from "@/i18n/navigation";
 import { mapAppUrl } from "@/lib/geo";
 import { supabaseBrowser } from "@/lib/supabase/client";
@@ -20,6 +21,8 @@ type Profile = {
   vehicle_desc: string | null;
   approval: "pending" | "approved" | "rejected" | "banned";
   availability: "active" | "paused";
+  share_location: boolean;
+  last_location_at: string | null;
   recoveries_count: number;
   current_job: {
     request_id: string;
@@ -379,6 +382,18 @@ export function MeDashboard() {
       >
         {t("signOut")}
       </Button>
+      <LocationShare
+
+        sharing={profile.share_location}
+
+        sharedAt={profile.last_location_at}
+
+        onChange={() => void load()}
+
+      />
+
+      
+
       {/* Quiet, and last. Most volunteers never need it, and a report form sitting open
           reads as an accusation waiting to happen. */}
       <div className="mt-10">

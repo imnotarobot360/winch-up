@@ -245,6 +245,24 @@
       "no_open_offer": "There's no open offer to answer.",
       "already_yours": "You already have this one.",
       "bad_value": "We didn't understand that."
+    },
+    "location": {
+      "title": "Where you are right now",
+      "body": "By default we match you from your home address. If you're already out on the trail, share where you actually are and you'll be matched from there instead.",
+      "share": "Share where I am",
+      "update": "Update my position",
+      "forget": "Stop sharing",
+      "working": "Working…",
+      "sharedAt": "Sharing your position, updated {when}.",
+      "note": "One position, stored when you press the button. Nothing runs in the background and nothing tracks you. It's ignored after a couple of hours and we go back to your home address.",
+      "errors": {
+        "denied": "Your browser blocked location. You'll need to allow it in browser settings.",
+        "unavailable": "We couldn't get a position. Try again outside or with a better signal.",
+        "unsupported": "This browser can't share a location.",
+        "too_inaccurate": "That position was too vague to use. Try again outside.",
+        "not_a_responder": "You're not signed up as a volunteer yet.",
+        "failed": "That didn't work. Try again."
+      }
     }
   },
   "board": {
