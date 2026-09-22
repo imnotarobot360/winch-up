@@ -156,6 +156,17 @@ docs/                     decisions + runbooks
 - **Photos are stripped client-side.** `createImageBitmap(file, {imageOrientation: "from-image"})`
   then canvas then JPEG. The re-encode is what drops EXIF, including GPS. Never add a path that
   uploads the original file.
+- **Notification producers are triggers, never calls added to existing functions.** Every event
+  worth telling somebody about is already written to `request_events`, `request_messages` or
+  `community_comments`, so `app.notify_on_*` triggers read those. `advance_dispatch()` is not
+  touched and must stay that way — notifications are not dispatch's job.
+- **Notifications do not send SMS for anything the dispatch path already texts about.** A
+  delivery with no `sms_template` param is recorded as `suppressed` with a reason. Email and push
+  are not built and say so in `last_error` rather than vanishing.
+- **Anything in the header runs on public pages.** `NotificationBell` checks for a session before
+  calling `my_notifications`, because that RPC is granted only to `authenticated` and calling it
+  signed out logs a console error on every public page. The E2E suite fails a page that logs
+  console errors, which is how this was caught.
 - **`supabase/tests/schema_audit_test.sql` is a property test over the whole catalogue.** Every
   table has RLS, every foreign key has an index, every geography column has a GiST index, every
   function pins `search_path`, every reference to `auth.users` has an ON DELETE, and `anon` can
@@ -231,12 +242,13 @@ long done. Work since then has followed the owner's 16-phase spec:
 | 7 Messaging | done — one thread per request, requester and accepted volunteer only |
 | 8 Community | done — feed, comments, reactions, blocking, reports, moderation queue. Groups, events and photo attachments deferred |
 | 11 Super admin | done in part — admin MFA, system health, the `moderator` role now has powers |
-| 13 Deployment | done in part — deployed and green; the 10DLC pack is written, not submitted |
+| 13 Notifications | done — in-app inbox, producers as triggers, retry, dedupe, delivery log, consent and priority |
 | 15 QA | partly done — unit, component and E2E suites exist; no integration tests yet |
 | 9 Trails & resources | done — trail directory with sourced access claims, condition reports, saved trails, member submissions; plus six public bilingual resource guides |
 | 10 Advertising | mostly done — business accounts, campaigns, per-advert approval, labelled serving, real counting. **Stripe is not wired**: it needs the owner's account and keys |
 | 12 Database & backend | done — schema audited and the findings fixed; the entities the spec names all exist |
-| 14, 16 | not started (security review, launch) |
+| 14 Security & privacy | not started |
+| 16 Deployment & production readiness | done in part — deployed and green; the 10DLC pack is written, not submitted |
 
 **Proven working in production**, not just built: a signed-in person files a request, the tick
 escalates it through all three rings, it reaches `unmatched` with nobody available, and the public
@@ -252,8 +264,8 @@ Four layers. Run all of them before claiming anything works.
 ```
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
 npm test            94 unit + component tests (vitest)
-npm run test:e2e    68 Playwright tests, mobile + desktop
-supabase test db    507 pgTAP assertions across twelve suites
+npm run test:e2e    70 Playwright tests, mobile + desktop
+supabase test db    550 pgTAP assertions across thirteen suites
 ```
 
 `prebuild` runs the i18n and contact-info parity checks only -- two plain node scripts with no

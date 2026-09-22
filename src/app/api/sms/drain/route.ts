@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { drainSmsOutbox } from "@/lib/sms/drain";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,6 +11,12 @@ export const dynamic = "force-dynamic";
  *
  * Called by the scheduled dispatch job (M3) and available for manual kicks during development.
  * Guarded by a shared secret: anyone who can call this can make the app send texts.
+ *
+ * It drains two queues, because they run on the same clock and neither deserves its own cron
+ * entry to forget to set up: the SMS outbox, and notification deliveries. The notification
+ * drain also sends event reminders, which is why it runs even when there is no SMS to send.
+ *
+ * A failure in one must not stop the other. Somebody stuck in a ditch is waiting on the first.
  */
 export async function POST(request: Request) {
   const secret = process.env.DISPATCH_TICK_SECRET;
@@ -23,6 +30,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const summary = await drainSmsOutbox(50);
-  return NextResponse.json(summary);
+  const sms = await drainSmsOutbox(50);
+
+  let notifications: unknown = { ok: false, error: "not_run" };
+  try {
+    const { data, error } = await supabaseAdmin().rpc("drain_notifications", { p_limit: 200 });
+    notifications = error ? { ok: false, error: error.message } : data;
+  } catch (error) {
+    // Logged, not thrown. The SMS half already ran and its result is worth returning.
+    console.error("[sms/drain] notification drain failed", error);
+    notifications = { ok: false, error: "threw" };
+  }
+
+  return NextResponse.json({ ...sms, notifications });
 }

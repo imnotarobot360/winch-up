@@ -1626,5 +1626,58 @@
       "rate_limited": "That's a lot of businesses at once. Try again tomorrow.",
       "failed": "That didn't work. Try again."
     }
+  },
+  "notify": {
+    "request": {
+      "accepted": "A volunteer is coming for {short_code}.",
+      "on_site": "Your volunteer has arrived.",
+      "recovered": "Marked recovered. Glad you're out.",
+      "cancelled": "Your request was cancelled.",
+      "expired": "Your request timed out.",
+      "unmatched": "Nobody has answered yet. We've shown you some paid options.",
+      "reassigned": "A different volunteer has taken your recovery."
+    },
+    "responder": {
+      "responder_notified": "Somebody near you needs a hand — {short_code}.",
+      "thanked": "You got a thank-you for {short_code}."
+    },
+    "message": {
+      "new": "New message on {short_code}."
+    },
+    "community": {
+      "reply": "Somebody replied to your post."
+    },
+    "safety": {
+      "reviewed": "Your safety report was reviewed."
+    },
+    "event": {
+      "soon": "{title} is coming up."
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "intro": "What the app has told you. Recovery first, always.",
+    "loading": "Loading…",
+    "empty": "Nothing yet.",
+    "markAllRead": "Mark all read",
+    "unreadLabel": "{count, plural, one {# unread notification} other {# unread notifications}}",
+    "kinds": {
+      "recovery_request": "Recovery",
+      "recovery_offer": "Recovery",
+      "recovery_accepted": "Recovery",
+      "recovery_status": "Recovery",
+      "message": "Message",
+      "community": "Community",
+      "event_reminder": "Event",
+      "safety": "Safety",
+      "marketing": "News"
+    },
+    "preferencesTitle": "Too many, or not enough?",
+    "preferencesBody": "Recovery alerts, community activity and news are three separate switches. Recovery is the one you probably want to leave on.",
+    "preferencesLink": "Change what you get",
+    "errors": {
+      "not_signed_in": "Sign in to see your notifications.",
+      "failed": "That didn't load. Try again."
+    }
   }
 }

@@ -1626,5 +1626,58 @@
       "rate_limited": "Son muchos negocios de golpe. Inténtalo mañana.",
       "failed": "No funcionó. Inténtalo otra vez."
     }
+  },
+  "notify": {
+    "request": {
+      "accepted": "Un voluntario va en camino para {short_code}.",
+      "on_site": "Tu voluntario ya llegó.",
+      "recovered": "Marcado como rescatado. Qué bueno que saliste.",
+      "cancelled": "Tu solicitud fue cancelada.",
+      "expired": "Tu solicitud se venció.",
+      "unmatched": "Nadie ha contestado todavía. Te mostramos algunas opciones de paga.",
+      "reassigned": "Otro voluntario tomó tu rescate."
+    },
+    "responder": {
+      "responder_notified": "Alguien cerca de ti necesita ayuda — {short_code}.",
+      "thanked": "Te dieron las gracias por {short_code}."
+    },
+    "message": {
+      "new": "Mensaje nuevo en {short_code}."
+    },
+    "community": {
+      "reply": "Alguien respondió a tu publicación."
+    },
+    "safety": {
+      "reviewed": "Tu reporte de seguridad fue revisado."
+    },
+    "event": {
+      "soon": "{title} ya viene."
+    }
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "intro": "Lo que la app te ha avisado. Los rescates primero, siempre.",
+    "loading": "Cargando…",
+    "empty": "Todavía no hay nada.",
+    "markAllRead": "Marcar todo como leído",
+    "unreadLabel": "{count, plural, one {# notificación sin leer} other {# notificaciones sin leer}}",
+    "kinds": {
+      "recovery_request": "Rescate",
+      "recovery_offer": "Rescate",
+      "recovery_accepted": "Rescate",
+      "recovery_status": "Rescate",
+      "message": "Mensaje",
+      "community": "Comunidad",
+      "event_reminder": "Evento",
+      "safety": "Seguridad",
+      "marketing": "Novedades"
+    },
+    "preferencesTitle": "¿Demasiadas, o muy pocas?",
+    "preferencesBody": "Avisos de rescate, actividad de la comunidad y novedades son tres interruptores distintos. El de rescates es el que conviene dejar prendido.",
+    "preferencesLink": "Cambiar lo que recibes",
+    "errors": {
+      "not_signed_in": "Inicia sesión para ver tus notificaciones.",
+      "failed": "No cargó. Inténtalo otra vez."
+    }
   }
 }
