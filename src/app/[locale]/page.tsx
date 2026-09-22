@@ -85,6 +85,18 @@ export default async function HomePage({
         </Link>
       </Card>
 
+      {/* Behind an account, so this is a door rather than the directory itself. */}
+      <Card className="mt-4 space-y-3">
+        <h2 className="text-xl font-semibold">{t("trailsTitle")}</h2>
+        <p className="text-base text-ink-soft">{t("trailsBody")}</p>
+        <Link
+          href="/trails"
+          className="tap-target flex w-full items-center justify-center rounded-field text-center border-2 border-line px-4 text-lg font-semibold"
+        >
+          {t("trailsLink")}
+        </Link>
+      </Card>
+
       <nav className="mt-10 flex flex-wrap gap-4 text-base text-ink-soft">
         <Link href="/terms" className="underline underline-offset-4">
           {tLegal("terms")}

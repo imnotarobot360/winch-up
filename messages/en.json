@@ -148,7 +148,10 @@
     "volunteerCta": "Sign up to volunteer",
     "boardTitle": "Watching, not texting?",
     "boardBody": "The open board shows every request as it comes in, with the pin blurred and no phone numbers. Same as scrolling the group, without the notifications.",
-    "boardCta": "Open the board"
+    "boardCta": "Open the board",
+    "trailsTitle": "Trails and conditions",
+    "trailsBody": "Where people run, what the ground was like last weekend, and whether you're allowed to be there — with a source for every claim about access.",
+    "trailsLink": "Open trails"
   },
   "notFound": {
     "title": "We couldn't find that",
@@ -328,7 +331,8 @@
       "audit": "Audit log",
       "incidents": "Safety",
       "security": "Security",
-      "system": "System"
+      "system": "System",
+      "trails": "Trails"
     },
     "signin": {
       "title": "Admin sign in",
@@ -543,6 +547,73 @@
       "requestsTitle": "Requests",
       "open": "Open",
       "noContact": "Dispatching, nobody contacted"
+    },
+    "trails": {
+      "title": "Trails",
+      "body": "Nothing goes up without a source for whether it's open, and publishing puts your name on it.",
+      "tabs": {
+        "trails": "Trails",
+        "suggestions": "Suggestions"
+      },
+      "addTrail": "Add a trail",
+      "addTitle": "Add a trail",
+      "editTitle": "Edit trail",
+      "name": "Name",
+      "slug": "URL name",
+      "slugHint": "Lowercase and hyphens: river-crossing",
+      "region": "County or area",
+      "lat": "Latitude",
+      "lng": "Longitude",
+      "access": "Access",
+      "accessSource": "Where did that come from?",
+      "accessSourceHint": "Something a person could check: \"county GIS map, 22 Sep 2026\", \"park website\", \"owner gave the group permission by phone\".",
+      "difficulty": "Difficulty",
+      "noRating": "No rating",
+      "difficultySource": "Rated by whom?",
+      "difficultySourceHint": "\"Group admins\", \"park signage\". It's an opinion; say whose.",
+      "drivetrain": "Minimum drivetrain",
+      "equipment": "Worth having",
+      "summary": "One line",
+      "description": "Description",
+      "status": "Status",
+      "statusHint": "Publishing records you as the person who checked it.",
+      "statuses": {
+        "pending": "Not published",
+        "published": "Published",
+        "archived": "Archived"
+      },
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "loading": "Loading…",
+      "empty": "No trails yet.",
+      "edit": "Edit",
+      "conditionCount": "{count, plural, =0 {No member reports} one {# member report} other {# member reports}}",
+      "someone": "Someone",
+      "noSuggestions": "Nothing here.",
+      "kinds": {
+        "new": "New trail",
+        "correction": "Correction",
+        "problem": "Problem"
+      },
+      "review": {
+        "new": "Waiting",
+        "actioned": "Done",
+        "dismissed": "Dismissed"
+      },
+      "markDone": "Done",
+      "dismiss": "Dismiss",
+      "errors": {
+        "access_source_required": "Say where the access claim came from.",
+        "difficulty_source_required": "Say whose rating that is.",
+        "bad_slug": "Lowercase letters, numbers and hyphens only.",
+        "slug_taken": "Another trail already uses that URL name.",
+        "name_required": "It needs a name.",
+        "location_required": "It needs coordinates.",
+        "bad_enum": "One of those values isn't valid.",
+        "not_found": "That trail is gone.",
+        "failed": "That didn't save. Try again."
+      }
     }
   },
   "enum": {
@@ -658,6 +729,27 @@
       "harassment": "Harassment",
       "impersonation": "Pretending to be someone else",
       "other": "Something else"
+    },
+    "trailAccess": {
+      "unknown": "We don't know",
+      "open_public": "Public land, open",
+      "permit_required": "Permit or day pass",
+      "private_permission": "Private land, permission only",
+      "closed": "Closed"
+    },
+    "trailDifficulty": {
+      "easy": "Easy",
+      "moderate": "Moderate",
+      "difficult": "Hard",
+      "extreme": "Extreme"
+    },
+    "trailCondition": {
+      "good": "Good",
+      "wet": "Wet",
+      "muddy": "Muddy",
+      "flooded": "Flooded",
+      "impassable": "Impassable",
+      "access_blocked": "Gate or road blocked"
     }
   },
   "emergency": {
@@ -989,5 +1081,85 @@
     "signedOut": "Sign in to open the moderation queue.",
     "backToFeed": "Back to the feed",
     "signIn": "Sign in"
+  },
+  "trails": {
+    "title": "Trails",
+    "intro": "Where people run, what the ground was like, and whether you're allowed to be there.",
+    "caveatTitle": "Check before you go.",
+    "caveatBody": "Access and conditions change. A gate that was open in March may be locked now. Everything here says where it came from and when it was checked — none of it is permission to be somewhere.",
+    "loading": "Loading…",
+    "searchLabel": "Search",
+    "searchPlaceholder": "Name or county…",
+    "accessFilterLabel": "Filter by access",
+    "difficultyFilterLabel": "Filter by difficulty",
+    "anyAccess": "Any access",
+    "anyDifficulty": "Any difficulty",
+    "savedOnly": "Saved",
+    "nearMe": "Near me",
+    "nearMeOn": "Nearest first",
+    "locating": "Finding you…",
+    "emptyTitle": "No trails here yet.",
+    "emptyBody": "Trails get added one at a time, by hand, each with a source for whether it's open — we don't import a list and hope it's right. If you know one, suggest it below and an admin will check it.",
+    "milesAway": "{miles} mi away",
+    "memberReport": "a member, {when}",
+    "savedTag": "Saved",
+    "suggest": "Suggest a trail",
+    "suggestTitle": "Suggest a trail",
+    "suggestNote": "An admin has to check who owns it and whether it's open before it goes up. Tell us what you know.",
+    "suggestName": "What's it called?",
+    "suggestRegion": "County or area",
+    "suggestCoords": "Coordinates",
+    "suggestCoordsHint": "Latitude, longitude — paste them from your maps app.",
+    "suggestBody": "What should we know?",
+    "suggestSend": "Send it",
+    "suggestThanks": "Thanks. An admin will look at it before it goes up.",
+    "accessTitle": "Are you allowed to be here?",
+    "accessSource": "Source: {source}",
+    "accessChecked": "Checked {when}",
+    "accessUnknown": "Nobody has checked who owns this or whether it's open. Treat it as unknown and find out before you drive in.",
+    "accessPrivate": "Private land. You need the owner's permission every time. Somebody else having had it does not give it to you.",
+    "accessClosed": "Reported closed. Don't drive in.",
+    "aboutTitle": "The trail",
+    "difficultySource": "Rated by: {source}",
+    "drivetrain": "Bring at least {value}.",
+    "bringTitle": "Worth having",
+    "save": "Save this",
+    "saved": "Saved",
+    "openInMaps": "Open in Maps",
+    "backToTrails": "Back to trails",
+    "conditionsTitle": "What members saw",
+    "conditionsNote": "Reported by members, not verified by anyone. Only the last {days} days are shown, because older than that is not news about this weekend.",
+    "noConditions": "Nothing reported in the last {days} days.",
+    "someone": "Someone",
+    "yours": "yours",
+    "addCondition": "Report a condition",
+    "conditionStateLabel": "How was it?",
+    "conditionNoteLabel": "Anything else?",
+    "conditionNoteHint": "No phone numbers or links.",
+    "conditionSend": "Post it",
+    "reportCondition": "Report this",
+    "reportThanks": "Thanks — a moderator will look.",
+    "reportListing": "Something wrong with this listing?",
+    "reportListingTitle": "Tell us what's wrong",
+    "reportListingNote": "A new fence, a locked gate, a wrong name. This is the one that matters most — a listing that says open when it isn't gets somebody in trouble.",
+    "reportListingLabel": "What did you find?",
+    "reportListingSend": "Send it",
+    "listingReportThanks": "Thanks. An admin will check it.",
+    "sending": "Sending…",
+    "cancel": "Cancel",
+    "errors": {
+      "not_signed_in": "Sign in to see trails.",
+      "not_found": "That trail isn't there.",
+      "failed": "That didn't work. Try again.",
+      "bad_state": "Pick how it was.",
+      "contact_info": "No phone numbers or links.",
+      "too_long": "That's too long. Keep it under 500 characters.",
+      "bad_length": "Say a bit more — and keep it under 2000 characters.",
+      "already_reported": "You already reported this one in the last hour.",
+      "bad_coords": "Two numbers, separated by a comma: 30.2672, -97.7431",
+      "incomplete": "We need a name and coordinates.",
+      "rate_limited": "That's a lot at once. Try again later.",
+      "bad_kind": "That didn't work. Try again."
+    }
   }
 }

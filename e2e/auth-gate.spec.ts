@@ -17,6 +17,7 @@ const GUARDED = [
   { path: "/account", why: "your own profile" },
   { path: "/account/vehicles", why: "your own rigs" },
   { path: "/community", why: "the feed is for members, not the public — /board is the public one" },
+  { path: "/trails", why: "a page asserting a place is legal to drive on is not for strangers" },
 ];
 
 test.describe("signed out", () => {

@@ -54,6 +54,19 @@ insert into user_roles (user_id, role)
 values ('c4444444-0000-4000-8000-00000000000c', 'moderator')
 on conflict do nothing;
 
+
+-- ---------------------------------------------------------------------------
+-- A known starting point.
+--
+-- This file's counts are only meaningful if the feed starts empty. Run against a
+-- database somebody has been clicking around in, they were not: two posts left over from a
+-- browser session made "all three posts" read four, and a `like` lookup match two rows. Rolled
+-- back with everything else, so nothing here touches real data.
+-- ---------------------------------------------------------------------------
+
+delete from content_reports;
+delete from community_posts;
+
 -- ---------------------------------------------------------------------------
 -- 1. Nothing is reachable except through the functions
 -- ---------------------------------------------------------------------------
@@ -420,8 +433,13 @@ select is(
 );
 
 reset role;
+-- Scoped to this post, not a count of every hide the database has ever seen: the audit log is
+-- append-only and real moderation lands in it, so a global count is a test that breaks the first
+-- time somebody actually moderates something.
 select is(
-  (select count(*)::integer from audit_log where action = 'content.hide'), 1,
+  (select count(*)::integer from audit_log
+    where action = 'content.hide'
+      and entity_id = (select id::text from cposts where body like 'Gate on the north%')), 1,
   'and the moderator''s action is in the audit log: hiding is reversible, doing it unaccountably is not'
 );
 

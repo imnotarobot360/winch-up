@@ -128,3 +128,36 @@ end
 $$;
 
 grant anon, authenticated, service_role to authenticator;
+
+-- ---- auth.mfa_factors ------------------------------------------------------
+-- GoTrue owns this table on a real Supabase project. The admin MFA work reads it (see
+-- 20260922000100_admin_mfa.sql) and auth_roles_test.sql writes to it, so a database rebuilt from
+-- these stubs needs it or thirteen assertions die on "relation does not exist" -- which is how
+-- this was found: every suite passed on the machine's working database and not on a fresh one.
+--
+-- Columns and defaults match what GoTrue creates, because the migration joins on `status` and
+-- the test inserts without naming `factor_type`.
+do $$
+begin
+  if not exists (select 1 from pg_type t join pg_namespace n on n.oid = t.typnamespace
+                  where n.nspname = 'auth' and t.typname = 'factor_type') then
+    create type auth.factor_type as enum ('totp', 'webauthn', 'phone');
+  end if;
+
+  if not exists (select 1 from pg_type t join pg_namespace n on n.oid = t.typnamespace
+                  where n.nspname = 'auth' and t.typname = 'factor_status') then
+    create type auth.factor_status as enum ('unverified', 'verified');
+  end if;
+end
+$$;
+
+create table if not exists auth.mfa_factors (
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid not null references auth.users (id) on delete cascade,
+  friendly_name text,
+  factor_type   auth.factor_type not null default 'totp',
+  status        auth.factor_status not null default 'unverified',
+  secret        text,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);

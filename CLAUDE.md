@@ -156,6 +156,15 @@ docs/                     decisions + runbooks
 - **Photos are stripped client-side.** `createImageBitmap(file, {imageOrientation: "from-image"})`
   then canvas then JPEG. The re-encode is what drops EXIF, including GPS. Never add a path that
   uploads the original file.
+- **A trail cannot claim to be open without naming a source.** `trails_access_needs_a_source`
+  and `trails_published_is_verified` are CHECK constraints, not form validation, because the spec
+  line they implement ("do not assume that a trail is open or legally accessible without reliable
+  supporting information") is about somebody getting a trespassing charge or finding a locked gate
+  forty miles out. The directory ships **empty** and is filled in by hand at `/admin/trails`;
+  never seed it from a model's memory of Texas trails.
+- **Trail listings and condition reports are different tables on purpose.** `trails` is what an
+  admin checked; `trail_conditions` is what a member saw, always dated, and dropped from the page
+  after 45 days. They are never rendered as the same kind of statement.
 - **The community feed is members-only, and `/board` is not.** `/board` is the public surface and
   is deliberately thin — no names, no phones, a blurred pin. `/community` carries display names and
   conversation and is behind an account, `noindex`, and RPCs granted only to `authenticated`.
@@ -196,7 +205,8 @@ long done. Work since then has followed the owner's 16-phase spec:
 | 11 Super admin | done in part — admin MFA, system health, the `moderator` role now has powers |
 | 13 Deployment | done in part — deployed and green; the 10DLC pack is written, not submitted |
 | 15 QA | partly done — unit, component and E2E suites exist; no integration tests yet |
-| 9, 10, 12, 14, 16 | not started (trails, advertising, database tooling, notifications, launch) |
+| 9 Trails & resources | trails done — directory, conditions, saved, member submissions, admin review. The recovery **resources** section is not built yet |
+| 10, 12, 14, 16 | not started (advertising, database tooling, notifications, launch) |
 
 **Proven working in production**, not just built: a signed-in person files a request, the tick
 escalates it through all three rings, it reaches `unmatched` with nobody available, and the public
@@ -212,8 +222,8 @@ Four layers. Run all of them before claiming anything works.
 ```
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
 npm test            94 unit + component tests (vitest)
-npm run test:e2e    44 Playwright tests, mobile + desktop
-supabase test db    313 pgTAP assertions across eight suites
+npm run test:e2e    46 Playwright tests, mobile + desktop
+supabase test db    368 pgTAP assertions across nine suites
 ```
 
 `prebuild` runs the i18n and contact-info parity checks only -- two plain node scripts with no
@@ -228,6 +238,12 @@ and the build gate's `--check` catches you if you forget.
 
 E2E runs against `next build && next start`, not `next dev`, with `workers: 2`. Both are
 explained in `playwright.config.ts` and both were learned the hard way.
+
+The suites assume a database built the documented way: every migration in order, then
+`supabase/seed.sql` and `supabase/seeds/demo.sql`. Five of them fail on migrations alone. Two
+suites (community, trails) clear the rows they count at the top of their transaction, because
+counting whatever happens to be in the database is how a test starts passing or failing on
+yesterday's clicking about.
 
 Operational procedures are in `docs/runbook.md`. Keep it current: it is written for whoever is
 holding the phone at 11pm, not for whoever wrote the code.

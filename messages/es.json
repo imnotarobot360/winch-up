@@ -148,7 +148,10 @@
     "volunteerCta": "Registrarse como voluntario",
     "boardTitle": "¿Prefiere mirar sin recibir mensajes?",
     "boardBody": "El tablero abierto muestra cada solicitud conforme llega, con el punto difuminado y sin números de teléfono. Igual que revisar el grupo, pero sin notificaciones.",
-    "boardCta": "Abrir el tablero"
+    "boardCta": "Abrir el tablero",
+    "trailsTitle": "Caminos y condiciones",
+    "trailsBody": "Por dónde anda la gente, cómo estaba el terreno el fin pasado, y si tienes permiso de estar ahí, con una fuente para cada dato de acceso.",
+    "trailsLink": "Ver caminos"
   },
   "notFound": {
     "title": "No encontramos eso",
@@ -328,7 +331,8 @@
       "audit": "Registro",
       "incidents": "Seguridad",
       "security": "Seguridad",
-      "system": "Sistema"
+      "system": "Sistema",
+      "trails": "Caminos"
     },
     "signin": {
       "title": "Entrar como administrador",
@@ -543,6 +547,73 @@
       "requestsTitle": "Solicitudes",
       "open": "Abiertas",
       "noContact": "Despachando, nadie contactado"
+    },
+    "trails": {
+      "title": "Caminos",
+      "body": "Nada se publica sin una fuente que diga si está abierto, y publicar pone tu nombre en ello.",
+      "tabs": {
+        "trails": "Caminos",
+        "suggestions": "Propuestas"
+      },
+      "addTrail": "Agregar un camino",
+      "addTitle": "Agregar un camino",
+      "editTitle": "Editar camino",
+      "name": "Nombre",
+      "slug": "Nombre en la URL",
+      "slugHint": "Minúsculas y guiones: river-crossing",
+      "region": "Condado o zona",
+      "lat": "Latitud",
+      "lng": "Longitud",
+      "access": "Acceso",
+      "accessSource": "¿De dónde salió eso?",
+      "accessSourceHint": "Algo que una persona pueda revisar: \"mapa GIS del condado, 22 sep 2026\", \"sitio del parque\", \"el dueño dio permiso al grupo por teléfono\".",
+      "difficulty": "Dificultad",
+      "noRating": "Sin calificar",
+      "difficultySource": "¿Quién lo calificó?",
+      "difficultySourceHint": "\"Los admins del grupo\", \"letreros del parque\". Es una opinión; di de quién.",
+      "drivetrain": "Tracción mínima",
+      "equipment": "Conviene llevar",
+      "summary": "Una línea",
+      "description": "Descripción",
+      "status": "Estado",
+      "statusHint": "Publicar te registra como la persona que lo revisó.",
+      "statuses": {
+        "pending": "Sin publicar",
+        "published": "Publicado",
+        "archived": "Archivado"
+      },
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "cancel": "Cancelar",
+      "loading": "Cargando…",
+      "empty": "Todavía no hay caminos.",
+      "edit": "Editar",
+      "conditionCount": "{count, plural, =0 {Sin reportes} one {# reporte de miembros} other {# reportes de miembros}}",
+      "someone": "Alguien",
+      "noSuggestions": "No hay nada aquí.",
+      "kinds": {
+        "new": "Camino nuevo",
+        "correction": "Corrección",
+        "problem": "Problema"
+      },
+      "review": {
+        "new": "Pendientes",
+        "actioned": "Listas",
+        "dismissed": "Descartadas"
+      },
+      "markDone": "Listo",
+      "dismiss": "Descartar",
+      "errors": {
+        "access_source_required": "Di de dónde salió la información de acceso.",
+        "difficulty_source_required": "Di de quién es esa calificación.",
+        "bad_slug": "Solo minúsculas, números y guiones.",
+        "slug_taken": "Otro camino ya usa ese nombre en la URL.",
+        "name_required": "Necesita un nombre.",
+        "location_required": "Necesita coordenadas.",
+        "bad_enum": "Alguno de esos valores no es válido.",
+        "not_found": "Ese camino ya no está.",
+        "failed": "No se guardó. Inténtalo otra vez."
+      }
     }
   },
   "enum": {
@@ -658,6 +729,27 @@
       "harassment": "Acoso",
       "impersonation": "Se hizo pasar por otra persona",
       "other": "Otra cosa"
+    },
+    "trailAccess": {
+      "unknown": "No lo sabemos",
+      "open_public": "Terreno público, abierto",
+      "permit_required": "Necesita permiso o pase",
+      "private_permission": "Terreno privado, solo con permiso",
+      "closed": "Cerrado"
+    },
+    "trailDifficulty": {
+      "easy": "Fácil",
+      "moderate": "Moderado",
+      "difficult": "Difícil",
+      "extreme": "Extremo"
+    },
+    "trailCondition": {
+      "good": "Bien",
+      "wet": "Mojado",
+      "muddy": "Lodoso",
+      "flooded": "Inundado",
+      "impassable": "Intransitable",
+      "access_blocked": "Puerta o camino bloqueado"
     }
   },
   "emergency": {
@@ -989,5 +1081,85 @@
     "signedOut": "Inicia sesión para abrir la cola de moderación.",
     "backToFeed": "Volver a la comunidad",
     "signIn": "Iniciar sesión"
+  },
+  "trails": {
+    "title": "Caminos",
+    "intro": "Por dónde anda la gente, cómo estaba el terreno, y si tienes permiso de estar ahí.",
+    "caveatTitle": "Confírmalo antes de ir.",
+    "caveatBody": "El acceso y las condiciones cambian. Una puerta que estaba abierta en marzo puede estar cerrada hoy. Todo lo de aquí dice de dónde salió y cuándo se revisó; nada de esto es permiso para estar en un lugar.",
+    "loading": "Cargando…",
+    "searchLabel": "Buscar",
+    "searchPlaceholder": "Nombre o condado…",
+    "accessFilterLabel": "Filtrar por acceso",
+    "difficultyFilterLabel": "Filtrar por dificultad",
+    "anyAccess": "Cualquier acceso",
+    "anyDifficulty": "Cualquier dificultad",
+    "savedOnly": "Guardados",
+    "nearMe": "Cerca de mí",
+    "nearMeOn": "Más cercanos primero",
+    "locating": "Ubicándote…",
+    "emptyTitle": "Todavía no hay caminos.",
+    "emptyBody": "Los caminos se agregan uno por uno, a mano, cada uno con una fuente que diga si está abierto: no importamos una lista y cruzamos los dedos. Si conoces uno, propónlo abajo y un admin lo revisa.",
+    "milesAway": "a {miles} mi",
+    "memberReport": "un miembro, {when}",
+    "savedTag": "Guardado",
+    "suggest": "Proponer un camino",
+    "suggestTitle": "Proponer un camino",
+    "suggestNote": "Un admin tiene que revisar de quién es y si está abierto antes de publicarlo. Cuéntanos lo que sepas.",
+    "suggestName": "¿Cómo se llama?",
+    "suggestRegion": "Condado o zona",
+    "suggestCoords": "Coordenadas",
+    "suggestCoordsHint": "Latitud, longitud — cópialas de tu app de mapas.",
+    "suggestBody": "¿Qué deberíamos saber?",
+    "suggestSend": "Enviar",
+    "suggestThanks": "Gracias. Un admin lo revisa antes de publicarlo.",
+    "accessTitle": "¿Tienes permiso de estar aquí?",
+    "accessSource": "Fuente: {source}",
+    "accessChecked": "Revisado {when}",
+    "accessUnknown": "Nadie ha revisado de quién es esto ni si está abierto. Trátalo como desconocido y averígualo antes de entrar.",
+    "accessPrivate": "Terreno privado. Necesitas el permiso del dueño cada vez. Que otro lo haya tenido no te lo da a ti.",
+    "accessClosed": "Reportado como cerrado. No entres.",
+    "aboutTitle": "El camino",
+    "difficultySource": "Calificado por: {source}",
+    "drivetrain": "Lleva por lo menos {value}.",
+    "bringTitle": "Conviene llevar",
+    "save": "Guardar",
+    "saved": "Guardado",
+    "openInMaps": "Abrir en Maps",
+    "backToTrails": "Volver a caminos",
+    "conditionsTitle": "Lo que vieron los miembros",
+    "conditionsNote": "Reportado por miembros, sin verificar por nadie. Solo se muestran los últimos {days} días, porque más viejo que eso no dice nada de este fin de semana.",
+    "noConditions": "Nada reportado en los últimos {days} días.",
+    "someone": "Alguien",
+    "yours": "tuyo",
+    "addCondition": "Reportar cómo estaba",
+    "conditionStateLabel": "¿Cómo estaba?",
+    "conditionNoteLabel": "¿Algo más?",
+    "conditionNoteHint": "Nada de números de teléfono ni enlaces.",
+    "conditionSend": "Publicar",
+    "reportCondition": "Reportar esto",
+    "reportThanks": "Gracias, un moderador lo va a revisar.",
+    "reportListing": "¿Algo mal en esta ficha?",
+    "reportListingTitle": "Dinos qué está mal",
+    "reportListingNote": "Una cerca nueva, una puerta con candado, un nombre equivocado. Esta es la que más importa: una ficha que dice abierto cuando no lo está mete a alguien en problemas.",
+    "reportListingLabel": "¿Qué encontraste?",
+    "reportListingSend": "Enviar",
+    "listingReportThanks": "Gracias. Un admin lo va a revisar.",
+    "sending": "Enviando…",
+    "cancel": "Cancelar",
+    "errors": {
+      "not_signed_in": "Inicia sesión para ver los caminos.",
+      "not_found": "Ese camino no está.",
+      "failed": "No funcionó. Inténtalo otra vez.",
+      "bad_state": "Elige cómo estaba.",
+      "contact_info": "Nada de números de teléfono ni enlaces.",
+      "too_long": "Es muy largo. Máximo 500 caracteres.",
+      "bad_length": "Cuenta un poco más, y máximo 2000 caracteres.",
+      "already_reported": "Ya reportaste este en la última hora.",
+      "bad_coords": "Dos números separados por coma: 30.2672, -97.7431",
+      "incomplete": "Necesitamos un nombre y coordenadas.",
+      "rate_limited": "Es mucho de golpe. Inténtalo más tarde.",
+      "bad_kind": "No funcionó. Inténtalo otra vez."
+    }
   }
 }
