@@ -179,5 +179,62 @@ select is(
   'the account is stored on the row, not just checked'
 );
 
+-- ---------------------------------------------------------------------------
+-- 8. One open recovery per account
+--
+-- Its own account and its own requests: this must not depend on what the assertions above left
+-- behind.
+-- ---------------------------------------------------------------------------
+
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, recovery_token, email_change, email_change_token_new
+) values (
+  '00000000-0000-0000-0000-000000000000', 'bbbbbbbb-0000-4000-8000-00000000000b',
+  'authenticated', 'authenticated', 'one-open-test@example.invalid', 'x', now(),
+  '{}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', ''
+);
+
+select is(
+  public.create_request(jsonb_build_object(
+    'name','Dupe','phone','+15125557001','lat',30.2,'lng',-97.7,
+    'vehicle_class','truck','stuck_type','mud','land_type','public','locale','en',
+    'requester_user_id','bbbbbbbb-0000-4000-8000-00000000000b'),
+    'https://example.com') ->> 'ok',
+  'true',
+  'the first request is created'
+);
+
+select is(
+  public.create_request(jsonb_build_object(
+    'name','Dupe','phone','+15125557001','lat',30.9,'lng',-97.1,
+    'vehicle_class','jeep','stuck_type','sand','land_type','public','locale','en',
+    'requester_user_id','bbbbbbbb-0000-4000-8000-00000000000b'),
+    'https://example.com') ->> 'existing_open',
+  'true',
+  'a second submission while one is open hands back the one they already have'
+);
+
+select is(
+  (select count(*)::int from requests
+    where requester_user_id = 'bbbbbbbb-0000-4000-8000-00000000000b'),
+  1,
+  'and no second request is created, so volunteers are not sent to the same truck twice'
+);
+
+update requests set status = 'recovered'
+ where requester_user_id = 'bbbbbbbb-0000-4000-8000-00000000000b';
+
+select is(
+  public.create_request(jsonb_build_object(
+    'name','Dupe','phone','+15125557001','lat',30.9,'lng',-97.1,
+    'vehicle_class','jeep','stuck_type','sand','land_type','public','locale','en',
+    'requester_user_id','bbbbbbbb-0000-4000-8000-00000000000b'),
+    'https://example.com') ->> 'existing_open',
+  null,
+  'once the first is closed they can ask for help again'
+);
+
 select * from finish();
 rollback;
