@@ -21,7 +21,10 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Checked on the server: a client-side redirect would render the page first.
+  // Checked on the server so the page never renders for a signed-out visitor. Note that this
+  // returns a 200 with a client navigation rather than a 307, because the head has already
+  // flushed by the time the redirect fires -- curl will show 200 here and the browser will
+  // still land on /signin. Test it in a browser, not with curl.
   if (!user) redirect({ href: "/signin", locale });
 
   const t = await getTranslations("account");
