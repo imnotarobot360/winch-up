@@ -156,6 +156,14 @@ docs/                     decisions + runbooks
 - **Photos are stripped client-side.** `createImageBitmap(file, {imageOrientation: "from-image"})`
   then canvas then JPEG. The re-encode is what drops EXIF, including GPS. Never add a path that
   uploads the original file.
+- **`supabase/tests/schema_audit_test.sql` is a property test over the whole catalogue.** Every
+  table has RLS, every foreign key has an index, every geography column has a GiST index, every
+  function pins `search_path`, every reference to `auth.users` has an ON DELETE, and `anon` can
+  execute exactly four security definer functions — named, so a fifth fails the suite. A new table
+  that skips one of these fails here rather than in a year.
+- **One open request per account is a partial unique index, not a check in a function.** The
+  application check in `create_request` reads then writes, which two concurrent submits both pass.
+  `create_request` now catches that one constraint by name and hands back the request that won.
 - **Ads cannot reach anything urgent, and it is the enum that stops them.** `ad_surface` has
   three values — community feed, trails, guides — and none of them is a request, a live recovery
   or a message thread. `app.ad_slot_allowed()` additionally refuses the two resource guides that
@@ -227,7 +235,8 @@ long done. Work since then has followed the owner's 16-phase spec:
 | 15 QA | partly done — unit, component and E2E suites exist; no integration tests yet |
 | 9 Trails & resources | done — trail directory with sourced access claims, condition reports, saved trails, member submissions; plus six public bilingual resource guides |
 | 10 Advertising | mostly done — business accounts, campaigns, per-advert approval, labelled serving, real counting. **Stripe is not wired**: it needs the owner's account and keys |
-| 12, 14, 16 | not started (database tooling, notifications, launch) |
+| 12 Database & backend | done — schema audited and the findings fixed; the entities the spec names all exist |
+| 14, 16 | not started (security review, launch) |
 
 **Proven working in production**, not just built: a signed-in person files a request, the tick
 escalates it through all three rings, it reaches `unmatched` with nobody available, and the public
@@ -244,7 +253,7 @@ Four layers. Run all of them before claiming anything works.
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
 npm test            94 unit + component tests (vitest)
 npm run test:e2e    68 Playwright tests, mobile + desktop
-supabase test db    432 pgTAP assertions across ten suites
+supabase test db    507 pgTAP assertions across twelve suites
 ```
 
 `prebuild` runs the i18n and contact-info parity checks only -- two plain node scripts with no
