@@ -52,6 +52,7 @@ export default async function AdminLayout({
   const tabs = [
     { href: "/admin", label: t("nav.queue") },
     { href: "/admin/responders", label: t("nav.responders") },
+    { href: "/admin/incidents", label: t("nav.incidents") },
     { href: "/admin/intake", label: t("nav.intake") },
     { href: "/admin/settings", label: t("nav.settings") },
     { href: "/admin/audit", label: t("nav.audit") },

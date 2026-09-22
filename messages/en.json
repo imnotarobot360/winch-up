@@ -297,7 +297,8 @@
       "responders": "Volunteers",
       "intake": "Intake",
       "settings": "Settings",
-      "audit": "Audit log"
+      "audit": "Audit log",
+      "incidents": "Safety"
     },
     "signin": {
       "title": "Admin sign in",
@@ -420,6 +421,37 @@
       "loading": "Loading…",
       "empty": "Nothing logged yet.",
       "unknownActor": "unknown"
+    },
+    "incidents": {
+      "title": "Safety reports",
+      "body": "What people told us went wrong. The person a report is about never sees it.",
+      "empty": "Nothing here.",
+      "urgent": "Money, injury or harassment. Deal with this before the rest.",
+      "reportedBy": "Reported by",
+      "request": "Request",
+      "subject": "About",
+      "noSubject": "No volunteer named",
+      "priorReports": "Other reports about them",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "What you did about it.",
+      "markReviewing": "Looking into it",
+      "markActioned": "Acted on it",
+      "markDismissed": "Dismiss",
+      "closedAs": "Closed as {status}.",
+      "banHint": "To stop them being dispatched, set them to banned on the Volunteers tab.",
+      "filters": {
+        "new": "New",
+        "reviewing": "Looking into it",
+        "actioned": "Acted on",
+        "dismissed": "Dismissed",
+        "all": "Everything"
+      },
+      "reporterKind": {
+        "requester": "The person who was stuck",
+        "responder": "A volunteer",
+        "admin": "An admin",
+        "system": "The system"
+      }
     }
   },
   "enum": {
@@ -525,6 +557,16 @@
       "rear": "Rear only",
       "both": "Front and rear",
       "unknown": "Not sure"
+    },
+    "incidentCategory": {
+      "asked_for_money": "Asked for money",
+      "unsafe_behavior": "Unsafe behaviour",
+      "no_show": "Never showed up",
+      "property_damage": "Property damage",
+      "injury": "Someone was hurt",
+      "harassment": "Harassment",
+      "impersonation": "Pretending to be someone else",
+      "other": "Something else"
     }
   },
   "emergency": {

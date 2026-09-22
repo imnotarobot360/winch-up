@@ -297,7 +297,8 @@
       "responders": "Voluntarios",
       "intake": "Captura",
       "settings": "Ajustes",
-      "audit": "Registro"
+      "audit": "Registro",
+      "incidents": "Seguridad"
     },
     "signin": {
       "title": "Entrar como administrador",
@@ -420,6 +421,37 @@
       "loading": "Cargando…",
       "empty": "Todavía no hay nada registrado.",
       "unknownActor": "desconocido"
+    },
+    "incidents": {
+      "title": "Reportes de seguridad",
+      "body": "Lo que la gente nos dijo que salió mal. La persona reportada nunca lo ve.",
+      "empty": "Nada por aquí.",
+      "urgent": "Dinero, lesión o acoso. Atienda esto antes que lo demás.",
+      "reportedBy": "Reportado por",
+      "request": "Solicitud",
+      "subject": "Sobre",
+      "noSubject": "Sin voluntario nombrado",
+      "priorReports": "Otros reportes sobre esta persona",
+      "notesLabel": "Notas",
+      "notesPlaceholder": "Qué hizo al respecto.",
+      "markReviewing": "Lo estoy revisando",
+      "markActioned": "Ya actué",
+      "markDismissed": "Descartar",
+      "closedAs": "Cerrado como {status}.",
+      "banHint": "Para que deje de recibir trabajos, márquelo como bloqueado en la pestaña Voluntarios.",
+      "filters": {
+        "new": "Nuevos",
+        "reviewing": "En revisión",
+        "actioned": "Atendidos",
+        "dismissed": "Descartados",
+        "all": "Todos"
+      },
+      "reporterKind": {
+        "requester": "La persona atascada",
+        "responder": "Un voluntario",
+        "admin": "Un administrador",
+        "system": "El sistema"
+      }
     }
   },
   "enum": {
@@ -525,6 +557,16 @@
       "rear": "Solo atrás",
       "both": "Adelante y atrás",
       "unknown": "No estoy seguro"
+    },
+    "incidentCategory": {
+      "asked_for_money": "Pidió dinero",
+      "unsafe_behavior": "Conducta insegura",
+      "no_show": "Nunca llegó",
+      "property_damage": "Daño a la propiedad",
+      "injury": "Alguien resultó herido",
+      "harassment": "Acoso",
+      "impersonation": "Se hizo pasar por otra persona",
+      "other": "Otra cosa"
     }
   },
   "emergency": {

@@ -38,8 +38,9 @@ select is(
 -- ---------------------------------------------------------------------------
 
 insert into safety_incidents (
-  reporter_kind, reporter_user_id, subject_responder_id, category, description
+  id, reporter_kind, reporter_user_id, subject_responder_id, category, description
 ) values (
+  'cccccccc-0000-4000-8000-00000000000c',
   'requester', '00000000-0000-4000-8000-000000000003',
   '11111111-1111-4111-8111-000000000001', 'asked_for_money',
   'He asked for forty dollars in cash before hooking up the strap.'
@@ -142,6 +143,60 @@ select lives_ok(
     values ('requester', 'harassment',
             'He kept calling me from 512-555-0134 after I marked it recovered.')$$,
   'a report may quote a phone number, because an admin needs it to act'
+);
+
+-- ---------------------------------------------------------------------------
+-- 6. Triage is admin-only, and does not hand back the reporter
+-- ---------------------------------------------------------------------------
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-4000-8000-000000000003","role":"authenticated"}';
+
+select throws_ok(
+  'select public.admin_incidents()',
+  null,
+  null,
+  'a signed-in non-admin cannot read the report queue'
+);
+
+-- The admin. app.require_admin() raises rather than returning an empty list, because a screen
+-- that silently shows nothing to a non-admin looks identical to one with no reports.
+set local request.jwt.claims = '{"sub":"00000000-0000-4000-8000-000000000001","role":"authenticated"}';
+
+select ok(
+  (public.admin_incidents() -> 'incidents') is not null,
+  'an admin can read the queue'
+);
+
+select ok(
+  not ((public.admin_incidents() -> 'incidents' -> 0) ? 'reporter_user_id'),
+  'the queue does not hand back who filed the report'
+);
+
+select ok(
+  (public.admin_incidents() -> 'incidents' -> 0) ? 'subject_prior_reports',
+  'it does hand back how many other reports name the same volunteer'
+);
+
+select is(
+  public.admin_review_incident('cccccccc-0000-4000-8000-00000000000c', 'not_a_status') ->> 'error',
+  'invalid_status',
+  'an unknown triage status is refused'
+);
+
+select is(
+  public.admin_review_incident('cccccccc-0000-4000-8000-00000000000c',
+    'actioned', 'Banned them and called the group admins.') ->> 'ok',
+  'true',
+  'an admin can close a report with a note'
+);
+
+reset role;
+
+select is(
+  (select status::text from safety_incidents where id = 'cccccccc-0000-4000-8000-00000000000c'),
+  'actioned',
+  'and the report is closed'
 );
 
 select * from finish();
