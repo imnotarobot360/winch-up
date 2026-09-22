@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useId } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -81,6 +82,19 @@ export function Callout({
   );
 }
 
+/**
+ * A labelled control.
+ *
+ * The label is associated with its input automatically. It used to rely on every call site
+ * passing `htmlFor` and the input carrying a matching `id`, and 36 of 61 call sites did not --
+ * so those labels rendered as `<label htmlFor={undefined}>`, which a screen reader does not
+ * connect to anything. An end-to-end test found it by failing to locate a field by its label,
+ * which is exactly how somebody using a screen reader would have failed to find it.
+ *
+ * Injection is deliberately narrow: only a single child that is genuinely labelable gets an id.
+ * A `<label for>` pointing at a `<div>` full of radios is invalid HTML and would announce
+ * worse than nothing. Those groups want a fieldset and a legend, which is a separate change.
+ */
 export function Field({
   label,
   hint,
@@ -94,13 +108,32 @@ export function Field({
   children: React.ReactNode;
   htmlFor?: string;
 }) {
+  const generatedId = useId();
+
+  const child = React.isValidElement(children) ? children : null;
+  const childProps = (child?.props ?? {}) as { id?: string };
+
+  // Labelable: one of our own text controls, or a bare input/select/textarea.
+  const labelable =
+    child !== null &&
+    (child.type === TextInput ||
+      child.type === TextArea ||
+      (typeof child.type === "string" && ["input", "select", "textarea"].includes(child.type)));
+
+  const controlId = htmlFor ?? childProps.id ?? (labelable ? generatedId : undefined);
+
+  const labelled =
+    labelable && !childProps.id && controlId
+      ? React.cloneElement(child as React.ReactElement<{ id?: string }>, { id: controlId })
+      : children;
+
   return (
     <div className="space-y-2">
-      <label htmlFor={htmlFor} className="block text-base font-semibold">
+      <label htmlFor={controlId} className="block text-base font-semibold">
         {label}
       </label>
       {hint ? <p className="text-sm text-ink-faint">{hint}</p> : null}
-      {children}
+      {labelled}
       {error ? (
         <p role="alert" className="text-sm font-medium text-danger">
           {error}

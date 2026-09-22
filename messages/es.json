@@ -44,7 +44,8 @@
       "reset_failed": "No pudimos guardar esa contraseña. Puede que el enlace haya vencido.",
       "link_expired": "Ese enlace ha vencido. Pida uno nuevo.",
       "missing_code": "Ese enlace estaba incompleto. Pida uno nuevo."
-    }
+    },
+    "checking": "Comprobando…"
   },
   "account": {
     "title": "Su cuenta",

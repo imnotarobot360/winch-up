@@ -44,7 +44,8 @@
       "reset_failed": "We couldn't save that password. The link may have expired.",
       "link_expired": "That link has expired. Ask for a new one.",
       "missing_code": "That link was incomplete. Ask for a new one."
-    }
+    },
+    "checking": "Checking…"
   },
   "account": {
     "title": "Your account",

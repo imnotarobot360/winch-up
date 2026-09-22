@@ -72,7 +72,12 @@ export function ResetForm() {
     router.refresh();
   }
 
-  if (phase === "checking") return null;
+  // Not null. Returning nothing leaves the card empty until the session check resolves, so the
+  // page reads as a heading above a blank box -- which looks broken to somebody who is already
+  // locked out and anxious about it.
+  if (phase === "checking") {
+    return <p className="text-lg text-ink-soft">{t("checking")}</p>;
+  }
 
   if (sent) {
     return (
