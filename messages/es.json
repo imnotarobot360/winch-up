@@ -77,7 +77,7 @@
     "saved": "Guardado.",
     "working": "Trabajando…",
     "deleteTitle": "Eliminar su cuenta",
-    "deleteBody": "Elimina su perfil y su inicio de sesión. Los registros de rescates quedan, sin su nombre.",
+    "deleteBody": "Se va para siempre: tu inicio de sesión, tu perfil, tu número y tu nombre, la ubicación de tu casa, y el punto exacto de cualquier rescate que hayas pedido.",
     "deleteStart": "Eliminar mi cuenta",
     "deleteConfirm": "Esto no se puede deshacer. Se cerrará su sesión y se eliminará su perfil.",
     "deleteYes": "Sí, eliminarla",
@@ -92,7 +92,8 @@
     },
     "vehiclesTitle": "Sus vehículos",
     "vehiclesBody": "Lo que maneja y lo que puede llevar a un rescate.",
-    "vehiclesCta": "Administrar sus vehículos"
+    "vehiclesCta": "Administrar sus vehículos",
+    "deleteKept": "Se queda, sin el nombre de nadie: que cada rescate pasó y más o menos dónde, los mensajes de ese rescate (una conversación es de dos personas), y las publicaciones a las que otros respondieron."
   },
   "vehicles": {
     "title": "Sus vehículos",

@@ -156,6 +156,19 @@ docs/                     decisions + runbooks
 - **Photos are stripped client-side.** `createImageBitmap(file, {imageOrientation: "from-image"})`
   then canvas then JPEG. The re-encode is what drops EXIF, including GPS. Never add a path that
   uploads the original file.
+- **Deleting an account scrubs the columns beside the foreign key, not just the key.** A
+  `BEFORE DELETE` trigger on `auth.users` blanks phone, name, exact pin, home location and shared
+  position, and cancels any live recovery. This was a real finding: the FKs were doing their job
+  and the identifying data was never in them. Anything new that stores a phone, a name or a
+  position must be added to `app.scrub_request` / `app.scrub_responder` and to
+  `security_test.sql`.
+- **Closed recoveries expire.** `privacy.request_retention_days` (default 180) scrubs the phone
+  and exact pin through the same code path, called from `/api/sms/drain`. Zero turns it off
+  rather than scrubbing everything, which is the safer way round for a setting somebody clears.
+- **`scripts/check-claims.mjs` fails the build on copy that overclaims.** No string may promise
+  emergency rescue, guaranteed help or location tracking, because none of the three is
+  implemented. A match must be fixed or added to `REVIEWED` with a reason — that list is the
+  point where somebody has to think about it.
 - **Notification producers are triggers, never calls added to existing functions.** Every event
   worth telling somebody about is already written to `request_events`, `request_messages` or
   `community_comments`, so `app.notify_on_*` triggers read those. `advance_dispatch()` is not
@@ -247,7 +260,7 @@ long done. Work since then has followed the owner's 16-phase spec:
 | 9 Trails & resources | done — trail directory with sourced access claims, condition reports, saved trails, member submissions; plus six public bilingual resource guides |
 | 10 Advertising | mostly done — business accounts, campaigns, per-advert approval, labelled serving, real counting. **Stripe is not wired**: it needs the owner's account and keys |
 | 12 Database & backend | done — schema audited and the findings fixed; the entities the spec names all exist |
-| 14 Security & privacy | not started |
+| 14 Security, privacy & safety | done — full review in `docs/security-review.md`; account deletion actually deletes now, retention exists, a claims check guards the copy |
 | 16 Deployment & production readiness | done in part — deployed and green; the 10DLC pack is written, not submitted |
 
 **Proven working in production**, not just built: a signed-in person files a request, the tick
@@ -265,11 +278,11 @@ Four layers. Run all of them before claiming anything works.
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
 npm test            94 unit + component tests (vitest)
 npm run test:e2e    70 Playwright tests, mobile + desktop
-supabase test db    550 pgTAP assertions across thirteen suites
+supabase test db    574 pgTAP assertions across fourteen suites
 ```
 
-`prebuild` runs the i18n and contact-info parity checks only -- two plain node scripts with no
-runtime of their own. The test suite used to run there too, which meant any problem with the test
+`prebuild` runs the i18n check, the contact-info parity check and the claims check -- three
+plain node scripts with no runtime of their own. The test suite used to run there too, which meant any problem with the test
 environment on Vercel blocked every deploy, and one did. A deploy should not be hostage to a test
 runner; run `npm run verify` yourself instead, or wire it into CI.
 

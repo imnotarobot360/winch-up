@@ -77,7 +77,7 @@
     "saved": "Saved.",
     "working": "Working…",
     "deleteTitle": "Delete your account",
-    "deleteBody": "Removes your profile and sign-in. Recovery records stay, without your name on them.",
+    "deleteBody": "Gone for good: your sign-in, your profile, your phone number and name, your home location, and the exact spot of any recovery you filed.",
     "deleteStart": "Delete my account",
     "deleteConfirm": "This cannot be undone. You'll be signed out and your profile removed.",
     "deleteYes": "Yes, delete it",
@@ -92,7 +92,8 @@
     },
     "vehiclesTitle": "Your rigs",
     "vehiclesBody": "What you drive, and what you can bring to a recovery.",
-    "vehiclesCta": "Manage your rigs"
+    "vehiclesCta": "Manage your rigs",
+    "deleteKept": "Kept, with nobody's name on it: that each recovery happened and roughly where, the messages on it — a conversation belongs to two people — and posts other members replied to."
   },
   "vehicles": {
     "title": "Your rigs",

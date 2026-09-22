@@ -42,5 +42,17 @@ export async function POST(request: Request) {
     notifications = { ok: false, error: "threw" };
   }
 
-  return NextResponse.json({ ...sms, notifications });
+  // Retention: scrub the phone number and exact pin off recoveries that closed long enough
+  // ago that nobody needs them. Cheap when there is nothing to do, and it means no separate
+  // cron entry for the one job whose failure nobody would notice.
+  let retention: unknown = { ok: false, error: "not_run" };
+  try {
+    const { data, error } = await supabaseAdmin().rpc("apply_retention", {});
+    retention = error ? { ok: false, error: error.message } : data;
+  } catch (error) {
+    console.error("[sms/drain] retention failed", error);
+    retention = { ok: false, error: "threw" };
+  }
+
+  return NextResponse.json({ ...sms, notifications, retention });
 }

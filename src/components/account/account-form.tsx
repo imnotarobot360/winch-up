@@ -193,6 +193,9 @@ export function AccountForm({ email }: { email: string }) {
       <Card className="space-y-3">
         <h2 className="text-xl font-semibold">{t("deleteTitle")}</h2>
         <p className="text-base text-ink-soft">{t("deleteBody")}</p>
+        {/* What survives, said before the button rather than discovered afterwards. A promise
+            of erasure that is quietly partial is worse than an honest one. */}
+        <p className="text-base text-ink-soft">{t("deleteKept")}</p>
 
         {error === "open_request" || error === "active_job" ? (
           <Callout tone="danger">{t(`errors.${error}`)}</Callout>
