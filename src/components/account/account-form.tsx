@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { deleteAccount } from "@/app/actions/account";
 import { Button, Callout, Card, Field, TextInput, Toggle } from "@/components/ui/primitives";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
 type Profile = {
@@ -141,6 +141,17 @@ export function AccountForm({ email }: { email: string }) {
               maxLength={80}
             />
           </Field>
+        </Card>
+
+        <Card className="space-y-3">
+          <h2 className="text-xl font-semibold">{t("vehiclesTitle")}</h2>
+          <p className="text-base text-ink-soft">{t("vehiclesBody")}</p>
+          <Link
+            href="/account/vehicles"
+            className="tap-target flex w-full items-center justify-center rounded-field border-2 border-line px-4 text-center text-lg font-semibold"
+          >
+            {t("vehiclesCta")}
+          </Link>
         </Card>
 
         <Card className="space-y-3">

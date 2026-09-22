@@ -109,5 +109,56 @@ select is(
   'vehicles carries no verification flag that nothing actually sets'
 );
 
+-- ---------------------------------------------------------------------------
+-- 5. set_primary_vehicle() is scoped to the caller
+--
+-- It is security definer and takes an id, which is exactly the shape of function that turns
+-- into "change any row" when the id is trusted instead of checked.
+-- ---------------------------------------------------------------------------
+
+delete from vehicles;
+
+insert into vehicles (id, user_id, make, is_primary) values
+  ('11111111-1111-4111-8111-000000000001', '00000000-0000-4000-8000-000000000002', 'Jeep',  true),
+  ('11111111-1111-4111-8111-000000000002', '00000000-0000-4000-8000-000000000002', 'Ford',  false),
+  ('11111111-1111-4111-8111-000000000003', '00000000-0000-4000-8000-000000000004', 'Other', true);
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-4000-8000-000000000002","role":"authenticated"}';
+
+select is(
+  public.set_primary_vehicle('11111111-1111-4111-8111-000000000003') ->> 'error',
+  'not_found',
+  'promoting another member''s rig is refused'
+);
+
+-- Checked with the role reset: inside that member's own session RLS hides the row, so the
+-- query would return null and the test would pass for the wrong reason.
+reset role;
+
+select is(
+  (select is_primary from vehicles where id = '11111111-1111-4111-8111-000000000003'),
+  true,
+  'and the other member''s rig is left exactly as it was'
+);
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-4000-8000-000000000002","role":"authenticated"}';
+
+select is(
+  public.set_primary_vehicle('11111111-1111-4111-8111-000000000002') ->> 'ok',
+  'true',
+  'promoting your own rig succeeds'
+);
+
+select is(
+  (select count(*)::int from vehicles
+    where user_id = '00000000-0000-4000-8000-000000000002' and is_primary),
+  1,
+  'and the previous main rig is demoted in the same transaction, never two at once'
+);
+
+reset role;
+
 select * from finish();
 rollback;
