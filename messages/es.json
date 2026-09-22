@@ -203,7 +203,8 @@
       "no_verified_phone": "Perdimos el rastro de su número confirmado. Empiece de nuevo.",
       "invalid_location": "No pudimos usar esa ubicación. Intente buscar otra vez.",
       "not_signed_in": "Su sesión venció. Confirme su número otra vez."
-    }
+    },
+    "smsConsent": "Al darnos su número acepta recibir mensajes de texto de Winch Up sobre solicitudes de rescate cerca de usted y los trabajos que tome. La frecuencia varía: solo le escribimos cuando alguien cerca está atascado. Pueden aplicar tarifas de mensajes y datos. Responda BAJA para darse de baja, AYUDA para ayuda. Consulte nuestros Términos y Política de Privacidad."
   },
   "me": {
     "pageTitle": "Mi panel",

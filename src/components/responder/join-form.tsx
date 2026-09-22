@@ -219,6 +219,15 @@ export function JoinForm() {
               onChange={(event) => setPhone(event.target.value)}
             />
           </Field>
+          {/*
+            * SMS consent, at the point the number is collected.
+            *
+            * Required by the carriers for 10DLC registration -- they ask for a screenshot of
+            * this exact screen -- and it is the TCPA basis for every text this app sends. It
+            * sits directly above the button that triggers the first message rather than in a
+            * footer, because consent buried away from the action is not consent.
+            */}
+          <p className="text-sm text-ink-faint">{t("smsConsent")}</p>
           <Button type="button" disabled={busy || !e164} onClick={sendCode}>
             {busy ? t("sending") : t("sendCode")}
           </Button>

@@ -203,7 +203,8 @@
       "no_verified_phone": "We lost track of your confirmed number. Start again.",
       "invalid_location": "We couldn't use that location. Try searching again.",
       "not_signed_in": "Your session expired. Confirm your number again."
-    }
+    },
+    "smsConsent": "By giving us your number you agree to receive text messages from Winch Up about recovery requests near you and the jobs you take. Message frequency varies — you'll only hear from us when somebody nearby is stuck. Message and data rates may apply. Reply STOP to opt out, HELP for help. See our Terms and Privacy Policy."
   },
   "me": {
     "pageTitle": "My dashboard",
