@@ -433,7 +433,12 @@
       "second_truck": "Second truck",
       "trailer": "Trailer",
       "lifted_4x4": "Lifted 4x4",
-      "night_lights": "Lights for night work"
+      "night_lights": "Lights for night work",
+      "soft_shackles": "Soft shackles",
+      "rated_recovery_points": "Rated recovery points",
+      "air_compressor": "Air compressor",
+      "tire_repair": "Tire repair kit",
+      "jack_lifting": "Jack or lifting gear"
     },
     "locationSource": {
       "gps": "Phone GPS",
@@ -468,6 +473,13 @@
       "reassigned": "Reassigned",
       "thanked": "Thank-you sent",
       "admin_note": "Admin note"
+    },
+    "recoveryPoints": {
+      "none": "None",
+      "front": "Front only",
+      "rear": "Rear only",
+      "both": "Front and rear",
+      "unknown": "Not sure"
     }
   },
   "emergency": {

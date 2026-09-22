@@ -63,6 +63,8 @@ export const ENUMS = {
     "semi",
     "other",
   ],
+  recoveryPoints: ["none", "front", "rear", "both", "unknown"],
+
   equipment: [
     "winch",
     "kinetic_rope",
@@ -72,6 +74,11 @@ export const ENUMS = {
     "trailer",
     "lifted_4x4",
     "night_lights",
+    "soft_shackles",
+    "rated_recovery_points",
+    "air_compressor",
+    "tire_repair",
+    "jack_lifting",
   ],
   radiusMiles: [15, 30, 60],
 } as const;

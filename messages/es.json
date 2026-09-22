@@ -433,7 +433,12 @@
       "second_truck": "Segunda troca",
       "trailer": "Remolque",
       "lifted_4x4": "4x4 levantada",
-      "night_lights": "Luces para trabajar de noche"
+      "night_lights": "Luces para trabajar de noche",
+      "soft_shackles": "Grilletes blandos",
+      "rated_recovery_points": "Puntos de rescate certificados",
+      "air_compressor": "Compresor de aire",
+      "tire_repair": "Kit de reparación de llantas",
+      "jack_lifting": "Gato o equipo de levante"
     },
     "locationSource": {
       "gps": "GPS del teléfono",
@@ -468,6 +473,13 @@
       "reassigned": "Reasignada",
       "thanked": "Agradecimiento enviado",
       "admin_note": "Nota del administrador"
+    },
+    "recoveryPoints": {
+      "none": "Ninguno",
+      "front": "Solo adelante",
+      "rear": "Solo atrás",
+      "both": "Adelante y atrás",
+      "unknown": "No estoy seguro"
     }
   },
   "emergency": {

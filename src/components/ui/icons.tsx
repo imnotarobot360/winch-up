@@ -107,6 +107,27 @@ export const IconClock = (p: IconProps) => (
   <Svg {...p}><circle cx="12" cy="12" r="9" /><path d="M12 7v5.5l3.5 2" /></Svg>
 );
 
+
+export const IconShackle = (p: IconProps) => (
+  <Svg {...p}><path d="M8 14a4 4 0 1 0 8 0c0-2.5-2-3.5-2-6a2 2 0 0 0-4 0c0 2.5-2 3.5-2 6Z" /><path d="M10 8h4" /></Svg>
+);
+
+export const IconRecoveryPoint = (p: IconProps) => (
+  <Svg {...p}><path d="M5 18V9a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v9" /><circle cx="12" cy="11" r="2.5" /><path d="M3 18h18" /></Svg>
+);
+
+export const IconCompressor = (p: IconProps) => (
+  <Svg {...p}><rect x="3" y="10" width="11" height="9" rx="2" /><path d="M14 13h3a3 3 0 0 0 3-3V6" /><circle cx="8.5" cy="14.5" r="2" /></Svg>
+);
+
+export const IconTireRepair = (p: IconProps) => (
+  <Svg {...p}><circle cx="11" cy="13" r="7" /><circle cx="11" cy="13" r="2.5" /><path d="m17 7 4-4M18.5 5.5 20 7" /></Svg>
+);
+
+export const IconJack = (p: IconProps) => (
+  <Svg {...p}><path d="M4 19h16" /><path d="M12 5 5 12l7 7 7-7z" /><path d="M12 9v6" /></Svg>
+);
+
 /** Equipment key -> icon, so a list of enum values can render without a switch at each call. */
 export const EQUIPMENT_ICONS = {
   winch: IconWinch,
@@ -117,4 +138,9 @@ export const EQUIPMENT_ICONS = {
   trailer: IconTrailer,
   lifted_4x4: IconLifted,
   night_lights: IconLight,
+  soft_shackles: IconShackle,
+  rated_recovery_points: IconRecoveryPoint,
+  air_compressor: IconCompressor,
+  tire_repair: IconTireRepair,
+  jack_lifting: IconJack,
 } as const;
