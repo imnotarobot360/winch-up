@@ -109,6 +109,28 @@ server-only and must never gain one.
 openssl rand -hex 32
 ```
 
+### Changing one of these later
+
+**Vercel injects environment variables when a deployment is created, not when it serves.** Saving
+a new value changes nothing that is already running. The variable will show **Needs Attention**
+in the dashboard until a deployment exists that was created after the save.
+
+So every change is two steps, and the second is easy to skip:
+
+1. Save the value.
+2. **Deployments → the Production row → ⋯ → Redeploy.**
+
+This cost five rounds of debugging on 2026-09-21. The symptom is that the old value keeps being
+served no matter how many times you edit the variable, which looks exactly like the dashboard
+refusing to save. It is not. Check the badge before concluding anything, and reveal the value in
+the UI to see what is actually stored.
+
+The trap is worse for `NEXT_PUBLIC_*` variables, which are compiled into the JavaScript bundle
+at build time rather than read at runtime — those are stale until a rebuild regardless.
+
+Probing from outside tells you what the *running deployment* has, never what the dashboard has.
+The two disagree in exactly this window.
+
 ## 4. The dispatch tick
 
 Nothing advances without this. Deploy the Edge Function:
