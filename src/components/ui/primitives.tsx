@@ -91,9 +91,16 @@ export function Callout({
  * connect to anything. An end-to-end test found it by failing to locate a field by its label,
  * which is exactly how somebody using a screen reader would have failed to find it.
  *
- * Injection is deliberately narrow: only a single child that is genuinely labelable gets an id.
- * A `<label for>` pointing at a `<div>` full of radios is invalid HTML and would announce
- * worse than nothing. Those groups want a fieldset and a legend, which is a separate change.
+ * Two shapes, handled differently, because a `<label for>` pointing at a `<div>` full of
+ * checkboxes is invalid HTML and announces worse than nothing:
+ *
+ *   a single labelable control -> the label gets `htmlFor` and the control gets a matching id
+ *   a group of controls        -> the group gets `role="group"` and `aria-labelledby`, so a
+ *                                 screen reader announces "What you can bring, group" before
+ *                                 reading thirteen checkboxes instead of reading thirteen
+ *                                 checkboxes that belong to nothing
+ *
+ * Anything that already carries its own id, role or accessible name is left alone.
  */
 export function Field({
   label,
@@ -111,7 +118,12 @@ export function Field({
   const generatedId = useId();
 
   const child = React.isValidElement(children) ? children : null;
-  const childProps = (child?.props ?? {}) as { id?: string };
+  const childProps = (child?.props ?? {}) as {
+    id?: string;
+    role?: string;
+    "aria-label"?: string;
+    "aria-labelledby"?: string;
+  };
 
   // Labelable: one of our own text controls, or a bare input/select/textarea.
   const labelable =
@@ -121,15 +133,29 @@ export function Field({
       (typeof child.type === "string" && ["input", "select", "textarea"].includes(child.type)));
 
   const controlId = htmlFor ?? childProps.id ?? (labelable ? generatedId : undefined);
+  const labelId = `${generatedId}-label`;
 
-  const labelled =
-    labelable && !childProps.id && controlId
-      ? React.cloneElement(child as React.ReactElement<{ id?: string }>, { id: controlId })
-      : children;
+  // A container element holding several controls: give it group semantics and point it at the
+  // visible label, so the group is announced by the same words the sighted user reads.
+  const isGroupContainer =
+    child !== null && !labelable && typeof child.type === "string" && !childProps["aria-label"];
+
+  const labelled = (() => {
+    if (labelable && !childProps.id && controlId) {
+      return React.cloneElement(child as React.ReactElement<{ id?: string }>, { id: controlId });
+    }
+    if (isGroupContainer && !childProps["aria-labelledby"]) {
+      return React.cloneElement(child as React.ReactElement<Record<string, unknown>>, {
+        role: childProps.role ?? "group",
+        "aria-labelledby": labelId,
+      });
+    }
+    return children;
+  })();
 
   return (
     <div className="space-y-2">
-      <label htmlFor={controlId} className="block text-base font-semibold">
+      <label id={labelId} htmlFor={controlId} className="block text-base font-semibold">
         {label}
       </label>
       {hint ? <p className="text-sm text-ink-faint">{hint}</p> : null}

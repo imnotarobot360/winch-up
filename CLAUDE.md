@@ -17,8 +17,10 @@ loop. **Nobody installs anything.**
 
 ## Users
 
-- **Requesters** — stuck, on a phone, weak signal, possibly panicking. Not authenticated. They hold
-  an unguessable link (`/r/[token]`). Optimize every decision for them.
+- **Requesters** — stuck, on a phone, weak signal, possibly panicking. **They now need an account**
+  (owner's decision, 2026-09-21): `create_request` refuses without one. They still reach their
+  status page through an unguessable link (`/r/[token]`) rather than by signing in, because by the
+  time help arrives they may be on somebody else's phone. Optimize every decision for them.
 - **Responders** — volunteers with equipment. Phone OTP auth. Must be approved by an admin before
   they are dispatched to.
 - **Admins** — the owner + the Facebook group admins.
@@ -29,7 +31,7 @@ loop. **Nobody installs anything.**
 |---|---|
 | App | Next.js App Router + TypeScript + Tailwind + shadcn/ui |
 | Data | Supabase Postgres + PostGIS, RLS on **every** table, migrations committed in `/supabase` |
-| Auth | Supabase Auth, **phone OTP** — responders and admins only |
+| Auth | Supabase Auth: **email/password** (verification + reset) **and phone OTP**, both kept. Google/Apple deferred. |
 | Files | Supabase Storage (private bucket, signed URLs only) |
 | SMS | Twilio Programmable SMS — outbound + inbound webhook |
 | Maps | Mapbox GL (pin drag + admin map) |
@@ -167,17 +169,47 @@ docs/                     decisions + runbooks
 - **`npm run build` runs the i18n check first** (`prebuild`). A missing Spanish key fails the
   build rather than silently falling back to English.
 
-## Milestones
+## Where this actually is
 
-All five are written. **None of them has ever been executed** — no `npm install`, no build, no
-type-check, no migration applied, no test run. The first real task is `npm install`,
-`npm run typecheck`, `supabase db reset` and `supabase test db`, then fixing what they turn up.
+Built, deployed and verified in production at **https://www.winch-up.com**. The original M1–M5 are
+long done. Work since then has followed the owner's 16-phase spec:
 
-- **M1** schema + migrations + RLS + seed data
-- **M2** `/request` + `/r` status page + requester SMS
-- **M3** responder signup + dispatch engine + inbound webhook + tests
-- **M4** `/board`, `/post`, `/admin`
-- **M5** PWA, i18n gate, runbook, deploy
+| Phase | State |
+|---|---|
+| 1 Audit | done — see the audit in the session log |
+| 2 Brand & design system | done — dark theme, Trail Green/Recovery Orange, Bebas + Inter, icon set |
+| 3 Auth & user management | done — roles, profiles, email/password, account deletion |
+| 4 Vehicles & equipment | done — members register rigs; matching unions rig equipment |
+| 5 Recovery requests | done — one open request per account, incident reporting + admin triage |
+| 6 GPS & matching | done — matches from a shared recent position, falling back to home |
+| 15 QA | partly done — unit, component and E2E suites exist; no integration tests yet |
+| 7–14, 16 | not started (messaging, community, trails, ads, super admin, notifications) |
+
+**Proven working in production**, not just built: a signed-in person files a request, the tick
+escalates it through all three rings, it reaches `unmatched` with nobody available, and the public
+board shows it with no phone, no name and a blurred pin.
+
+**Not launched.** Three things gate that and none are code: Twilio + A2P 10DLC registration, at
+least one approved volunteer (there are none), and a lawyer reading /terms, /waiver and /privacy.
+
+## Tests
+
+Four layers. Run all of them before claiming anything works.
+
+```
+npm test            94 unit + component tests (vitest; also runs in prebuild)
+npm run test:e2e    38 Playwright tests, mobile + desktop
+supabase test db    220 pgTAP assertions across six suites
+npm run build       runs i18n parity, contact-info parity and the unit tests first
+```
+
+Two things are generated rather than written: `supabase/tests/contact_info_parity_test.sql` comes
+from `src/lib/__fixtures__/contact-info-cases.json` via `scripts/gen-contact-info-parity.mjs`,
+so the SQL and TypeScript twins are tested against identical cases. Edit the fixtures, regenerate,
+and the build gate's `--check` catches you if you forget.
+
+E2E runs against `next build && next start`, not `next dev`, with `workers: 2`. Both are
+explained in `playwright.config.ts` and both were learned the hard way.
 
 Operational procedures are in `docs/runbook.md`. Keep it current: it is written for whoever is
 holding the phone at 11pm, not for whoever wrote the code.
@@ -186,7 +218,9 @@ holding the phone at 11pm, not for whoever wrote the code.
 
 1. The repo root is `txrecover/`, its own git repo, because the parent folder holds unrelated
    projects.
-2. Requesters are never authenticated. Security rests on the unguessable `public_token`.
+2. ~~Requesters are never authenticated.~~ **Changed 2026-09-21 by the owner:** a request now
+   requires an account. The `public_token` is still how the status page is reached — an account
+   says who filed it, not who may read it.
 3. Phone numbers are stored E.164, US only (`^\+1[0-9]{10}$`).
 4. One winning responder per request. The schema allows additional "assist" dispatches later, but
    there is only one `accepted_responder_id`.
