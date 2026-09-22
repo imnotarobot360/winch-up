@@ -236,5 +236,81 @@ select is(
   'once the first is closed they can ask for help again'
 );
 
+-- ---------------------------------------------------------------------------
+-- 9. Administrators can be made to use a second factor
+--
+-- Phase 11 requires MFA for admin accounts. Enforcement sits at app.require_admin(), which gates
+-- the privileged RPCs -- not at app.is_admin(), which backs a dozen RLS read policies and would
+-- have locked an admin out of everything including the page where they enrol.
+-- ---------------------------------------------------------------------------
+
+select is(
+  (select value #>> '{}' from app_settings where key = 'security.require_admin_mfa'),
+  'false',
+  'enforcement ships off, because turning it on before anybody enrols locks out the only admin'
+);
+
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"00000000-0000-4000-8000-000000000001","role":"authenticated","aal":"aal1"}';
+
+select is(
+  public.admin_set_mfa_required(true) ->> 'error',
+  'enrol_and_sign_in_first',
+  'an unchallenged session cannot switch on a requirement it has not met'
+);
+
+set local request.jwt.claims =
+  '{"sub":"00000000-0000-4000-8000-000000000001","role":"authenticated","aal":"aal2"}';
+
+select is(
+  public.admin_set_mfa_required(true) ->> 'error',
+  'no_admin_has_mfa',
+  'and it is refused while no admin has a verified factor at all'
+);
+
+reset role;
+
+insert into auth.mfa_factors (user_id, friendly_name, status)
+values ('00000000-0000-4000-8000-000000000001', 'Test authenticator', 'verified');
+
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"00000000-0000-4000-8000-000000000001","role":"authenticated","aal":"aal2"}';
+
+select is(
+  public.admin_set_mfa_required(true) ->> 'ok',
+  'true',
+  'a challenged admin with a factor enrolled can switch it on'
+);
+
+set local request.jwt.claims =
+  '{"sub":"00000000-0000-4000-8000-000000000001","role":"authenticated","aal":"aal1"}';
+
+select throws_ok(
+  'select public.admin_list_settings()',
+  '42501',
+  null,
+  'with enforcement on, an admin session that never used its factor is refused'
+);
+
+-- The escape hatch. If this were gated too, an admin who enrolled but has not been challenged
+-- would have no screen to fix it from.
+select is(
+  public.admin_security_state() ->> 'required',
+  'true',
+  'the security screen itself stays reachable without a second factor'
+);
+
+set local request.jwt.claims =
+  '{"sub":"00000000-0000-4000-8000-000000000001","role":"authenticated","aal":"aal2"}';
+
+select lives_ok(
+  'select public.admin_list_settings()',
+  'and a challenged admin still works normally'
+);
+
+reset role;
+
 select * from finish();
 rollback;

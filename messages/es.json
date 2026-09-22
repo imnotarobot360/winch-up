@@ -43,9 +43,16 @@
       "weak_password": "Elija una contraseña más larga: al menos 8 caracteres.",
       "reset_failed": "No pudimos guardar esa contraseña. Puede que el enlace haya vencido.",
       "link_expired": "Ese enlace ha vencido. Pida uno nuevo.",
-      "missing_code": "Ese enlace estaba incompleto. Pida uno nuevo."
+      "missing_code": "Ese enlace estaba incompleto. Pida uno nuevo.",
+      "bad_code": "Ese código no funcionó. Pruebe con el actual.",
+      "challenge_failed": "No pudimos iniciar la verificación. Intente de nuevo.",
+      "mfa_unavailable": "Esta cuenta necesita un código pero no encontramos su autenticador. Contacte a un administrador."
     },
-    "checking": "Comprobando…"
+    "checking": "Comprobando…",
+    "mfaPrompt": "Un paso más: abra su aplicación de autenticación.",
+    "mfaLabel": "Los seis dígitos",
+    "mfaHint": "Cambia cada 30 segundos.",
+    "mfaSubmit": "Iniciar sesión"
   },
   "account": {
     "title": "Su cuenta",
@@ -317,7 +324,8 @@
       "intake": "Captura",
       "settings": "Ajustes",
       "audit": "Registro",
-      "incidents": "Seguridad"
+      "incidents": "Seguridad",
+      "security": "Seguridad"
     },
     "signin": {
       "title": "Entrar como administrador",
@@ -470,6 +478,42 @@
         "responder": "Un voluntario",
         "admin": "Un administrador",
         "system": "El sistema"
+      }
+    },
+    "security": {
+      "title": "Inicio de sesión en dos pasos",
+      "body": "Una cuenta de administrador puede ver el teléfono y la ubicación exacta de cada solicitante, aprobar voluntarios, bloquear personas y cambiar el documento que todos aceptaron. Una contraseña sola es poca protección para eso.",
+      "yourFactors": "Su autenticador",
+      "noFactors": "Todavía no ha configurado uno.",
+      "authenticatorApp": "Aplicación de autenticación",
+      "addFactor": "Configurar un autenticador",
+      "remove": "Quitar",
+      "scanIt": "Escanee esto con Google Authenticator, 1Password, Authy — cualquiera.",
+      "orTypeIt": "¿No puede escanear? Escriba esto:",
+      "qrAlt": "Código QR para su aplicación de autenticación",
+      "codeLabel": "Los seis dígitos de la aplicación",
+      "codeHint": "Cambia cada 30 segundos.",
+      "confirm": "Confirmar",
+      "cancel": "Cancelar",
+      "working": "Trabajando…",
+      "enrolledNote": "Listo. Cierre sesión y vuelva a entrar una vez, y entonces podrá exigirlo para todos.",
+      "enforcementTitle": "Exigirlo a todos los administradores",
+      "enforcementBody": "Cuando esto está activo, cada acción de administrador necesita un código, no solo iniciar sesión. Ver la cola, aprobar un voluntario, todo.",
+      "adminsCovered": "{with} de {total} administradores tienen un autenticador configurado.",
+      "enforcementOn": "Activo. Las acciones de administrador necesitan un código.",
+      "enforcementOff": "Inactivo. Ahora mismo basta con una contraseña.",
+      "turnOn": "Exigirlo",
+      "turnOff": "Dejar de exigirlo",
+      "enrolFirst": "Configure primero su propio autenticador, o al activarlo se quedará fuera.",
+      "signInAgainFirst": "Cierre sesión y vuelva a entrar con su código primero, para saber que funciona.",
+      "errors": {
+        "enrol_and_sign_in_first": "Cierre sesión y vuelva a entrar con su código primero. No activamos esto desde una sesión que no lo ha usado.",
+        "no_admin_has_mfa": "Ningún administrador tiene autenticador todavía. Activarlo dejaría a todos fuera.",
+        "bad_code": "Ese código no funcionó. Revise la aplicación e intente con el actual.",
+        "challenge_failed": "No pudimos iniciar la verificación. Intente de nuevo.",
+        "enrol_failed": "No pudimos configurarlo. Intente de nuevo.",
+        "forbidden": "No es administrador.",
+        "failed": "No funcionó. Intente de nuevo."
       }
     }
   },

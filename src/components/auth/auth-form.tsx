@@ -28,6 +28,9 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  // Set when the account has a second factor and this session has not used it yet.
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
+  const [code, setCode] = useState("");
 
   const valid = /^\S+@\S+\.\S+$/.test(email) && password.length >= 8;
 
@@ -61,15 +64,99 @@ export function AuthForm({ mode }: { mode: Mode }) {
     }
 
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-    setBusy(false);
 
     if (signInError) {
+      setBusy(false);
       setError(signInError.status === 400 ? "bad_credentials" : "signin_failed");
+      return;
+    }
+
+    // A password is only the first factor. If this account has an authenticator, the session is
+    // at aal1 and Supabase will tell us it could be at aal2 -- which is exactly the state the
+    // admin gate refuses once enforcement is on.
+    const { data: level } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
+    if (level?.nextLevel === "aal2" && level.currentLevel !== "aal2") {
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const factor = factors?.totp?.find((f) => f.status === "verified");
+
+      setBusy(false);
+
+      if (!factor) {
+        // Enrolled but unusable. Better to say so than to drop them into a console that will
+        // refuse every action without explaining why.
+        setError("mfa_unavailable");
+        return;
+      }
+
+      setMfaFactorId(factor.id);
+      return;
+    }
+
+    setBusy(false);
+    router.push("/me");
+    router.refresh();
+  }
+
+  async function submitCode(event: React.FormEvent) {
+    event.preventDefault();
+    if (!mfaFactorId || busy) return;
+
+    setBusy(true);
+    setError(null);
+
+    const supabase = supabaseBrowser();
+
+    const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
+      factorId: mfaFactorId,
+    });
+
+    if (challengeError || !challenge) {
+      setBusy(false);
+      setError("challenge_failed");
+      return;
+    }
+
+    const { error: verifyError } = await supabase.auth.mfa.verify({
+      factorId: mfaFactorId,
+      challengeId: challenge.id,
+      code: code.trim(),
+    });
+
+    setBusy(false);
+
+    if (verifyError) {
+      setError("bad_code");
       return;
     }
 
     router.push("/me");
     router.refresh();
+  }
+
+  if (mfaFactorId) {
+    return (
+      <form onSubmit={submitCode} className="space-y-4" noValidate>
+        {error ? <Callout tone="danger">{t(`errors.${error}`)}</Callout> : null}
+
+        <p className="text-lg">{t("mfaPrompt")}</p>
+
+        <Field label={t("mfaLabel")} hint={t("mfaHint")}>
+          <TextInput
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            autoFocus
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            maxLength={6}
+          />
+        </Field>
+
+        <Button type="submit" size="lg" disabled={busy || code.trim().length < 6}>
+          {busy ? t("working") : t("mfaSubmit")}
+        </Button>
+      </form>
+    );
   }
 
   if (sent) {
