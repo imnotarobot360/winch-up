@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Button, Callout, Card, Field, TextInput } from "@/components/ui/primitives";
+import { ReportForm } from "@/components/incident/report-form";
 import { Link } from "@/i18n/navigation";
 import { mapAppUrl } from "@/lib/geo";
 import { supabaseBrowser } from "@/lib/supabase/client";
@@ -378,6 +379,11 @@ export function MeDashboard() {
       >
         {t("signOut")}
       </Button>
+      {/* Quiet, and last. Most volunteers never need it, and a report form sitting open
+          reads as an accusation waiting to happen. */}
+      <div className="mt-10">
+        <ReportForm />
+      </div>
     </main>
   );
 }

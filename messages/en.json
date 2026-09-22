@@ -738,6 +738,28 @@
       "already_thanked": "You've already sent a thank-you."
     }
   },
+  "report": {
+    "openLink": "Something go wrong? Report it.",
+    "title": "Report what happened",
+    "body": "This goes to the admins. The person you're reporting never sees it, and never finds out who reported them.",
+    "categoryLabel": "What happened?",
+    "whatHappened": "Tell us about it",
+    "whatHappenedHint": "What happened, when, and anything that would help us act on it. Phone numbers are fine here — only admins read this.",
+    "send": "Send report",
+    "sending": "Sending…",
+    "cancel": "Never mind",
+    "thanksTitle": "Sent.",
+    "thanksBody": "An admin will look at it. We won't tell them who reported it.",
+    "errors": {
+      "invalid_category": "Pick what happened first.",
+      "description_too_short": "Tell us a little more — at least a sentence.",
+      "description_too_long": "That's too long. Keep it under 2000 characters.",
+      "not_signed_in": "You're signed out. Sign in and try again.",
+      "not_found": "We couldn't find that recovery.",
+      "rate_limited": "You've sent several reports today. Contact an admin directly.",
+      "server_error": "Something broke on our end. Try again."
+    }
+  },
   "common": {
     "next": "Next",
     "back": "Back",

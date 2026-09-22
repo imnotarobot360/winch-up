@@ -738,6 +738,28 @@
       "already_thanked": "Ya envió un agradecimiento."
     }
   },
+  "report": {
+    "openLink": "¿Algo salió mal? Repórtelo.",
+    "title": "Reporte lo que pasó",
+    "body": "Esto llega a los administradores. La persona reportada nunca lo ve, ni se entera de quién la reportó.",
+    "categoryLabel": "¿Qué pasó?",
+    "whatHappened": "Cuéntenos",
+    "whatHappenedHint": "Qué pasó, cuándo, y cualquier cosa que nos ayude a actuar. Aquí sí puede poner teléfonos: solo lo leen los administradores.",
+    "send": "Enviar reporte",
+    "sending": "Enviando…",
+    "cancel": "Mejor no",
+    "thanksTitle": "Enviado.",
+    "thanksBody": "Un administrador lo revisará. No le diremos quién lo reportó.",
+    "errors": {
+      "invalid_category": "Primero elija qué pasó.",
+      "description_too_short": "Cuéntenos un poco más: al menos una oración.",
+      "description_too_long": "Es demasiado largo. Manténgalo bajo 2000 caracteres.",
+      "not_signed_in": "Su sesión está cerrada. Inicie sesión e intente de nuevo.",
+      "not_found": "No encontramos ese rescate.",
+      "rate_limited": "Ya envió varios reportes hoy. Contacte a un administrador directamente.",
+      "server_error": "Algo falló de nuestro lado. Intente de nuevo."
+    }
+  },
   "common": {
     "next": "Siguiente",
     "back": "Atrás",
