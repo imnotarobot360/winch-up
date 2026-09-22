@@ -197,11 +197,16 @@ least one approved volunteer (there are none), and a lawyer reading /terms, /wai
 Four layers. Run all of them before claiming anything works.
 
 ```
-npm test            94 unit + component tests (vitest; also runs in prebuild)
+npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
+npm test            94 unit + component tests (vitest)
 npm run test:e2e    38 Playwright tests, mobile + desktop
-supabase test db    220 pgTAP assertions across six suites
-npm run build       runs i18n parity, contact-info parity and the unit tests first
+supabase test db    227 pgTAP assertions across six suites
 ```
+
+`prebuild` runs the i18n and contact-info parity checks only -- two plain node scripts with no
+runtime of their own. The test suite used to run there too, which meant any problem with the test
+environment on Vercel blocked every deploy, and one did. A deploy should not be hostage to a test
+runner; run `npm run verify` yourself instead, or wire it into CI.
 
 Two things are generated rather than written: `supabase/tests/contact_info_parity_test.sql` comes
 from `src/lib/__fixtures__/contact-info-cases.json` via `scripts/gen-contact-info-parity.mjs`,
