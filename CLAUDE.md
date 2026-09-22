@@ -156,6 +156,15 @@ docs/                     decisions + runbooks
 - **Photos are stripped client-side.** `createImageBitmap(file, {imageOrientation: "from-image"})`
   then canvas then JPEG. The re-encode is what drops EXIF, including GPS. Never add a path that
   uploads the original file.
+- **The community feed is members-only, and `/board` is not.** `/board` is the public surface and
+  is deliberately thin — no names, no phones, a blurred pin. `/community` carries display names and
+  conversation and is behind an account, `noindex`, and RPCs granted only to `authenticated`.
+  `contains_contact_info()` **does** apply to posts and comments: this is the surface where a tow
+  company would post its number.
+- **Moderation lives at `/moderation`, not under `/admin`.** The admin shell gates on
+  `role = 'admin'` and its tabs lead to volunteer phone numbers and the waiver. A moderator can
+  hide content and nothing else; `app.is_moderator()` is the gate, and there is a test proving a
+  moderator is refused at `admin_list_responders()`.
 - **`public.contains_contact_info()` has a TypeScript twin** in `src/lib/contact-info.ts`. Change
   one, change both.
 - **The service worker caches almost nothing.** `/_next/static` and the offline shell, full stop.
@@ -182,8 +191,12 @@ long done. Work since then has followed the owner's 16-phase spec:
 | 4 Vehicles & equipment | done — members register rigs; matching unions rig equipment |
 | 5 Recovery requests | done — one open request per account, incident reporting + admin triage |
 | 6 GPS & matching | done — matches from a shared recent position, falling back to home |
+| 7 Messaging | done — one thread per request, requester and accepted volunteer only |
+| 8 Community | done — feed, comments, reactions, blocking, reports, moderation queue. Groups, events and photo attachments deferred |
+| 11 Super admin | done in part — admin MFA, system health, the `moderator` role now has powers |
+| 13 Deployment | done in part — deployed and green; the 10DLC pack is written, not submitted |
 | 15 QA | partly done — unit, component and E2E suites exist; no integration tests yet |
-| 7–14, 16 | not started (messaging, community, trails, ads, super admin, notifications) |
+| 9, 10, 12, 14, 16 | not started (trails, advertising, database tooling, notifications, launch) |
 
 **Proven working in production**, not just built: a signed-in person files a request, the tick
 escalates it through all three rings, it reaches `unmatched` with nobody available, and the public
@@ -199,8 +212,8 @@ Four layers. Run all of them before claiming anything works.
 ```
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
 npm test            94 unit + component tests (vitest)
-npm run test:e2e    38 Playwright tests, mobile + desktop
-supabase test db    227 pgTAP assertions across six suites
+npm run test:e2e    44 Playwright tests, mobile + desktop
+supabase test db    313 pgTAP assertions across eight suites
 ```
 
 `prebuild` runs the i18n and contact-info parity checks only -- two plain node scripts with no

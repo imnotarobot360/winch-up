@@ -3,21 +3,29 @@
 import { useTranslations } from "next-intl";
 
 import { Link, usePathname } from "@/i18n/navigation";
-import { IconDoc, IconHome, IconHook, IconPin, IconTruck } from "@/components/ui/icons";
+import { IconHome, IconHook, IconPeople, IconPin, IconTruck } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 
 /**
  * The tab bar from the brand mockups.
  *
- * Every destination here is a route that exists. The mockups also show Community and Profile
- * tabs; there is no community feed, and the responder dashboard is what "profile" means in this
- * product, so those slots are Volunteer and Rules instead of tabs that lead nowhere.
+ * Every destination here is a route that exists. The mockups show a Community tab and a Profile
+ * tab; the feed exists now, and the responder dashboard is what "profile" means in this product,
+ * so the second slot is Volunteer. Rules lost its tab to Community -- it is still one tap away
+ * from the home page, the request wizard and the volunteer signup, which is where anybody who
+ * needs it actually is.
  *
  * Hidden wherever it would fight the page for the bottom of the screen or the user's attention:
  * the request wizard has its own fixed action bar, and nobody reading a live recovery status,
- * working the admin queue or copying a post needs a tab bar under it.
+ * working the admin or moderation queue, or copying a post needs a tab bar under it.
  */
-const HIDDEN = [/^\/request(\/|$)/, /^\/r\//, /^\/admin(\/|$)/, /^\/post\//];
+const HIDDEN = [
+  /^\/request(\/|$)/,
+  /^\/r\//,
+  /^\/admin(\/|$)/,
+  /^\/moderation(\/|$)/,
+  /^\/post\//,
+];
 
 type Tab = { href: string; key: string; icon: React.ReactNode };
 
@@ -41,9 +49,9 @@ const RIGHT: Tab[] = [
     icon: <IconTruck size={26} />,
   },
   {
-    href: "/waiver",
-    key: "rules",
-    icon: <IconDoc size={26} />,
+    href: "/community",
+    key: "community",
+    icon: <IconPeople size={26} />,
   },
 ];
 

@@ -10,7 +10,8 @@
     "board": "Board",
     "getHelp": "Get help",
     "volunteer": "Volunteer",
-    "rules": "Rules"
+    "rules": "Rules",
+    "community": "Community"
   },
   "auth": {
     "signIn": "Sign in",
@@ -900,5 +901,93 @@
   "privacyNote": {
     "phone": "Your phone number is never shown publicly. It goes only to the volunteer who takes your request.",
     "pin": "Your exact location is only shared with the volunteer who takes your request. The public board shows an approximate pin about a mile off."
+  },
+  "community": {
+    "title": "Community",
+    "intro": "For people already in the group. Trail conditions, gate closures, questions about gear — the things that used to be a Facebook post.",
+    "composeLabel": "Your post",
+    "placeholder": "North trail is chewed up after the rain, bring boards…",
+    "noContactNote": "No phone numbers and no links. Nobody charges for a recovery here.",
+    "post": "Post",
+    "posting": "Posting…",
+    "loading": "Loading…",
+    "empty": "Nothing here yet. Say something.",
+    "loadMore": "Show older",
+    "someone": "Someone",
+    "moreActions": "More",
+    "helpful": "Helpful",
+    "comments": "{count, plural, =0 {Comment} one {# comment} other {# comments}}",
+    "noComments": "No comments yet.",
+    "commentLabel": "Your comment",
+    "commentPlaceholder": "Which loop were you on?",
+    "reply": "Reply",
+    "delete": "Delete",
+    "deletePost": "Delete my post",
+    "report": "Report this",
+    "reportTitle": "What's wrong with it?",
+    "reportSend": "Send report",
+    "reportThanks": "Thanks. A moderator will look at it.",
+    "cancel": "Cancel",
+    "block": "Block {name}",
+    "blockNote": "They aren't told. You stop seeing each other's posts, both ways.",
+    "reasons": {
+      "soliciting_payment": "Asking for money",
+      "spam": "Spam or advertising",
+      "harassment": "Harassment",
+      "impersonation": "Pretending to be someone else",
+      "unsafe_advice": "Unsafe advice",
+      "other": "Something else"
+    },
+    "errors": {
+      "not_signed_in": "Sign in to use the feed.",
+      "empty": "Type something first.",
+      "too_long": "That's too long. Keep it under 2000 characters.",
+      "bad_length": "A comment has to be between 1 and 1000 characters.",
+      "contact_info": "No phone numbers or links. Nobody charges for a recovery here.",
+      "rate_limited": "That's a lot at once. Give it a few minutes.",
+      "not_found": "That post isn't there any more.",
+      "bad_kind": "That didn't work. Try again.",
+      "bad_target": "That didn't work. Try again.",
+      "bad_reason": "Pick a reason first.",
+      "failed": "That didn't work. Try again."
+    }
+  },
+  "moderation": {
+    "title": "Moderation",
+    "intro": "What members reported, grouped by the post rather than by the report — five people reporting one thing is one decision, not five.",
+    "filterLabel": "Show",
+    "filters": {
+      "new": "Waiting",
+      "actioned": "Acted on",
+      "dismissed": "Left up"
+    },
+    "loading": "Loading…",
+    "empty": "Nothing waiting.",
+    "someone": "Someone",
+    "kind": {
+      "post": "Post",
+      "comment": "Comment"
+    },
+    "reportedBy": "{count, plural, one {# report} other {# reports}}",
+    "reasons": {
+      "soliciting_payment": "Asking for money",
+      "spam": "Spam or advertising",
+      "harassment": "Harassment",
+      "impersonation": "Pretending to be someone else",
+      "unsafe_advice": "Unsafe advice",
+      "other": "Something else"
+    },
+    "gone": "This content is gone.",
+    "status": {
+      "hidden": "Hidden",
+      "removed": "Deleted by its author"
+    },
+    "hide": "Hide it",
+    "restore": "Put it back",
+    "dismiss": "Leave it up",
+    "notModerator": "This screen is for moderators.",
+    "signedOut": "Sign in to open the moderation queue.",
+    "backToFeed": "Back to the feed",
+    "signIn": "Sign in"
   }
 }

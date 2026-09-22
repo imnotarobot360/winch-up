@@ -50,6 +50,10 @@ export const IconDoc = (p: IconProps) => (
   <Svg {...p}><path d="M5 4h10l4 4v12H5z" /><path d="M15 4v4h4" /><path d="M8.5 12.5h7M8.5 16h5" /></Svg>
 );
 
+export const IconPeople = (p: IconProps) => (
+  <Svg {...p}><circle cx="9" cy="8.5" r="3" /><path d="M3.5 19c0-3 2.5-4.8 5.5-4.8s5.5 1.8 5.5 4.8" /><path d="M16 6.2a3 3 0 0 1 0 5.6" /><path d="M17.5 14.6c1.9.6 3 2.2 3 4.4" /></Svg>
+);
+
 /** The hook. The app's one verb, so it gets the heaviest stroke in the set. */
 export const IconHook = (p: IconProps) => (
   <Svg {...p} strokeWidth={2}><path d="M12 3v5" /><path d="M9 8h6l-1.2 4.2a3 3 0 1 1-4.6 0Z" /></Svg>

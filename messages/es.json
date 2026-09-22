@@ -10,7 +10,8 @@
     "board": "Tablero",
     "getHelp": "Ayuda",
     "volunteer": "Voluntario",
-    "rules": "Reglas"
+    "rules": "Reglas",
+    "community": "Comunidad"
   },
   "auth": {
     "signIn": "Iniciar sesión",
@@ -900,5 +901,93 @@
   "privacyNote": {
     "phone": "Su número de teléfono nunca se muestra públicamente. Solo llega al voluntario que toma su solicitud.",
     "pin": "Su ubicación exacta solo se comparte con el voluntario que toma su solicitud. El tablero público muestra un punto aproximado, a cerca de una milla."
+  },
+  "community": {
+    "title": "Comunidad",
+    "intro": "Para los que ya están en el grupo. Cómo están los caminos, puertas cerradas, preguntas de equipo: lo que antes era una publicación en Facebook.",
+    "composeLabel": "Tu publicación",
+    "placeholder": "El camino del norte quedó deshecho con la lluvia, lleven tablas…",
+    "noContactNote": "Nada de números de teléfono ni enlaces. Aquí nadie cobra por un rescate.",
+    "post": "Publicar",
+    "posting": "Publicando…",
+    "loading": "Cargando…",
+    "empty": "Todavía no hay nada. Escribe algo.",
+    "loadMore": "Ver más antiguas",
+    "someone": "Alguien",
+    "moreActions": "Más",
+    "helpful": "Útil",
+    "comments": "{count, plural, =0 {Comentar} one {# comentario} other {# comentarios}}",
+    "noComments": "Todavía no hay comentarios.",
+    "commentLabel": "Tu comentario",
+    "commentPlaceholder": "¿En qué vuelta andabas?",
+    "reply": "Responder",
+    "delete": "Borrar",
+    "deletePost": "Borrar mi publicación",
+    "report": "Reportar",
+    "reportTitle": "¿Qué tiene de malo?",
+    "reportSend": "Enviar reporte",
+    "reportThanks": "Gracias. Un moderador la va a revisar.",
+    "cancel": "Cancelar",
+    "block": "Bloquear a {name}",
+    "blockNote": "No se le avisa. Dejan de verse las publicaciones, los dos.",
+    "reasons": {
+      "soliciting_payment": "Está cobrando",
+      "spam": "Spam o publicidad",
+      "harassment": "Acoso",
+      "impersonation": "Se hace pasar por otra persona",
+      "unsafe_advice": "Consejo peligroso",
+      "other": "Otra cosa"
+    },
+    "errors": {
+      "not_signed_in": "Inicia sesión para usar la comunidad.",
+      "empty": "Escribe algo primero.",
+      "too_long": "Es muy largo. Máximo 2000 caracteres.",
+      "bad_length": "Un comentario tiene que tener entre 1 y 1000 caracteres.",
+      "contact_info": "Nada de números de teléfono ni enlaces. Aquí nadie cobra por un rescate.",
+      "rate_limited": "Es mucho de golpe. Espera unos minutos.",
+      "not_found": "Esa publicación ya no está.",
+      "bad_kind": "No funcionó. Inténtalo otra vez.",
+      "bad_target": "No funcionó. Inténtalo otra vez.",
+      "bad_reason": "Elige un motivo primero.",
+      "failed": "No funcionó. Inténtalo otra vez."
+    }
+  },
+  "moderation": {
+    "title": "Moderación",
+    "intro": "Lo que reportaron los miembros, agrupado por publicación y no por reporte: cinco personas reportando lo mismo es una decisión, no cinco.",
+    "filterLabel": "Mostrar",
+    "filters": {
+      "new": "Pendientes",
+      "actioned": "Resueltas",
+      "dismissed": "Se quedaron"
+    },
+    "loading": "Cargando…",
+    "empty": "No hay nada pendiente.",
+    "someone": "Alguien",
+    "kind": {
+      "post": "Publicación",
+      "comment": "Comentario"
+    },
+    "reportedBy": "{count, plural, one {# reporte} other {# reportes}}",
+    "reasons": {
+      "soliciting_payment": "Está cobrando",
+      "spam": "Spam o publicidad",
+      "harassment": "Acoso",
+      "impersonation": "Se hace pasar por otra persona",
+      "unsafe_advice": "Consejo peligroso",
+      "other": "Otra cosa"
+    },
+    "gone": "Este contenido ya no está.",
+    "status": {
+      "hidden": "Oculta",
+      "removed": "Borrada por quien la escribió"
+    },
+    "hide": "Ocultar",
+    "restore": "Volver a mostrar",
+    "dismiss": "Dejarla",
+    "notModerator": "Esta pantalla es para moderadores.",
+    "signedOut": "Inicia sesión para abrir la cola de moderación.",
+    "backToFeed": "Volver a la comunidad",
+    "signIn": "Iniciar sesión"
   }
 }

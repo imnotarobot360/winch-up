@@ -16,6 +16,7 @@ const GUARDED = [
   { path: "/request", why: "the request wizard needs an account to attach the request to" },
   { path: "/account", why: "your own profile" },
   { path: "/account/vehicles", why: "your own rigs" },
+  { path: "/community", why: "the feed is for members, not the public — /board is the public one" },
 ];
 
 test.describe("signed out", () => {
@@ -38,6 +39,27 @@ test.describe("signed out", () => {
     // "Delete your account" is only on the real account page. Seeing it would mean the page
     // rendered before redirecting, which is what the server-side check exists to prevent.
     expect(text).not.toMatch(/Delete your account|Eliminar su cuenta/i);
+  });
+
+  test("/moderation says what it is rather than redirecting", async ({ page }) => {
+    // Not a redirect, because the queue is not somewhere a signed-out person was trying to get
+    // to by accident. It says plainly what the screen is and offers the way in.
+    await page.goto("/moderation");
+    await expect(page.locator("main")).toContainText(/Sign in to open the moderation queue/i);
+
+    // And nothing of the queue itself: no reported content, no filter tabs.
+    const text = await page.locator("main").innerText();
+    expect(text).not.toMatch(/Waiting|Acted on|Hide it/i);
+  });
+
+  test("the community feed's own content never renders on the way past", async ({ page }) => {
+    await page.goto("/community");
+    await page.waitForURL(/\/signin/, { timeout: 15_000 });
+
+    const text = await page.locator("main").innerText();
+    // The composer is only on the real feed. Seeing it would mean the page rendered before
+    // redirecting — and a feed carries names and conversation, unlike /board.
+    expect(text).not.toMatch(/No phone numbers and no links/i);
   });
 
   test("Spanish speakers are sent to the Spanish sign in", async ({ page }) => {

@@ -36,6 +36,14 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
   const format = useFormatter();
   const now = useNow({ updateInterval: 30_000 });
 
+  // useNow ticks on an interval, so something written seconds ago can be newer than the clock it
+  // is measured against, and next-intl then honestly reports it as "in 40 seconds". Measuring
+  // from whichever is later reads as "now".
+  const relative = (iso: string) => {
+    const at = new Date(iso);
+    return format.relativeTime(at, at > now ? at : now);
+  };
+
   const [messages, setMessages] = useState<Message[] | null>(null);
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
@@ -121,7 +129,7 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
                 <p className="whitespace-pre-wrap text-base">{message.body}</p>
               ) : null}
               <p className="mt-1 text-xs text-ink-faint">
-                {format.relativeTime(new Date(message.created_at), now)}
+                {relative(message.created_at)}
                 {/* Only meaningful on your own messages: "they have seen it". */}
                 {message.mine && message.read_at ? ` · ${t("read")}` : ""}
               </p>
