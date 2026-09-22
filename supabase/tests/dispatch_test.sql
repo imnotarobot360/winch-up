@@ -788,5 +788,118 @@ select is(
   'and the point is actually gone, not just switched off'
 );
 
+-- ---------------------------------------------------------------------------
+-- Notification preference, and knowing whether the tick is alive
+--
+-- Phase 13: profiles.notify_recovery had been writable since Phase 3 and read by nothing, so a
+-- volunteer could switch off recovery alerts, watch it save, and still be texted at 2am.
+-- ---------------------------------------------------------------------------
+
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, recovery_token, email_change, email_change_token_new
+) values (
+  '00000000-0000-0000-0000-000000000000', 'eeeeeeee-0000-4000-8000-00000000000e',
+  'authenticated', 'authenticated', 'pref-test@example.invalid', 'x', now(),
+  '{}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', ''
+);
+
+insert into responders (
+  id, user_id, phone, first_name, home_location, radius_miles,
+  equipment, approval, availability, night_ok, sms_opt_in, max_active_jobs
+) values (
+  'eeeeeeee-1111-4111-8111-00000000000e', 'eeeeeeee-0000-4000-8000-00000000000e',
+  '+15125559201', 'PrefTest',
+  extensions.st_setsrid(extensions.st_point(-97.7431, 30.2672), 4326)::extensions.geography,
+  60, '{tractor}', 'approved', 'active', true, true, 1
+);
+
+insert into requests (
+  requester_name, requester_phone, location, vehicle_class, stuck_type, land_type,
+  needs_tractor, status, emergency_ack_at, rules_accepted, waiver_id, waiver_accepted_at
+) values (
+  'Pref Match', '+15125559202',
+  extensions.st_setsrid(extensions.st_point(-97.7431, 30.2672), 4326)::extensions.geography,
+  'truck', 'mud', 'public', true, 'dispatching', now(), true,
+  (select id from waivers where slug = 'requester_waiver' and is_current), now()
+);
+
+select is(
+  (select count(*)::int
+     from app.candidates((select id from requests where requester_phone = '+15125559202'), 60, 50) c
+    where c.responder_id = 'eeeeeeee-1111-4111-8111-00000000000e'),
+  1,
+  'a volunteer with recovery alerts on is matched'
+);
+
+update profiles set notify_recovery = false
+ where user_id = 'eeeeeeee-0000-4000-8000-00000000000e';
+
+select is(
+  (select count(*)::int
+     from app.candidates((select id from requests where requester_phone = '+15125559202'), 60, 50) c
+    where c.responder_id = 'eeeeeeee-1111-4111-8111-00000000000e'),
+  0,
+  'and is not matched once they switch recovery alerts off'
+);
+
+-- A volunteer with no account never had the chance to express a preference. Silently dropping
+-- them would be worse than texting them, and nearly every volunteer today has no account.
+update responders set user_id = null where id = 'eeeeeeee-1111-4111-8111-00000000000e';
+
+select is(
+  (select count(*)::int
+     from app.candidates((select id from requests where requester_phone = '+15125559202'), 60, 50) c
+    where c.responder_id = 'eeeeeeee-1111-4111-8111-00000000000e'),
+  1,
+  'a volunteer with no account keeps being matched'
+);
+
+-- ---------------------------------------------------------------------------
+-- The heartbeat: telling a quiet afternoon from a dead scheduler
+-- ---------------------------------------------------------------------------
+
+delete from system_heartbeats where key = 'dispatch_tick';
+
+select ok(
+  public.advance_dispatch(5) is not null,
+  'a tick runs'
+);
+
+select is(
+  (select count(*)::int from system_heartbeats where key = 'dispatch_tick'),
+  1,
+  'and writes a heartbeat, whether or not it had anything to do'
+);
+
+update system_heartbeats set beat_at = now() - interval '20 minutes'
+ where key = 'dispatch_tick';
+
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"00000000-0000-4000-8000-000000000001","role":"authenticated","aal":"aal2"}';
+
+select is(
+  public.admin_system_health() -> 'dispatch' ->> 'stalled',
+  'true',
+  'a heartbeat 20 minutes old is reported as stalled'
+);
+
+reset role;
+update system_heartbeats set beat_at = now() where key = 'dispatch_tick';
+
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"00000000-0000-4000-8000-000000000001","role":"authenticated","aal":"aal2"}';
+
+select is(
+  public.admin_system_health() -> 'dispatch' ->> 'stalled',
+  'false',
+  'and a fresh one is not'
+);
+
+reset role;
+
 select * from finish();
 rollback;

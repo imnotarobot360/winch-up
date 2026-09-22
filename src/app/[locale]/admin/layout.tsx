@@ -56,6 +56,7 @@ export default async function AdminLayout({
     { href: "/admin/intake", label: t("nav.intake") },
     { href: "/admin/settings", label: t("nav.settings") },
     { href: "/admin/security", label: t("nav.security") },
+    { href: "/admin/system", label: t("nav.system") },
     { href: "/admin/audit", label: t("nav.audit") },
   ];
 

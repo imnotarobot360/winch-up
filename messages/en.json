@@ -325,7 +325,8 @@
       "settings": "Settings",
       "audit": "Audit log",
       "incidents": "Safety",
-      "security": "Security"
+      "security": "Security",
+      "system": "System"
     },
     "signin": {
       "title": "Admin sign in",
@@ -515,6 +516,31 @@
         "forbidden": "You're not an admin.",
         "failed": "That didn't work. Try again."
       }
+    },
+    "system": {
+      "title": "Is anything running?",
+      "body": "An idle system and a dead one look the same from every other screen. This is where they don't.",
+      "stalledTitle": "The dispatch tick has stopped.",
+      "stalledSince": "Last ran {when}. Nothing is being dispatched — requests won't escalate and no volunteer is being texted.",
+      "neverRan": "It has never run. Nothing is being dispatched.",
+      "stalledWhatToDo": "Check the pg_cron job in Supabase, and that the Edge Function still has the right secret.",
+      "running": "Running. Last tick {seconds} seconds ago.",
+      "volunteersTitle": "Volunteers",
+      "reachable": "Reachable right now",
+      "approvedActive": "Approved & active",
+      "pending": "Waiting for approval",
+      "noneReachable": "No volunteer can be texted right now. A request would escalate through every ring and find nobody.",
+      "smsTitle": "Messages",
+      "sent24h": "Sent, 24h",
+      "queued": "Queued",
+      "exhausted": "Gave up retrying",
+      "failed": "Failed",
+      "noFailures": "Nothing has failed.",
+      "unknownTemplate": "Unknown template",
+      "attempts": "{n} attempts",
+      "requestsTitle": "Requests",
+      "open": "Open",
+      "noContact": "Dispatching, nobody contacted"
     }
   },
   "enum": {

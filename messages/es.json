@@ -325,7 +325,8 @@
       "settings": "Ajustes",
       "audit": "Registro",
       "incidents": "Seguridad",
-      "security": "Seguridad"
+      "security": "Seguridad",
+      "system": "Sistema"
     },
     "signin": {
       "title": "Entrar como administrador",
@@ -515,6 +516,31 @@
         "forbidden": "No es administrador.",
         "failed": "No funcionó. Intente de nuevo."
       }
+    },
+    "system": {
+      "title": "¿Está funcionando algo?",
+      "body": "Un sistema inactivo y uno muerto se ven igual desde cualquier otra pantalla. Aquí no.",
+      "stalledTitle": "El ciclo de despacho se detuvo.",
+      "stalledSince": "Se ejecutó por última vez {when}. No se está despachando nada: las solicitudes no escalan y no se avisa a ningún voluntario.",
+      "neverRan": "Nunca se ha ejecutado. No se está despachando nada.",
+      "stalledWhatToDo": "Revise el trabajo de pg_cron en Supabase y que la Edge Function siga teniendo el secreto correcto.",
+      "running": "Funcionando. Último ciclo hace {seconds} segundos.",
+      "volunteersTitle": "Voluntarios",
+      "reachable": "Contactables ahora",
+      "approvedActive": "Aprobados y activos",
+      "pending": "Esperando aprobación",
+      "noneReachable": "Ahora mismo no se puede avisar a ningún voluntario. Una solicitud recorrería todos los anillos sin encontrar a nadie.",
+      "smsTitle": "Mensajes",
+      "sent24h": "Enviados, 24h",
+      "queued": "En cola",
+      "exhausted": "Se dejó de reintentar",
+      "failed": "Fallidos",
+      "noFailures": "Nada ha fallado.",
+      "unknownTemplate": "Plantilla desconocida",
+      "attempts": "{n} intentos",
+      "requestsTitle": "Solicitudes",
+      "open": "Abiertas",
+      "noContact": "Despachando, nadie contactado"
     }
   },
   "enum": {
