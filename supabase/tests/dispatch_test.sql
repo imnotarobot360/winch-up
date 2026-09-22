@@ -591,6 +591,96 @@ select is(
   'a volunteer awaiting approval cannot accept anything'
 );
 
-select * from finish();
+-- ---------------------------------------------------------------------------
+-- Matching counts equipment on a member's rigs, not only their declared list
+--
+-- Phase 4 gave members vehicles with their own equipment. Before this change a winch added to
+-- the Jeep did nothing for matching and the volunteer would never have been texted.
+--
+-- This section builds its own volunteer, account and request rather than borrowing the demo
+-- fixtures. Fifty assertions above it have already accepted jobs, written dispatch rows and
+-- moved people around; a test that reuses those rows passes or fails on what ran before it.
+-- ---------------------------------------------------------------------------
 
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, recovery_token, email_change, email_change_token_new
+) values (
+  '00000000-0000-0000-0000-000000000000',
+  'aaaaaaaa-0000-4000-8000-00000000000a', 'authenticated', 'authenticated',
+  'rig-match-test@example.invalid', 'x', now(),
+  '{}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', ''
+);
+
+insert into responders (
+  id, user_id, phone, first_name, home_location, radius_miles,
+  equipment, approval, availability, night_ok, sms_opt_in, max_active_jobs
+) values (
+  'aaaaaaaa-1111-4111-8111-00000000000a',
+  'aaaaaaaa-0000-4000-8000-00000000000a',
+  '+15125559001', 'RigTest',
+  extensions.st_setsrid(extensions.st_point(-97.7431, 30.2672), 4326)::extensions.geography,
+  60, '{kinetic_rope}', 'approved', 'active', true, true, 1
+);
+
+insert into requests (
+  requester_name, requester_phone, location, vehicle_class, stuck_type, land_type,
+  needs_tractor, status, emergency_ack_at, rules_accepted, waiver_id, waiver_accepted_at
+) values (
+  'Rig Match', '+15125559002',
+  extensions.st_setsrid(extensions.st_point(-97.7431, 30.2672), 4326)::extensions.geography,
+  'truck', 'mud', 'public', true, 'dispatching', now(), true,
+  (select id from waivers where slug = 'requester_waiver' and is_current), now()
+);
+
+-- required_equipment is derived by a trigger from the situation, so it is read, not set.
+select is(
+  (select required_equipment::text from requests where requester_phone = '+15125559002'),
+  '{tractor}',
+  'needs_tractor derives a tractor requirement'
+);
+
+select is(
+  (select count(*)::int
+     from app.candidates((select id from requests where requester_phone = '+15125559002'), 60, 50) c
+    where c.responder_id = 'aaaaaaaa-1111-4111-8111-00000000000a'),
+  0,
+  'a volunteer whose declared list lacks the gear does not match'
+);
+
+insert into vehicles (user_id, make, equipment)
+values ('aaaaaaaa-0000-4000-8000-00000000000a', 'Kubota', '{tractor}'::equipment_type[]);
+
+select is(
+  (select count(*)::int
+     from app.candidates((select id from requests where requester_phone = '+15125559002'), 60, 50) c
+    where c.responder_id = 'aaaaaaaa-1111-4111-8111-00000000000a'),
+  1,
+  'and matches once a rig of theirs carries it'
+);
+
+delete from vehicles where user_id = 'aaaaaaaa-0000-4000-8000-00000000000a';
+
+select is(
+  (select count(*)::int
+     from app.candidates((select id from requests where requester_phone = '+15125559002'), 60, 50) c
+    where c.responder_id = 'aaaaaaaa-1111-4111-8111-00000000000a'),
+  0,
+  'and stops matching when that rig is removed'
+);
+
+-- Most volunteers have no account, and their declared list has to keep working on its own.
+update responders set user_id = null, equipment = '{tractor}'
+ where id = 'aaaaaaaa-1111-4111-8111-00000000000a';
+
+select is(
+  (select count(*)::int
+     from app.candidates((select id from requests where requester_phone = '+15125559002'), 60, 50) c
+    where c.responder_id = 'aaaaaaaa-1111-4111-8111-00000000000a'),
+  1,
+  'a volunteer with no account still matches on their declared list alone'
+);
+
+select * from finish();
 rollback;
