@@ -18,7 +18,12 @@ const PAGES = [
   { path: "/signin", heading: /Sign in/i, title: /Sign in/i },
   { path: "/signup", heading: /Create your account/i, title: /Create account/i },
   { path: "/reset", heading: /Reset your password/i, title: /Reset/i },
+  { path: "/resources", heading: /Getting out/i, title: /Getting out/i },
 ];
+
+// Public and indexable, unlike trails and the feed — this is the part of the app that is useful
+// to somebody who has never heard of us and is standing next to a stuck truck right now.
+const GUIDES = ["stuck", "safety", "gear", "before", "etiquette", "weather"];
 
 test.describe("public pages", () => {
   for (const page_ of PAGES) {
@@ -45,6 +50,62 @@ test.describe("public pages", () => {
       expect(real, `${page_.path} logged console errors`).toEqual([]);
     });
   }
+});
+
+test.describe("the resources section", () => {
+  for (const slug of GUIDES) {
+    test(`/resources/${slug} renders its checklists`, async ({ page }) => {
+      const response = await page.goto(`/resources/${slug}`);
+      expect(response?.status()).toBeLessThan(400);
+
+      await expect(page.locator("h1")).toBeVisible();
+
+      // Every guide is lists. A guide that renders its heading and no items is a guide that lost
+      // its content to a message-shape change, which is exactly the failure worth catching.
+      const items = await page.locator("main li").count();
+      expect(items, `${slug} has no list items`).toBeGreaterThan(4);
+
+      // The spec line for this phase: do not represent volunteers as certified professionals.
+      // It is on every guide, not only the index, because people arrive from search and from
+      // forwarded links.
+      await expect(page.locator("main")).toContainText(
+        /volunteers, not professionals|voluntarios, no profesionales/i,
+      );
+      await expect(page.locator("main")).toContainText(/911/);
+    });
+  }
+
+  test("an unknown guide lands on not-found, and asks not to be indexed", async ({ page }) => {
+    // Not a status assertion, and the reason is the one this project keeps relearning: the head
+    // flushes before the guard runs, so the response is already committed as 200 by the time
+    // notFound() fires. Where the person ends up is the behaviour. The noindex is what stops a
+    // crawler filing it as a real page.
+    await page.goto("/resources/not-a-guide");
+
+    const text = await page.locator("body").innerText();
+    expect(text).toMatch(/couldn't find|no encontramos|404/i);
+    expect(text, "the guide's own content must not render").not.toMatch(/Turn around, don't drown/);
+
+    const robots = await page
+      .locator('meta[name="robots"]')
+      .first()
+      .getAttribute("content");
+    expect(robots ?? "").toMatch(/noindex/);
+  });
+
+  test("the Spanish guides are Spanish, not a fallback to English", async ({ page }) => {
+    await page.goto("/es/resources/safety");
+    const text = await page.locator("main").innerText();
+    await expect(page.locator("h1")).toContainText(/rescate/i);
+    expect(text).not.toMatch(/A line under tension|Know when to stop/);
+  });
+
+  test("the index links every guide", async ({ page }) => {
+    await page.goto("/resources");
+    for (const slug of GUIDES) {
+      await expect(page.locator(`a[href$="/resources/${slug}"]`)).toBeVisible();
+    }
+  });
 });
 
 test.describe("Spanish", () => {

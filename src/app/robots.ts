@@ -14,8 +14,20 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/board", "/join", "/terms", "/waiver", "/privacy"],
-        disallow: ["/r/", "/post/", "/me", "/admin", "/api/"],
+        allow: ["/", "/board", "/join", "/terms", "/waiver", "/privacy", "/resources"],
+        // Every members-only surface. /trails and /community carry names, conversation and
+        // claims about who owns which piece of land; they redirect a signed-out visitor anyway,
+        // and each page sends noindex, but say it here too.
+        disallow: [
+          "/r/",
+          "/post/",
+          "/me",
+          "/admin",
+          "/api/",
+          "/community",
+          "/trails",
+          "/moderation",
+        ],
       },
     ],
     sitemap: site ? `${site}/sitemap.xml` : undefined,

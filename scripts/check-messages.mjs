@@ -20,10 +20,22 @@ function load(locale) {
   return JSON.parse(readFileSync(join(messagesDir, `${locale}.json`), "utf8"));
 }
 
+/**
+ * Arrays are walked by index, not treated as leaves.
+ *
+ * The resources guides are lists -- a checklist of what to carry, the steps of a safe pull. If an
+ * array counted as one key, an English list of seven items and a Spanish list of five would pass
+ * this check, and the two missing lines would be safety instructions nobody noticed were gone.
+ * Walking by index turns that into "missing in es: resources.guides.safety.sections.1.items.6".
+ */
 function flatten(value, prefix = "", out = new Map()) {
-  for (const [key, child] of Object.entries(value)) {
+  const entries = Array.isArray(value)
+    ? value.map((child, index) => [String(index), child])
+    : Object.entries(value);
+
+  for (const [key, child] of entries) {
     const path = prefix ? `${prefix}.${key}` : key;
-    if (child && typeof child === "object" && !Array.isArray(child)) {
+    if (child && typeof child === "object") {
       flatten(child, path, out);
     } else {
       out.set(path, child);

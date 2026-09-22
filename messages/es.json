@@ -151,7 +151,10 @@
     "boardCta": "Abrir el tablero",
     "trailsTitle": "Caminos y condiciones",
     "trailsBody": "Por dónde anda la gente, cómo estaba el terreno el fin pasado, y si tienes permiso de estar ahí, con una fuente para cada dato de acceso.",
-    "trailsLink": "Ver caminos"
+    "trailsLink": "Ver caminos",
+    "resourcesTitle": "Qué llevar, y cómo no salir lastimado",
+    "resourcesBody": "Listas de equipo, qué revisar antes de dejar el pavimento, y la lista corta de lo que lastima gente durante un rescate. Gratis y sin cuenta.",
+    "resourcesLink": "Leer las guías"
   },
   "notFound": {
     "title": "No encontramos eso",
@@ -1160,6 +1163,329 @@
       "incomplete": "Necesitamos un nombre y coordenadas.",
       "rate_limited": "Es mucho de golpe. Inténtalo más tarde.",
       "bad_kind": "No funcionó. Inténtalo otra vez."
+    }
+  },
+  "resources": {
+    "title": "Salir del atasco, y no llegar a necesitarlo",
+    "intro": "Qué llevar, qué revisar antes de dejar el pavimento, y cómo se tuerce un rescate. Escrito por gente que se saca entre sí, no por instructores.",
+    "notProsTitle": "Somos voluntarios, no profesionales.",
+    "notProsBody": "Aquí nadie es operador certificado de rescate, ni mecánico, ni paramédico, salvo que te lo diga, y nosotros no lo verificamos. Esto es lo que el grupo ha aprendido, ofrecido gratis. No es capacitación, no es una norma, y no reemplaza contratar a alguien que vive de esto.",
+    "emergencyTitle": "Si hay alguien lastimado, llama al 911 primero.",
+    "emergencyBody": "Una persona lastimada, un vehículo en agua corriente, o cualquier cosa en un carril de tráfico es una llamada de emergencia, no una solicitud de rescate. Somos voluntarios con camionetas. Nadie está de turno y nadie está obligado a ir.",
+    "readMore": "Leer esta guía",
+    "backToResources": "Todas las guías",
+    "externalNote": "Estos se abren fuera de Winch Up.",
+    "guides": {
+      "gear": {
+        "title": "Qué llevar",
+        "blurb": "Lo que convierte una mala tarde en un simple contratiempo.",
+        "lede": "Nada de esto hace seguro un rescate por sí solo. Un grillete certificado en una camioneta que no tiene dónde engancharlo sigue siendo no tener dónde engancharlo.",
+        "sections": [
+          {
+            "heading": "Siempre en la camioneta",
+            "items": [
+              "Una llanta de refacción de tamaño completo que tenga aire, y las herramientas para cambiarla de verdad, incluyendo una barra si te apretaron las tuercas en un taller.",
+              "Kit de parches de tapón y algo para volver a inflar. La mayoría de las ponchaduras en el camino se parchan bien.",
+              "Cables pasacorriente o un arrancador de batería.",
+              "Un gato que funcione en terreno blando, y una tabla plana para apoyarlo. Un gato de botella sobre lodo es un gato dentro del lodo.",
+              "Más agua de la que crees. Quien venga a sacarte también va a querer.",
+              "Una lámpara que no sea tu teléfono, y pilas de repuesto.",
+              "Un botiquín que hayas abierto alguna vez antes de hoy."
+            ]
+          },
+          {
+            "heading": "Antes de dejar el pavimento",
+            "items": [
+              "Desinflador y manómetro. Bajar la presión es la tracción más barata que hay.",
+              "Un compresor, porque bajar la presión es un viaje de ida sin uno.",
+              "Tablas de tracción. Sacan más vehículos que los malacates.",
+              "Guantes. Todo rescate implica levantar algo que preferirías no tocar.",
+              "Un cargador que funcione con la camioneta, no una batería portátil que cargaste la semana pasada.",
+              "Una pala. Muchas veces es todo el rescate."
+            ]
+          },
+          {
+            "heading": "Si tú eres quien va a jalar",
+            "items": [
+              "Una cuerda cinética o eslinga de rescate con capacidad muy por encima del peso del vehículo más pesado.",
+              "Grilletes suaves, o grilletes certificados. No los de ferretería sin certificar.",
+              "Un amortiguador para cada línea que vaya bajo carga: uno hecho para eso, o una cobija pesada mojada.",
+              "Una eslinga para árbol si vas a anclar a uno, para no matarlo y para que siga siendo un ancla la próxima vez.",
+              "Una segunda persona que entienda lo que va a pasar."
+            ]
+          },
+          {
+            "heading": "Nunca jales desde esto",
+            "items": [
+              "Una bola de arrastre. Se rompe bajo carga de jalón y sale disparada: atraviesa un parabrisas. Esta es la que mata gente.",
+              "Un perno de enganche en un receptor vacío. Usa una base certificada para grillete.",
+              "Cadenas con ganchos. No estiran, y el gancho va a dar a alguna parte cuando suelta.",
+              "Eslingas de trinquete y de carga. Son para sujetar cosas quietas.",
+              "Las argollitas que se usan para amarrar un vehículo a una plataforma. Están hechas para sostener un carro estacionado, no para jalar uno atascado.",
+              "Brazos de suspensión, partes de la dirección, defensas que no estén atornilladas al chasis, o un gancho de fábrica del que no sepas su capacidad."
+            ]
+          }
+        ]
+      },
+      "before": {
+        "title": "Antes de salir",
+        "blurb": "Cinco minutos en casa que deciden cómo se pone la noche.",
+        "lede": "Casi todos los rescates largos son largos por algo que se decidió antes de que alguien saliera de su casa.",
+        "sections": [
+          {
+            "heading": "Dile a una persona, no a un grupo",
+            "items": [
+              "A dónde vas, más o menos por dónde, y a qué hora regresas.",
+              "Cuándo debe empezar a hacer llamadas. Una hora tarde no es lo mismo que cuatro, y no puede juzgarlo si no se lo dices.",
+              "Una publicación en un grupo no cuenta. Una persona esperándote sí."
+            ]
+          },
+          {
+            "heading": "Da por hecho que no habrá señal",
+            "items": [
+              "Descarga el mapa sin conexión de la zona antes de salir de casa.",
+              "Toma captura de pantalla del mapa, para tenerlo cuando la app no cargue.",
+              "Anota en papel las coordenadas de a dónde vas. Un teléfono que se muere se lleva todo el plan."
+            ]
+          },
+          {
+            "heading": "Gasolina, agua, luz de día",
+            "items": [
+              "Medio tanque es el punto de regresar, no el punto de preocuparse.",
+              "Calcula a qué hora oscurece, y réstale una hora.",
+              "Agua para todos los que van, y algo extra para quien salga a buscarte."
+            ]
+          },
+          {
+            "heading": "Baja la presión, y ten cómo volver a subirla",
+            "items": [
+              "Menos presión es la tracción más barata que existe, y es gratis.",
+              "Ten clara la presión a la que vas a bajar, y mídela en vez de adivinar.",
+              "Necesitas un compresor para volver a casa. Pedirlo prestado en la entrada no es un plan."
+            ]
+          },
+          {
+            "heading": "Ve acompañado",
+            "items": [
+              "Un segundo vehículo es la diferencia entre un contratiempo y pasar la noche afuera.",
+              "Si vas solo, dile a alguien la ruta y no te salgas de ella."
+            ]
+          }
+        ]
+      },
+      "safety": {
+        "title": "Hacer un rescate sin lastimar a nadie",
+        "blurb": "La lista corta de lo que de verdad lastima gente.",
+        "lede": "Esto no es capacitación. Es lo que el grupo ha aprendido, y parte se aprendió por las malas. Si nunca lo has hecho, ve con alguien que sí y primero observa.",
+        "sections": [
+          {
+            "heading": "Antes de que algo quede bajo carga",
+            "items": [
+              "Definan quién manda. Una persona decide, los demás hacen lo que dice.",
+              "Definan quién puede parar todo. Todos pueden parar todo.",
+              "Caminen la línea que va a seguir el jalón, y decidan dónde se va a parar la gente: que no sea en ella ni junto a ella.",
+              "Manden a los curiosos detrás de un vehículo, bien atrás. Los teléfonos también. Un video de alguien lastimándose sigue siendo alguien lastimándose."
+            ]
+          },
+          {
+            "heading": "Una línea en tensión es energía guardada",
+            "items": [
+              "Una cuerda cinética está hecha para estirarse. Lo que guarda regresa por la línea, rápido, si algo suelta.",
+              "Pon un amortiguador sobre cada línea bajo carga. Una cobija pesada mojada sirve. Tira la línea al suelo en vez de dejarla volar.",
+              "Mantente fuera del arco, no solo fuera de la línea. Lo que suelta sale de lado.",
+              "Revisa las dos puntas antes de cada intento. Casi todas las fallas son en el enganche, no a la mitad."
+            ]
+          },
+          {
+            "heading": "Engancha a algo certificado",
+            "items": [
+              "Puntos de rescate certificados, atornillados al chasis, en los dos vehículos.",
+              "Si no hay dónde enganchar con seguridad, ahí se acaba el intento. No es motivo para usar otra cosa.",
+              "Revisa la lista de lo que nunca se usa para jalar, en la guía de equipo. La bola de arrastre es la que mata gente."
+            ]
+          },
+          {
+            "heading": "Despacio y con pausas",
+            "items": [
+              "Intentos cortos revisando todo entre uno y otro es mejor que uno grande.",
+              "Si el vehículo atascado no se movió en tres intentos, cambia algo (excava, baja más la presión, cambia el ángulo) en lugar de jalar más fuerte.",
+              "Nunca ha salido nada bueno de un arrancón del que nadie estaba seguro."
+            ]
+          },
+          {
+            "heading": "Saber cuándo parar",
+            "items": [
+              "Ya está oscuro y nadie lo tenía contemplado.",
+              "El agua está subiendo.",
+              "Alguien está lastimado, con frío, sobrecalentado o asustado.",
+              "Nadie está seguro de qué sigue y ya se está adivinando.",
+              "El vehículo aguanta hasta mañana. Todo esto es más fácil con luz de día, y una camioneta atascada vale menos que la gente parada alrededor."
+            ]
+          },
+          {
+            "heading": "Si alguien se lastima",
+            "items": [
+              "Se detiene el rescate. Todo se detiene.",
+              "Llama al 911. Da coordenadas, no referencias.",
+              "Somos voluntarios con camionetas. No somos paramédicos, y aquí nadie está entrenado para decidir si una lesión es grave."
+            ]
+          }
+        ]
+      },
+      "etiquette": {
+        "title": "Cómo portarse en el camino",
+        "blurb": "Así es como los caminos siguen abiertos.",
+        "lede": "Casi todos los caminos cerrados en Texas se cerraron por algo que hizo alguien, no por el terreno.",
+        "sections": [
+          {
+            "heading": "El permiso es por visita",
+            "items": [
+              "Terreno privado significa la palabra del dueño, esta vez, para ti.",
+              "Que otro haya tenido permiso no es permiso. Haber ido antes tampoco.",
+              "Si no puedes decir quién te dio permiso, no lo tienes."
+            ]
+          },
+          {
+            "heading": "Las puertas como las encontraste",
+            "items": [
+              "Abierta se queda abierta. Cerrada se queda cerrada. Con candado se queda con candado.",
+              "Si te topas con una puerta que no entiendes, date la vuelta."
+            ]
+          },
+          {
+            "heading": "No te salgas de la línea",
+            "items": [
+              "Nada de cortar curvas ni abrir una línea nueva para rodear un obstáculo. El atajo se vuelve el camino, y luego el camino es del doble de ancho.",
+              "Rodear un charco de lodo es como los charcos terminan midiendo quince metros.",
+              "Si el camino está demasiado mojado para pasar sin ensancharlo, está demasiado mojado."
+            ]
+          },
+          {
+            "heading": "Déjalo mejor",
+            "items": [
+              "Llévate lo que trajiste, y algo de lo que no.",
+              "Rellena las roderas que hagas, si puedes.",
+              "No dejes tirado equipo de rescate, eslingas ni tablas. Alguien lo hará, y nos lo van a cobrar a todos."
+            ]
+          },
+          {
+            "heading": "Con otra gente",
+            "items": [
+              "Cede el paso a quien viene subiendo, y a quien va a pie, en bici o a caballo. Con caballos, detente y baja las revoluciones.",
+              "Despacio y sin ruido cerca de casas, campamentos y ganado.",
+              "No bloquees una puerta, un retorno o un tramo angosto mientras te acomodas."
+            ]
+          },
+          {
+            "heading": "Si rompes algo, dilo",
+            "items": [
+              "Una puerta rota que se reporta es una puerta que se arregla.",
+              "Una puerta rota que alguien encuentra es un camino que se cierra."
+            ]
+          }
+        ]
+      },
+      "stuck": {
+        "title": "Cuando el atascado eres tú",
+        "blurb": "Qué hacer primero, y qué pasa después de pedir ayuda.",
+        "lede": "Estar atascado casi siempre es aburrido y de vez en cuando es peligroso. Lo primero es saber cuál de las dos es hoy.",
+        "sections": [
+          {
+            "heading": "Llama al 911 primero si",
+            "items": [
+              "Hay alguien lastimado.",
+              "El vehículo está en agua corriente, o el agua está subiendo.",
+              "Estás en un carril de tráfico o donde un vehículo pueda pegarte.",
+              "No puedes mantenerte lo bastante caliente, o lo bastante fresco, para esperar varias horas.",
+              "Winch Up son voluntarios. Nadie está de turno, nadie está obligado a ir, y aquí nadie es un servicio de emergencia."
+            ]
+          },
+          {
+            "heading": "Pon tu ubicación en algo que otro pueda usar",
+            "items": [
+              "La página de solicitud la toma de tu teléfono, y te muestra qué tan exacta es.",
+              "En un teléfono prestado, lee las coordenadas en una app de mapas y escríbelas.",
+              "Un pin que no puedes describir en voz alta no es una ubicación. Los números sí."
+            ]
+          },
+          {
+            "heading": "Haz que el teléfono dure",
+            "items": [
+              "Brillo abajo, datos apagados entre mensajes, nada reproduciéndose.",
+              "Un teléfono cargado vale más que tres descargados: elige uno y guarda los demás.",
+              "Manda el mensaje importante antes de que la batería se ponga interesante."
+            ]
+          },
+          {
+            "heading": "Quédate con el vehículo",
+            "items": [
+              "Es mucho más fácil de encontrar que tú.",
+              "Es refugio, y tiene luces.",
+              "Caminar de noche en terreno desconocido es como un rescate se convierte en una búsqueda."
+            ]
+          },
+          {
+            "heading": "Qué pasa después de mandar la solicitud",
+            "items": [
+              "Les mandamos mensaje a los voluntarios cerca de ti con lo que necesitas y a qué distancia estás, no con tu número.",
+              "El primero que contesta se lo queda. Nadie es asignado; están eligiendo manejar hasta allá.",
+              "Recibes su nombre, su vehículo y un tiempo estimado, y un enlace que puedes ver y compartir.",
+              "Si nadie contesta en unos veinticinco minutos, te avisamos y te mostramos operadores de paga. Eso no es una falla tuya."
+            ]
+          },
+          {
+            "heading": "Nadie te cobra",
+            "items": [
+              "En un rescate de Winch Up no hay dinero de por medio. Ni tarifa, ni propina, ni dinero de gasolina pedido ahí mismo.",
+              "Si alguien te pide dinero, así no funciona esto. Repórtalo y nosotros nos encargamos.",
+              "Invitarle de comer a alguien después porque tú quieres es asunto tuyo."
+            ]
+          }
+        ]
+      },
+      "weather": {
+        "title": "Clima y condiciones",
+        "blurb": "Las dos cosas que cambian un camino en Texas de un día para otro: el agua y el calor.",
+        "lede": "Un camino que estaba bien a las nueve de la mañana puede ser intransitable a las cuatro de la tarde y estar bien otra vez al día siguiente. Revisa antes de salir, no al llegar.",
+        "sections": [
+          {
+            "heading": "Da la vuelta, no te ahogues",
+            "items": [
+              "La mayoría de las muertes por inundación en Texas pasan dentro de vehículos, en cruces que la gente había pasado cien veces.",
+              "Treinta centímetros de agua corriendo levantan casi cualquier camioneta. Sesenta la mueven.",
+              "No puedes ver si el camino sigue debajo del agua, y los cruces bajos se socavan por abajo.",
+              "Si hay agua sobre el camino, se acabó el día. Espera o rodea."
+            ]
+          },
+          {
+            "heading": "El barro y el caliche cambian por completo mojados",
+            "items": [
+              "La tierra negra pasa de agarrar a estar grasosa con un solo aguacero, y sigue así un día o más.",
+              "El caliche es bueno en seco y resbala como hielo mojado.",
+              "La arena es al revés: muchas veces está mejor húmeda que seca.",
+              "Después de una lluvia fuerte, déjalo un día. El camino va a seguir ahí, y también las roderas que ibas a hacer."
+            ]
+          },
+          {
+            "heading": "El calor es lo que agarra desprevenida a la gente",
+            "items": [
+              "Un rescate en agosto toma horas y las vas a pasar afuera.",
+              "Un vehículo sin motor encendido es un horno en minutos. Métete a la sombra, no a la cabina.",
+              "Agua para todos, y luego otro tanto. Es más probable un golpe de calor en quien espera que una lesión durante el jalón."
+            ]
+          },
+          {
+            "heading": "Qué revisar antes de salir",
+            "items": [
+              "Pronósticos y avisos: el Servicio Meteorológico Nacional, weather.gov.",
+              "Niveles de ríos y arroyos: el sitio de datos de agua del USGS, waterdata.usgs.gov.",
+              "Cierres y condiciones de carretera: DriveTexas de TxDOT, drivetexas.org.",
+              "Cierres de parques, vedas de fuego y reglas de uso de suelo: Texas Parks and Wildlife, tpwd.texas.gov, y el condado a donde vas.",
+              "La lluvia que cayó ochenta kilómetros río arriba es la que te agarra. Mira toda la cuenca, no solo el cielo de encima."
+            ]
+          }
+        ]
+      }
     }
   }
 }

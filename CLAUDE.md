@@ -156,6 +156,11 @@ docs/                     decisions + runbooks
 - **Photos are stripped client-side.** `createImageBitmap(file, {imageOrientation: "from-image"})`
   then canvas then JPEG. The re-encode is what drops EXIF, including GPS. Never add a path that
   uploads the original file.
+- **The resources section is content, not a CMS.** The six guides live in `messages/{en,es}.json`
+  and are rendered from `src/lib/resources.ts`. `check-messages.mjs` walks arrays **by index**, so
+  an English checklist of seven items and a Spanish one of five fails the build — which matters
+  when the two missing lines are the ones about what never to pull from. Move it to a table only
+  if the owner needs to edit without deploying, and version it like the waiver if that happens.
 - **A trail cannot claim to be open without naming a source.** `trails_access_needs_a_source`
   and `trails_published_is_verified` are CHECK constraints, not form validation, because the spec
   line they implement ("do not assume that a trail is open or legally accessible without reliable
@@ -205,7 +210,7 @@ long done. Work since then has followed the owner's 16-phase spec:
 | 11 Super admin | done in part — admin MFA, system health, the `moderator` role now has powers |
 | 13 Deployment | done in part — deployed and green; the 10DLC pack is written, not submitted |
 | 15 QA | partly done — unit, component and E2E suites exist; no integration tests yet |
-| 9 Trails & resources | trails done — directory, conditions, saved, member submissions, admin review. The recovery **resources** section is not built yet |
+| 9 Trails & resources | done — trail directory with sourced access claims, condition reports, saved trails, member submissions; plus six public bilingual resource guides |
 | 10, 12, 14, 16 | not started (advertising, database tooling, notifications, launch) |
 
 **Proven working in production**, not just built: a signed-in person files a request, the tick
@@ -222,7 +227,7 @@ Four layers. Run all of them before claiming anything works.
 ```
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
 npm test            94 unit + component tests (vitest)
-npm run test:e2e    46 Playwright tests, mobile + desktop
+npm run test:e2e    66 Playwright tests, mobile + desktop
 supabase test db    368 pgTAP assertions across nine suites
 ```
 

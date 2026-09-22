@@ -151,7 +151,10 @@
     "boardCta": "Open the board",
     "trailsTitle": "Trails and conditions",
     "trailsBody": "Where people run, what the ground was like last weekend, and whether you're allowed to be there — with a source for every claim about access.",
-    "trailsLink": "Open trails"
+    "trailsLink": "Open trails",
+    "resourcesTitle": "What to carry, and how not to get hurt",
+    "resourcesBody": "Checklists, what to do before you leave pavement, and the short list of things that hurt people during a recovery. Free, no account needed.",
+    "resourcesLink": "Read the guides"
   },
   "notFound": {
     "title": "We couldn't find that",
@@ -1160,6 +1163,329 @@
       "incomplete": "We need a name and coordinates.",
       "rate_limited": "That's a lot at once. Try again later.",
       "bad_kind": "That didn't work. Try again."
+    }
+  },
+  "resources": {
+    "title": "Getting out, and not needing to",
+    "intro": "What to carry, what to check before you leave pavement, and how a recovery goes wrong. Written by people who pull each other out, not by instructors.",
+    "notProsTitle": "We are volunteers, not professionals.",
+    "notProsBody": "Nobody here is a certified recovery operator, a mechanic or a medic unless they tell you they are, and we do not check. This is what the group has learned, offered freely. It is not training, not a standard, and not a substitute for hiring somebody who does this for a living.",
+    "emergencyTitle": "If somebody is hurt, call 911 first.",
+    "emergencyBody": "Injury, a vehicle in moving water, or anything in a traffic lane is an emergency call, not a recovery request. We are volunteers with trucks. Nobody is on shift and nobody is obliged to come.",
+    "readMore": "Read this one",
+    "backToResources": "All guides",
+    "externalNote": "These open outside Winch Up.",
+    "guides": {
+      "gear": {
+        "title": "What to carry",
+        "blurb": "The things that turn a bad afternoon into an inconvenience.",
+        "lede": "None of this makes a recovery safe by itself. A rated shackle on a truck with nowhere rated to hook it is still nowhere to hook it.",
+        "sections": [
+          {
+            "heading": "Always in the truck",
+            "items": [
+              "A full-size spare that holds air, and the tools to actually change it — including a breaker bar if your lug nuts were put on by a shop.",
+              "A tyre plug kit and a way to put air back in. Most trail punctures are sidewall-survivable and plug fine.",
+              "Jumper cables or a jump pack.",
+              "A jack that works on soft ground, and a flat board to stand it on. A bottle jack on mud is a jack in the mud.",
+              "More water than you think. The person coming to get you will want some too.",
+              "A torch that is not your phone, and spare batteries.",
+              "A first aid kit you have opened before today."
+            ]
+          },
+          {
+            "heading": "Before you leave pavement",
+            "items": [
+              "A tyre deflator and a gauge. Airing down is the cheapest traction there is.",
+              "A compressor, because airing down is a one-way trip without one.",
+              "Traction boards. They get more vehicles out than winches do.",
+              "Gloves. Every recovery involves picking up something you would rather not.",
+              "A charger that runs off the truck, not a power bank you charged last week.",
+              "A shovel. Often the whole recovery."
+            ]
+          },
+          {
+            "heading": "If you are the one doing the pulling",
+            "items": [
+              "A kinetic rope or recovery strap rated well above the weight of the heavier vehicle.",
+              "Soft shackles, or rated bow shackles. Not hardware-store clevises.",
+              "A damper for every line that goes under load — a purpose-made one, or a heavy wet blanket or jacket.",
+              "A tree strap if you might anchor to a tree, so you do not ring-bark it and so the tree survives to be an anchor next time.",
+              "A second person who knows what is about to happen."
+            ]
+          },
+          {
+            "heading": "Never pull from these",
+            "items": [
+              "A tow ball. It shears under a snatch load and becomes a projectile that goes through a windscreen. This is the one that kills people.",
+              "A hitch pin through an empty receiver. Use a rated shackle mount.",
+              "Chains with hooks. No stretch, and the hook goes somewhere when it lets go.",
+              "Ratchet straps and cargo straps. They are for holding things still.",
+              "The little tie-down loops used to strap a vehicle to a trailer. They are rated for holding a parked car, not for pulling a stuck one.",
+              "Suspension arms, steering components, bumpers that are not bolted to the frame, or a tow hook that came with the truck unless you know what it is rated for."
+            ]
+          }
+        ]
+      },
+      "before": {
+        "title": "Before you go",
+        "blurb": "Five minutes at home that decide how the night goes.",
+        "lede": "Most long recoveries are long because of something that was decided before anyone left the house.",
+        "sections": [
+          {
+            "heading": "Tell a person, not a group",
+            "items": [
+              "Where you are going, roughly which way, and when you will be back.",
+              "When they should start making calls. An hour late is different from four hours late, and they cannot judge that unless you tell them.",
+              "A post in a group is not this. A person expecting you is this."
+            ]
+          },
+          {
+            "heading": "Assume there is no signal",
+            "items": [
+              "Download the offline map for the area before you leave the house.",
+              "Screenshot the map, so you have it when the app cannot load tiles.",
+              "Write the coordinates of where you are headed on paper. A phone that dies takes the whole plan with it."
+            ]
+          },
+          {
+            "heading": "Fuel, water, daylight",
+            "items": [
+              "Half a tank is the turn-around point, not the worry point.",
+              "Work out when it gets dark, then subtract an hour.",
+              "Water for everyone in the vehicle, plus some for whoever comes out to you."
+            ]
+          },
+          {
+            "heading": "Air down, and plan to air up",
+            "items": [
+              "Lower pressure is the cheapest traction there is, and it is free.",
+              "Know the pressure you are going to, and check it rather than guessing.",
+              "You need a compressor to get home. Borrowing one at the gate is not a plan."
+            ]
+          },
+          {
+            "heading": "Go with somebody",
+            "items": [
+              "A second vehicle is the difference between an inconvenience and a night out.",
+              "If you are going alone, tell somebody the route and stick to it."
+            ]
+          }
+        ]
+      },
+      "safety": {
+        "title": "Doing a recovery without hurting anyone",
+        "blurb": "The short list of things that actually hurt people.",
+        "lede": "This is not training. It is what the group has learned, and some of it was learned badly. If you have not done this before, go with somebody who has and watch first.",
+        "sections": [
+          {
+            "heading": "Before anything goes under load",
+            "items": [
+              "Agree who is in charge. One person calls it, everybody else does what they say.",
+              "Agree who can call a stop. Everybody can call a stop.",
+              "Walk the line the pull will take, and decide where people will stand — which is not in it and not beside it.",
+              "Send bystanders behind a vehicle, well back. Phones too. A recording of somebody being hurt is still somebody being hurt."
+            ]
+          },
+          {
+            "heading": "A line under tension is stored energy",
+            "items": [
+              "A kinetic rope is designed to stretch. What it stores comes back along the line, fast, if anything lets go.",
+              "Put a damper over every line under load. A heavy wet blanket works. It drops the line instead of letting it fly.",
+              "Stay out of the arc, not just out of the line. Things that let go go sideways.",
+              "Check both ends before every attempt. Most failures are at the attachment, not in the middle."
+            ]
+          },
+          {
+            "heading": "Hook to something rated",
+            "items": [
+              "Rated recovery points, bolted to the frame, on both vehicles.",
+              "If there is nowhere rated to hook, that is the end of the attempt. It is not a reason to use something else.",
+              "See the list of what never to pull from in the gear guide. The tow ball is the one that kills people."
+            ]
+          },
+          {
+            "heading": "Go slow, stop often",
+            "items": [
+              "Short attempts with a look at everything in between beats one big one.",
+              "If the stuck vehicle has not moved in three tries, change something — dig, air down further, change the angle — rather than pulling harder.",
+              "Nothing good has ever come from a running start nobody was sure about."
+            ]
+          },
+          {
+            "heading": "Know when to stop",
+            "items": [
+              "It is dark and nobody planned for dark.",
+              "The water is coming up.",
+              "Somebody is hurt, cold, overheating or frightened.",
+              "Nobody is sure what to do next and people are starting to guess.",
+              "The vehicle keeps until morning. Everything about this gets easier in daylight, and a stuck truck is worth less than the people standing around it."
+            ]
+          },
+          {
+            "heading": "If somebody is hurt",
+            "items": [
+              "Stop the recovery. Everything stops.",
+              "Call 911. Give coordinates, not landmarks.",
+              "We are volunteers with trucks. We are not medics, and nobody here is trained to decide whether an injury is serious."
+            ]
+          }
+        ]
+      },
+      "etiquette": {
+        "title": "Trail etiquette",
+        "blurb": "How trails stay open.",
+        "lede": "Nearly every closed trail in Texas was closed because of something somebody did, not because of the land itself.",
+        "sections": [
+          {
+            "heading": "Permission is per-visit",
+            "items": [
+              "Private land means the owner's word, this time, for you.",
+              "Somebody else having had permission is not permission. Neither is having been there before.",
+              "If you cannot say who gave you permission, you do not have it."
+            ]
+          },
+          {
+            "heading": "Gates as you found them",
+            "items": [
+              "Open stays open. Closed stays closed. Latched stays latched.",
+              "If you find a gate you cannot work out, turn around."
+            ]
+          },
+          {
+            "heading": "Stay on the line",
+            "items": [
+              "No cutting corners, and no new line around an obstacle. The bypass becomes the trail, and then the trail is twice as wide.",
+              "Driving around a mudhole is how mudholes become fifty feet across.",
+              "If the trail is too wet to drive without widening it, it is too wet."
+            ]
+          },
+          {
+            "heading": "Leave it better",
+            "items": [
+              "Pack out what you brought, and some of what you did not.",
+              "Fill the ruts you cut if you can.",
+              "Do not leave recovery gear, straps or boards behind. Somebody will, and it will be blamed on all of us."
+            ]
+          },
+          {
+            "heading": "Around other people",
+            "items": [
+              "Yield to anything coming uphill, and to anyone on foot, on a bike or on a horse. Stop and turn the engine down for horses.",
+              "Slow and quiet near houses, camps and stock.",
+              "Do not block a gate, a turnaround or a narrow spot while you sort yourself out."
+            ]
+          },
+          {
+            "heading": "If you break something, say so",
+            "items": [
+              "A broken gate that gets reported is a gate that gets fixed.",
+              "A broken gate that gets found is a trail that gets closed."
+            ]
+          }
+        ]
+      },
+      "stuck": {
+        "title": "When you are the one stuck",
+        "blurb": "What to do first, and what happens after you ask.",
+        "lede": "Being stuck is usually boring and occasionally dangerous. The first job is working out which one this is.",
+        "sections": [
+          {
+            "heading": "Call 911 first if",
+            "items": [
+              "Anybody is hurt.",
+              "The vehicle is in moving water, or water is rising.",
+              "You are in a traffic lane or anywhere a vehicle could hit you.",
+              "You cannot stay warm enough, or cool enough, to wait several hours.",
+              "Winch Up is volunteers. Nobody is on shift, nobody is obliged to come, and nobody here is an emergency service."
+            ]
+          },
+          {
+            "heading": "Get your location into a form somebody else can use",
+            "items": [
+              "The request page takes it from your phone, and shows you how accurate it is.",
+              "On a borrowed phone, read the coordinates out of a maps app and type them in.",
+              "A dropped pin you cannot describe out loud is not a location. Numbers are."
+            ]
+          },
+          {
+            "heading": "Make the phone last",
+            "items": [
+              "Brightness down, data off between messages, nothing streaming.",
+              "One charged phone is worth more than three flat ones — pick one and put the others away.",
+              "Send the important message before the battery gets interesting."
+            ]
+          },
+          {
+            "heading": "Stay with the vehicle",
+            "items": [
+              "It is far easier to find than you are.",
+              "It is shelter, and it has lights.",
+              "Walking out in the dark in unfamiliar country is how a recovery becomes a search."
+            ]
+          },
+          {
+            "heading": "What happens after you send a request",
+            "items": [
+              "We text volunteers near you with what you need and how far away you are — not your phone number.",
+              "The first one to answer takes it. Nobody is dispatched; they are choosing to drive out.",
+              "You get their first name, their vehicle and an ETA, and a link you can watch and share.",
+              "If nobody answers within about twenty-five minutes, we tell you, and we show you paid operators instead. That is not a failure of yours."
+            ]
+          },
+          {
+            "heading": "Nobody charges you",
+            "items": [
+              "No money changes hands for a Winch Up recovery. Not a fee, not a tip, not fuel money asked for on the spot.",
+              "If somebody asks you for money, that is not how this works. Report it, and we will deal with it.",
+              "Buying somebody a meal afterwards because you want to is your business."
+            ]
+          }
+        ]
+      },
+      "weather": {
+        "title": "Weather and conditions",
+        "blurb": "The two things that change a Texas trail overnight: water and heat.",
+        "lede": "A road that was fine at nine in the morning can be un-driveable at four in the afternoon and fine again the next day. Check before you leave, not when you get there.",
+        "sections": [
+          {
+            "heading": "Turn around, don't drown",
+            "items": [
+              "Most flood deaths in Texas happen in vehicles, at crossings people had driven a hundred times.",
+              "A foot of moving water will float most trucks. Two feet will move them.",
+              "You cannot see whether the road is still under the water, and low-water crossings wash out from underneath.",
+              "If water is over the road, the day is over. Wait or go around."
+            ]
+          },
+          {
+            "heading": "Clay and caliche change completely when wet",
+            "items": [
+              "Black clay goes from grippy to greasy in one shower, and stays that way for a day or more.",
+              "Caliche is fine dry and slick as ice wet.",
+              "Sand is the other way round — often better damp than dry.",
+              "After heavy rain, give it a day. The trail will still be there, and so will the ruts you would have cut."
+            ]
+          },
+          {
+            "heading": "Heat is what catches people out",
+            "items": [
+              "A recovery in August takes hours and you will spend them outside.",
+              "A vehicle with no engine running is an oven within minutes. Get into shade, not into the cab.",
+              "Water for everyone, and then the amount again. Heat exhaustion in somebody waiting is more likely than an injury during the pull."
+            ]
+          },
+          {
+            "heading": "What to check before you leave",
+            "items": [
+              "Forecasts and warnings: the National Weather Service, weather.gov.",
+              "River and creek levels: the USGS water data site, waterdata.usgs.gov.",
+              "Road closures and conditions: TxDOT's DriveTexas, drivetexas.org.",
+              "Park closures, burn bans and land rules: Texas Parks and Wildlife, tpwd.texas.gov, and the county you are going to.",
+              "Rain that fell fifty miles upstream is the rain that gets you. Look at the whole watershed, not the sky above you."
+            ]
+          }
+        ]
+      }
     }
   }
 }
