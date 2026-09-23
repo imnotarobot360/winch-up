@@ -100,8 +100,11 @@ select ok(
 -- ---------------------------------------------------------------------------
 -- 5. Enable volunteer availability
 --
--- Signing up is not the same as being dispatched to. An admin has to approve first, which is
--- what keeps tow companies out of a volunteer group.
+-- There is no volunteer registration any more and no approval to wait for. A member fills in
+-- where they are and what they carry, turns on Available to Help, and from that moment the
+-- dispatcher can reach them. `approval` still exists and is still 'pending' below -- it is the
+-- verification badge now, not a gate -- and the assertions here exist to prove it does not block
+-- anything.
 --
 -- The number on the profile comes from the verified OTP claim in the session, never from the
 -- form -- otherwise anybody could claim anybody's number. That is why the JWT above carries a
@@ -122,7 +125,15 @@ select is(
 select is(
   (select approval::text from responders where user_id = '22220000-0000-4000-8000-00000000cafe'),
   'pending',
-  'and starts pending, because signing up is not the same as being trusted with somebody address'
+  'and is still unverified, which no longer stops them helping anybody'
+);
+
+-- The switch that replaced the approval gate. It is the member's own decision and it defaults
+-- off, so this line is what makes them reachable -- not an admin, and not signing up.
+select is(
+  public.set_available_to_help(true) ->> 'ok',
+  'true',
+  'they turn on Available to Help'
 );
 
 reset role;
@@ -134,10 +145,15 @@ set local role authenticated;
 set local request.jwt.claims =
   '{"sub":"33330000-0000-4000-8000-00000000cafe","role":"authenticated","aal":"aal2"}';
 
+-- An admin verifies them. This is deliberately NOT on the critical path any more: everything
+-- below would work identically without it, and the test would still pass. It stays because the
+-- badge it sets is the only remaining signal separating a checked volunteer from an account
+-- created five minutes ago, and a verification nobody exercises is a verification that quietly
+-- rots.
 select is(
   public.admin_set_responder_approval((select responder_id from lc), 'approved', null) ->> 'ok',
   'true',
-  'an admin approves them'
+  'an admin verifies them -- a badge now, not a gate'
 );
 
 set local request.jwt.claims =
@@ -229,9 +245,11 @@ select ok(
 );
 
 -- ---------------------------------------------------------------------------
--- 10 and 11. Submit a volunteer offer, and accept it
+-- 10 and 11. Submit a volunteer offer, and the requester accepts it
 --
--- The volunteer replying "1" to the text is the offer. First one wins.
+-- This is the step the phase changed. The volunteer used to take the job -- first reply won.
+-- Now they offer, and the person who is stuck decides who comes out. Two actors, two calls, and
+-- a state in between where somebody has volunteered and nobody is committed.
 -- ---------------------------------------------------------------------------
 
 set local role authenticated;
@@ -239,9 +257,32 @@ set local request.jwt.claims =
   '{"sub":"22220000-0000-4000-8000-00000000cafe","role":"authenticated","phone":"15125557802"}';
 
 select is(
-  public.accept_request((select request_id from lc), 40) ->> 'ok',
+  public.offer_assistance((select request_id from lc), 'Winch and straps aboard', 40, true) ->> 'state',
+  'offered',
+  'step 10: the volunteer offers, and says forty minutes'
+);
+
+-- Nothing is settled yet. If this ever comes back non-null, something is assigning people again
+-- without asking the requester.
+select is(
+  (select accepted_responder_id from requests where id = (select request_id from lc)),
+  null,
+  'and nobody is assigned by offering'
+);
+
+-- The requester decides. Service-role, because the real caller is a server action holding the
+-- token -- the same path every other by_token write takes.
+reset role;
+
+select is(
+  public.accept_offer_by_token(
+    (select public_token from lc),
+    (select id from dispatches
+      where request_id = (select request_id from lc)
+        and responder_id = (select responder_id from lc))
+  ) ->> 'ok',
   'true',
-  'step 10 and 11: the volunteer takes the job and says forty minutes'
+  'step 11: the person who is stuck picks them'
 );
 
 select is(

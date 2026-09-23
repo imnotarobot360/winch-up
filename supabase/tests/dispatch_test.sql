@@ -126,28 +126,43 @@ select is(
   'the request moves to dispatching'
 );
 
+-- Three, not two. 'Waiting' is approval = 'pending' and under the old model was invisible to the
+-- dispatcher; universal membership means there is no approval gate, so a member who is nearby,
+-- willing and carrying the right kit is rung whether or not an admin has ever looked at them.
+-- This assertion is the gate's headstone: if it ever reads 2 again, the gate is back.
 select is(
   (select count(*)::int from dispatches
     where request_id = (select id from t_ids where name = 'r1') and ring = 1),
-  2,
-  'ring 1 reaches exactly the two volunteers inside 15 miles'
+  3,
+  'ring 1 reaches all three willing volunteers inside 15 miles, approved or not'
 );
 
 select is(
   (select count(*)::int from dispatches d
      join responders r on r.id = d.responder_id
     where d.request_id = (select id from t_ids where name = 'r1')
-      and r.first_name in ('Waiting', 'Onbreak')),
+      and r.first_name = 'Waiting'),
+  1,
+  'a volunteer nobody has approved is now reached -- that is the point of this phase'
+);
+
+-- What did NOT change. Paused still means paused: it is the member saying "not right now", and
+-- removing the approval gate must not quietly remove that one too.
+select is(
+  (select count(*)::int from dispatches d
+     join responders r on r.id = d.responder_id
+    where d.request_id = (select id from t_ids where name = 'r1')
+      and r.first_name = 'Onbreak'),
   0,
-  'a pending volunteer and a paused volunteer are never dispatched to'
+  'a paused volunteer is still never dispatched to'
 );
 
 select is(
   (select count(*)::int from sms_messages
     where request_id = (select id from t_ids where name = 'r1')
       and template_key = 'responder.offer'),
-  2,
-  'each dispatched volunteer has an offer queued'
+  3,
+  'each dispatched volunteer has an invitation queued'
 );
 
 select is(
@@ -525,16 +540,54 @@ select is(
 insert into t_ids values ('sms2', pg_temp.make_request('test-token-inbound-accept-1'));
 do $$ begin perform app.advance_one((select id from t_ids where name = 'sms2')); end $$;
 
+-- Replying `1` used to win the job outright. Now it is an offer and the requester chooses, so
+-- these assertions describe a two-step handshake where there used to be one step.
 select is(
   handle_inbound_sms('+12813330004', '1 45') ->> 'action',
-  'accepted',
-  'replying 1 takes the job'
+  'offered',
+  'replying 1 puts their hand up'
+);
+
+select is(
+  (select accepted_responder_id from requests where id = (select id from t_ids where name = 'sms2')),
+  null,
+  'and nobody is assigned by it -- the driver has not chosen yet'
+);
+
+-- The ETA now rides on the offer until somebody is chosen. Putting it straight onto the request
+-- would be claiming an arrival time from a volunteer who may never be picked.
+select is(
+  (select offer_eta_minutes from dispatches
+    where request_id = (select id from t_ids where name = 'sms2')
+      and responder_id = 'aaaa0001-0000-4000-8000-000000000004'),
+  45,
+  'a number after the 1 is read as the ETA and held on the offer'
+);
+
+select is(
+  (select state::text from dispatches
+    where request_id = (select id from t_ids where name = 'sms2')
+      and responder_id = 'aaaa0001-0000-4000-8000-000000000004'),
+  'offered',
+  'and the invitation becomes an offer'
+);
+
+-- The requester picks them, which is the step that did not exist before.
+select is(
+  (select accept_offer_by_token(
+            (select public_token from requests where id = (select id from t_ids where name = 'sms2')),
+            (select id from dispatches
+              where request_id = (select id from t_ids where name = 'sms2')
+                and responder_id = 'aaaa0001-0000-4000-8000-000000000004')
+          ) ->> 'ok'),
+  'true',
+  'the requester accepts the offer'
 );
 
 select is(
   (select eta_minutes from requests where id = (select id from t_ids where name = 'sms2')),
   45::smallint,
-  'a number after the 1 is read as the ETA'
+  'and the ETA they gave carries onto the request'
 );
 
 select is(
@@ -582,13 +635,16 @@ select is(
   'accepting a job you were never texted about is refused'
 );
 
+-- This used to read 'not_approved'. There is no approval gate any more, so an unapproved member
+-- reaches the same refusal as everybody else: you cannot be assigned to a recovery you never
+-- offered on. The protection that matters here was never the approval -- it was the offer.
 select is(
   app.accept_request(
     (select id from t_ids where name = 'unoffered'),
     'aaaa0001-0000-4000-8000-000000000006'
   ) ->> 'error',
-  'not_approved',
-  'a volunteer awaiting approval cannot accept anything'
+  'not_offered',
+  'an unapproved member is refused for the same reason as anyone else: no offer'
 );
 
 -- ---------------------------------------------------------------------------
@@ -623,6 +679,14 @@ insert into responders (
   extensions.st_setsrid(extensions.st_point(-97.7431, 30.2672), 4326)::extensions.geography,
   60, '{kinetic_rope}', 'approved', 'active', true, true, 1
 );
+
+-- Every fixture below that belongs to a real account has to opt in, because willingness is now a
+-- thing a member chooses rather than something an admin confers. profiles.available_to_help
+-- defaults to false on purpose: being listed as willing to drive out to a stranger at 2am should
+-- never be a thing that happens to somebody by default. The volunteers higher up this file have
+-- no user_id at all -- they are the legacy SMS-only kind -- and are matched as before.
+update profiles set available_to_help = true
+ where user_id = 'aaaaaaaa-0000-4000-8000-00000000000a';
 
 insert into requests (
   requester_name, requester_phone, location, vehicle_class, stuck_type, land_type,
@@ -709,6 +773,10 @@ insert into responders (
   extensions.st_setsrid(extensions.st_point(-100.5, 31.5), 4326)::extensions.geography,
   60, '{tractor}', 'approved', 'active', true, true, 1
 );
+
+-- Willing to be called out; see the note on the first account-backed fixture above.
+update profiles set available_to_help = true
+ where user_id = 'dddddddd-0000-4000-8000-00000000000d';
 
 insert into requests (
   requester_name, requester_phone, location, vehicle_class, stuck_type, land_type,
@@ -814,6 +882,12 @@ insert into responders (
   extensions.st_setsrid(extensions.st_point(-97.7431, 30.2672), 4326)::extensions.geography,
   60, '{tractor}', 'approved', 'active', true, true, 1
 );
+
+-- Willing to be called out. This section then switches notify_recovery off to prove the
+-- preference is honoured, so the two switches have to be independent: available_to_help stays on
+-- throughout, or the test would pass for the wrong reason.
+update profiles set available_to_help = true
+ where user_id = 'eeeeeeee-0000-4000-8000-00000000000e';
 
 insert into requests (
   requester_name, requester_phone, location, vehicle_class, stuck_type, land_type,

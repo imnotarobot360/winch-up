@@ -27,6 +27,7 @@ export type SmsTemplateKey =
   | "requester.unmatched"
   | "requester.recovered_by_responder"
   | "responder.offer"
+  | "responder.offer_received"
   | "responder.assigned"
   | "responder.already_covered"
   | "responder.declined_ack"
@@ -112,6 +113,15 @@ const TEMPLATES: Record<SmsTemplateKey, { en: Renderer; es: Renderer }> = {
 
   // --- to volunteers --------------------------------------------------------
 
+  /**
+   * The invitation.
+   *
+   * "offer" rather than "take it" is the whole change here, and it is carried by that one word
+   * on purpose. Spelling out that the driver chooses costs a fourth SMS segment in Spanish,
+   * where the accents force UCS-2 and a segment is 70 characters rather than 160 — so the
+   * explanation lives in `responder.offer_received`, which arrives the instant somebody replies
+   * `1` and is the message that actually needs to stop them setting off.
+   */
   "responder.offer": {
     en: (p) =>
       `${APP_SHORT_NAME} ${p.short_code}: ${label("en", "vehicleClass", p.vehicle_class)} stuck ${p.miles} mi from you. ${join(
@@ -122,7 +132,7 @@ const TEMPLATES: Record<SmsTemplateKey, { en: Renderer; es: Renderer }> = {
           p.needs_second_truck ? "needs a second truck" : "",
           p.county ? `${p.county} County` : "",
         ],
-      )}. Reply 1 to take it, 2 to pass. STOP to opt out.`,
+      )}. Reply 1 to offer, 2 to pass. STOP to opt out.`,
     es: (p) =>
       `${APP_SHORT_NAME} ${p.short_code}: ${label("es", "vehicleClass", p.vehicle_class)} atascado a ${p.miles} mi de usted. ${join(
         [
@@ -132,7 +142,22 @@ const TEMPLATES: Record<SmsTemplateKey, { en: Renderer; es: Renderer }> = {
           p.needs_second_truck ? "necesita segunda troca" : "",
           p.county ? `condado de ${p.county}` : "",
         ],
-      )}. Responda 1 para tomarlo, 2 para pasar. STOP para no recibir más.`,
+      )}. Responda 1 para ofrecerse, 2 para pasar. STOP para no recibir más.`,
+  },
+
+  /**
+   * Sent the moment a volunteer replies `1`.
+   *
+   * It exists because the answer to `1` changed meaning. It used to be "it is yours" — the first
+   * reply won the job. Now the requester chooses, so this has to say clearly that nothing is
+   * settled yet. Getting this wrong sends somebody driving forty miles to a recovery another
+   * volunteer is assigned to, which is worse than a slow confirmation.
+   */
+  "responder.offer_received": {
+    en: (p) =>
+      `${APP_SHORT_NAME} ${p.short_code}: thanks — your offer is in. The driver chooses who comes out, and we will text you the moment they do. Do not set off yet.`,
+    es: (p) =>
+      `${APP_SHORT_NAME} ${p.short_code}: gracias, su ofrecimiento está registrado. El conductor elige quién va, y le avisamos en cuanto decida. No salga todavía.`,
   },
 
   "responder.assigned": {
