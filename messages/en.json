@@ -93,7 +93,11 @@
     "vehiclesTitle": "Your rigs",
     "vehiclesBody": "What you drive, and what you can bring to a recovery.",
     "vehiclesCta": "Manage your rigs",
-    "deleteKept": "Kept, with nobody's name on it: that each recovery happened and roughly where, the messages on it — a conversation belongs to two people — and posts other members replied to."
+    "deleteKept": "Kept, with nobody's name on it: that each recovery happened and roughly where, the messages on it — a conversation belongs to two people — and posts other members replied to.",
+    "availableTitle": "Available to help",
+    "availableLabel": "I can be called out to help someone",
+    "availableHint": "Turn this on to get alerts when somebody near you is stuck. You can still browse requests and offer help with it off — nobody is ever obliged to go.",
+    "availableFailed": "We could not save that. Try again."
   },
   "vehicles": {
     "title": "Your rigs",
@@ -1706,6 +1710,16 @@
     "event": {
       "soon": "{title} is coming up."
     }
+  },
+  "push": {
+    "title": "Alerts on this device",
+    "body": "Get a notification when someone nearby needs help, and when there is news on your own recovery.",
+    "turnOn": "Turn on alerts",
+    "turnOff": "Turn off alerts on this device",
+    "thisDeviceOnly": "This device only. Turn it on separately on your phone or laptop.",
+    "unsupported": "This browser cannot show alerts. On an iPhone, add Winch Up to your home screen first.",
+    "denied": "Alerts are blocked for this site in your browser settings. You will need to allow them there.",
+    "saveFailed": "We could not turn alerts on. Try again."
   },
   "notifications": {
     "title": "Notifications",

@@ -93,7 +93,11 @@
     "vehiclesTitle": "Sus vehículos",
     "vehiclesBody": "Lo que maneja y lo que puede llevar a un rescate.",
     "vehiclesCta": "Administrar sus vehículos",
-    "deleteKept": "Se queda, sin el nombre de nadie: que cada rescate pasó y más o menos dónde, los mensajes de ese rescate (una conversación es de dos personas), y las publicaciones a las que otros respondieron."
+    "deleteKept": "Se queda, sin el nombre de nadie: que cada rescate pasó y más o menos dónde, los mensajes de ese rescate (una conversación es de dos personas), y las publicaciones a las que otros respondieron.",
+    "availableTitle": "Disponible para ayudar",
+    "availableLabel": "Pueden llamarme para ayudar a alguien",
+    "availableHint": "Actívalo para recibir avisos cuando alguien cerca de ti esté atascado. Aun con esto apagado puedes ver las solicitudes y ofrecerte — nadie está obligado a ir nunca.",
+    "availableFailed": "No pudimos guardarlo. Inténtalo de nuevo."
   },
   "vehicles": {
     "title": "Sus vehículos",
@@ -1706,6 +1710,16 @@
     "event": {
       "soon": "{title} ya viene."
     }
+  },
+  "push": {
+    "title": "Avisos en este dispositivo",
+    "body": "Recibe un aviso cuando alguien cerca necesite ayuda, y cuando haya novedades en tu propio rescate.",
+    "turnOn": "Activar avisos",
+    "turnOff": "Desactivar avisos en este dispositivo",
+    "thisDeviceOnly": "Solo este dispositivo. Actívalos por separado en tu teléfono o tu computadora.",
+    "unsupported": "Este navegador no puede mostrar avisos. En un iPhone, primero agrega Winch Up a tu pantalla de inicio.",
+    "denied": "Tu navegador tiene los avisos bloqueados para este sitio. Tendrás que permitirlos ahí.",
+    "saveFailed": "No pudimos activar los avisos. Inténtalo de nuevo."
   },
   "notifications": {
     "title": "Notificaciones",

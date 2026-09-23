@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { drainPush } from "@/lib/push/send";
 import { drainSmsOutbox } from "@/lib/sms/drain";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -42,6 +43,17 @@ export async function POST(request: Request) {
     notifications = { ok: false, error: "threw" };
   }
 
+  // Push. Runs after the notification drain, which is what creates the deliveries it claims, so
+  // something queued this tick goes out on this tick rather than waiting sixty seconds. It is a
+  // no-op without VAPID keys and leaves the rows queued rather than burning their attempts.
+  let push: unknown = { ok: false, error: "not_run" };
+  try {
+    push = await drainPush(100);
+  } catch (error) {
+    console.error("[sms/drain] push drain failed", error);
+    push = { ok: false, error: "threw" };
+  }
+
   // Retention: scrub the phone number and exact pin off recoveries that closed long enough
   // ago that nobody needs them. Cheap when there is nothing to do, and it means no separate
   // cron entry for the one job whose failure nobody would notice.
@@ -54,5 +66,5 @@ export async function POST(request: Request) {
     retention = { ok: false, error: "threw" };
   }
 
-  return NextResponse.json({ ...sms, notifications, retention });
+  return NextResponse.json({ ...sms, notifications, push, retention });
 }

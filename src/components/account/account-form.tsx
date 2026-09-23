@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { deleteAccount } from "@/app/actions/account";
+import { PushToggle } from "@/components/pwa/push-toggle";
 import { Button, Callout, Card, Field, TextInput, Toggle } from "@/components/ui/primitives";
 import { Link, useRouter } from "@/i18n/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
@@ -44,16 +45,23 @@ export function AccountForm({ email }: { email: string }) {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
+  // Kept out of `profile` on purpose: it saves through an RPC on toggle, not with the form.
+  const [availableToHelp, setAvailableToHelp] = useState(false);
+  const [availabilityError, setAvailabilityError] = useState(false);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       const { data } = await supabaseBrowser()
         .from("profiles")
-        .select("display_name, home_region, notify_recovery, notify_community, notify_marketing, profile_public")
+        .select("display_name, home_region, notify_recovery, notify_community, notify_marketing, profile_public, available_to_help")
         .maybeSingle();
       if (!alive) return;
-      if (data) setProfile({ ...EMPTY, ...data });
+      if (data) {
+        const { available_to_help: willing, ...rest } = data as Record<string, unknown>;
+        setProfile({ ...EMPTY, ...(rest as Partial<Profile>) });
+        setAvailableToHelp(Boolean(willing));
+      }
       setLoaded(true);
     })();
     return () => {
@@ -64,6 +72,29 @@ export function AccountForm({ email }: { email: string }) {
   function set<K extends keyof Profile>(key: K, value: Profile[K]) {
     setProfile((p) => ({ ...p, [key]: value }));
     setSaved(false);
+  }
+
+  /**
+   * The availability switch saves immediately rather than on form submit.
+   *
+   * It is a switch, not a field — somebody flipping "I can help" and walking away should not
+   * discover later that it never took because they did not press Save. The optimistic update is
+   * rolled back if the RPC refuses, so the control never shows a state the database disagrees
+   * with.
+   */
+  async function setAvailability(next: boolean) {
+    const previous = availableToHelp;
+    setAvailableToHelp(next);
+    setAvailabilityError(false);
+
+    const { data, error: rpcError } = await supabaseBrowser().rpc("set_available_to_help", {
+      p_available: next,
+    });
+
+    if (rpcError || !(data as { ok?: boolean })?.ok) {
+      setAvailableToHelp(previous);
+      setAvailabilityError(true);
+    }
   }
 
   async function save(event: React.FormEvent) {
@@ -152,6 +183,29 @@ export function AccountForm({ email }: { email: string }) {
           >
             {t("vehiclesCta")}
           </Link>
+        </Card>
+
+        {/* Spec section 5. Deliberately NOT part of the form below, and not written through the
+            profiles update: turning this on also has to create the member's recovery capability
+            row, which is what app.candidates() matches against. A direct table write would set
+            the flag and leave them willing with nothing to be matched through — marked available
+            and never rung, with no error anywhere. So it saves on toggle, through the RPC that
+            does both. */}
+        <Card className="space-y-3">
+          <h2 className="text-xl font-semibold">{t("availableTitle")}</h2>
+          <Toggle
+            checked={availableToHelp}
+            onChange={(v) => void setAvailability(v)}
+            label={t("availableLabel")}
+            hint={t("availableHint")}
+          />
+          {availabilityError ? (
+            <p className="text-sm text-danger">{t("availableFailed")}</p>
+          ) : null}
+        </Card>
+
+        <Card className="space-y-3">
+          <PushToggle />
         </Card>
 
         <Card className="space-y-3">

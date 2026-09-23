@@ -137,3 +137,28 @@ default privileges on `public` — that last one matters, because without it the
 the RLS migration would be a no-op and the privacy tests would pass for the wrong reason.
 
 It is close. It is not a Supabase instance. Run the suites against a real project before launch.
+
+## After adding an RPC
+
+PostgREST caches the schema at startup. A function added while it is running is invisible to it,
+and the call fails the way a missing grant does — `supabase-js` returns no rows and no error worth
+reading, so it looks like the function ran and found nothing. Nudge it rather than restarting:
+
+```bash
+psql -h 127.0.0.1 -p 55432 -U postgres -d winchup -c "notify pgrst, 'reload schema';"
+```
+
+This cost a confusing half hour on the push work: `claim_push_deliveries` returned zero rows
+against a queue that demonstrably had one in it.
+
+## Web push locally
+
+`npm run push:keys` prints a VAPID pair. Put it in `.env.local`, which is gitignored. Without the
+keys the drain reports `skipped: true` and leaves the deliveries queued rather than burning their
+attempts, so nothing is lost by developing with push off.
+
+A real end-to-end push needs a browser subscription against a real push service; headless
+Chromium will not give you one. What can be proved locally is everything up to the network hop —
+register a subscription with a genuine P-256 key and an unreachable endpoint, drain, and the
+delivery comes back `failed` with `getaddrinfo ENOTFOUND`, which means the payload encrypted and
+the VAPID JWT signed.

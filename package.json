@@ -25,7 +25,8 @@
     "test:e2e:ui": "playwright test --ui",
     "verify": "npm run typecheck && npm run lint && npm test && npm run build",
     "claims:check": "node scripts/check-claims.mjs",
-    "env:check": "node scripts/check-env.mjs"
+    "env:check": "node scripts/check-env.mjs",
+    "push:keys": "node scripts/gen-vapid-keys.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.75.2",
@@ -41,6 +42,7 @@
     "react-dom": "^19.1.1",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.3.1",
+    "web-push": "^3.6.7",
     "zod": "^3.25.76"
   },
   "devDependencies": {
@@ -52,6 +54,7 @@
     "@types/node": "^22.18.0",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
+    "@types/web-push": "^3.6.4",
     "eslint": "^9.36.0",
     "eslint-config-next": "^15.5.4",
     "happy-dom": "^20.14.5",

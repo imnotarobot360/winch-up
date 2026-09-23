@@ -253,7 +253,9 @@ select ok(
   'nor by anon'
 );
 
--- An email and a push delivery, neither of which is built.
+-- Email is still unbuilt. Push is not, as of 20260923000400 -- it is claimed by the Node sender
+-- instead, so this drain must leave it alone rather than suppressing it a fraction of a second
+-- before it would have gone out.
 select ok(
   app.notify('f1111111-0000-4000-8000-0000000000ff', 'community', 'notify.community.reply',
              '{}'::jsonb, null, array['email','push']::notification_channel[], 'unbuilt') is not null,
@@ -265,8 +267,15 @@ select ok((public.drain_notifications(500) ->> 'ok')::boolean, 'the drain runs')
 select is(
   (select count(*)::integer from notification_deliveries
     where dedupe_key like 'unbuilt%' and state = 'suppressed'),
-  2,
-  'and records unbuilt channels as suppressed, with a reason, rather than losing them'
+  1,
+  'and records the still-unbuilt channel as suppressed, with a reason, rather than losing it'
+);
+
+select is(
+  (select state::text from notification_deliveries
+    where dedupe_key like 'unbuilt%' and channel = 'push'),
+  'queued',
+  'while a push delivery is left queued for the sender that now exists'
 );
 
 select ok(

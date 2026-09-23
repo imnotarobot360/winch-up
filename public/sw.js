@@ -84,3 +84,68 @@ self.addEventListener("fetch", (event) => {
     );
   }
 });
+
+// ---------------------------------------------------------------------------
+// Push
+// ---------------------------------------------------------------------------
+//
+// What arrives here has already been stripped: the sender puts the kind of thing that happened
+// and a path in the payload, never a name, a number, a pin or a status token. A push notification
+// is rendered on a lock screen that anybody standing nearby can read, and on this app the person
+// receiving it is often out with other people. The detail lives behind the sign-in.
+//
+// Written defensively because a service worker that throws in a push handler shows the browser's
+// own "This site has been updated in the background" notice instead, which is worse than nothing.
+
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    // A push with no body, or a body that is not ours. Still worth waking them: something
+    // happened, and the app will say what.
+  }
+
+  const title = typeof payload.title === "string" ? payload.title : "Winch Up";
+  const url = typeof payload.url === "string" ? payload.url : "/me";
+  const urgent = typeof payload.kind === "string" && payload.kind.startsWith("recovery");
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: payload.body || "",
+      icon: "/brand/icon-192.png",
+      // No `badge`. Android wants a monochrome silhouette for it and this brand does not have
+      // one yet; pointing at the colour icon renders a grey smudge, and pointing at a file that
+      // does not exist is worse. The platform default is fine until somebody draws one.
+      // Somebody stuck is the one case worth overriding a quiet phone for.
+      requireInteraction: urgent,
+      // Collapses repeats of the same kind rather than stacking six of them on a lock screen.
+      tag: payload.kind || "winch-up",
+      renotify: urgent,
+      data: { url },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || "/me";
+
+  // Focus an open tab rather than opening a second one. Somebody who already has the app open
+  // should land on the right screen in it, not end up with two copies of a live recovery.
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clients) => {
+        for (const client of clients) {
+          if (client.url.includes(target) && "focus" in client) return client.focus();
+        }
+        for (const client of clients) {
+          if ("navigate" in client && "focus" in client) {
+            return client.navigate(target).then(() => client.focus());
+          }
+        }
+        return self.clients.openWindow(target);
+      }),
+  );
+});
