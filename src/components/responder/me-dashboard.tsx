@@ -59,6 +59,23 @@ type FeedRow = {
   is_mine: boolean;
 };
 
+/**
+ * The member's own recoveries (spec section 2, My Active Requests).
+ *
+ * Carries the status token, which is theirs: until this existed, somebody who lost the text had
+ * no route back to their own live recovery and could not cancel it, close it, or file another.
+ */
+type MyRequest = {
+  request_id: string;
+  short_code: string;
+  public_token: string;
+  status: string;
+  is_open: boolean;
+  created_at: string;
+  responder_name: string | null;
+  offer_count: number;
+};
+
 type JobContact = {
   requester_name: string;
   requester_phone: string;
@@ -84,6 +101,7 @@ export function MeDashboard() {
   const [signedIn, setSignedIn] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [feed, setFeed] = useState<FeedRow[]>([]);
+  const [mine, setMine] = useState<MyRequest[]>([]);
   const [contact, setContact] = useState<JobContact | null>(null);
   // Keyed by request: a volunteer holding two offers must not see the ETA they typed for one
   // pre-filled into the other, or accept the second with the first ones number.
@@ -106,10 +124,13 @@ export function MeDashboard() {
 
     setSignedIn(true);
 
-    const [{ data: profileData }, { data: feedData }] = await Promise.all([
+    const [{ data: profileData }, { data: feedData }, { data: mineData }] = await Promise.all([
       supabase.rpc("my_responder_profile"),
       supabase.rpc("responder_feed"),
+      supabase.rpc("my_requests", { p_limit: 10 }),
     ]);
+
+    setMine((mineData as MyRequest[] | null) ?? []);
 
     const nextProfile = (profileData as Profile | null) ?? null;
     setProfile(nextProfile);
@@ -205,6 +226,45 @@ export function MeDashboard() {
           {t("helpSomeone")}
         </Link>
       </div>
+
+      {/* My Active Requests (spec section 2). The open ones first, because a live recovery is
+          the only thing on this screen that might be happening right now. */}
+      {mine.length > 0 ? (
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold">{t("myRequestsTitle")}</h2>
+          <ul className="space-y-2">
+            {mine.map((row) => (
+              <li key={row.request_id}>
+                <Link
+                  href={`/r/${row.public_token}`}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-4"
+                >
+                  <span>
+                    <span className="block font-mono text-sm text-ink-faint">
+                      {row.short_code}
+                    </span>
+                    <span className="block text-lg font-semibold">
+                      {tEnum(`requestStatus.${row.status}`)}
+                    </span>
+                    {row.responder_name ? (
+                      <span className="block text-base text-ink-soft">
+                        {t("myRequestHelper", { name: row.responder_name })}
+                      </span>
+                    ) : row.offer_count > 0 ? (
+                      <span className="block text-base font-semibold text-brand">
+                        {t("myRequestOffers", { count: row.offer_count })}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span aria-hidden className="text-ink-faint">
+                    →
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {/* `pending` used to mean "you are waiting for an admin and cannot be dispatched to". It
           means "nobody has checked you yet" now, and nothing hangs on it, so the copy no longer

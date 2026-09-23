@@ -288,7 +288,10 @@
     "offerToHelp": "Offer to help",
     "equipmentAck": "I have the gear this needs and I can do it safely",
     "unverifiedTitle": "Not verified yet",
-    "unverifiedBody": "An admin has not checked your profile. That does not stop you helping anyone — it just means your offers do not carry a verified badge yet."
+    "unverifiedBody": "An admin has not checked your profile. That does not stop you helping anyone — it just means your offers do not carry a verified badge yet.",
+    "myRequestsTitle": "My recoveries",
+    "myRequestHelper": "{name} is coming",
+    "myRequestOffers": "{count, plural, one {# volunteer has offered — pick one} other {# volunteers have offered — pick one}}"
   },
   "board": {
     "title": "Open board",

@@ -288,7 +288,10 @@
     "offerToHelp": "Ofrecerme a ayudar",
     "equipmentAck": "Tengo el equipo que esto necesita y puedo hacerlo con seguridad",
     "unverifiedTitle": "Aún sin verificar",
-    "unverifiedBody": "Un administrador todavía no ha revisado tu perfil. Eso no te impide ayudar a nadie — solo significa que tus ofrecimientos aún no llevan la insignia de verificado."
+    "unverifiedBody": "Un administrador todavía no ha revisado tu perfil. Eso no te impide ayudar a nadie — solo significa que tus ofrecimientos aún no llevan la insignia de verificado.",
+    "myRequestsTitle": "Mis rescates",
+    "myRequestHelper": "{name} viene en camino",
+    "myRequestOffers": "{count, plural, one {# voluntario se ofreció — elige a alguien} other {# voluntarios se ofrecieron — elige a alguien}}"
   },
   "board": {
     "title": "Tablero abierto",

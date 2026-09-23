@@ -22,6 +22,7 @@ export type HelpRow = {
   land_type: string;
   required_equipment: string[] | null;
   county: string | null;
+  notes: string | null;
   created_at: string;
   offer_state: string | null;
   i_offered: boolean;
@@ -167,6 +168,11 @@ export function HelpList({ initial }: { initial: HelpRow[] }) {
                       .join(" · ")}
                   </p>
                 ) : null}
+
+                {/* What the person actually wrote. Often the line that decides whether this is a
+                    winch job or a tractor job, and it was missing from this screen while the
+                    public board had shown it since the first week. */}
+                {row.notes ? <p className="mt-2 text-base">{row.notes}</p> : null}
 
                 {row.required_equipment && row.required_equipment.length > 0 ? (
                   <p className="mt-1 text-sm text-ink-soft">
