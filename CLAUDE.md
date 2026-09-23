@@ -156,6 +156,14 @@ docs/                     decisions + runbooks
 - **Photos are stripped client-side.** `createImageBitmap(file, {imageOrientation: "from-image"})`
   then canvas then JPEG. The re-encode is what drops EXIF, including GPS. Never add a path that
   uploads the original file.
+- **`.env.example` is checked against what the code reads, both directions.** It used to
+  document `TWILIO_WEBHOOK_SECRET` and `ADMIN_ALERT_PHONES`; neither is read anywhere, and an
+  owner following the guide would have believed the webhook was secured by the first and admins
+  paged by the second. Neither was true. `npm run env:check` fails the build on drift now.
+- **`/api/health` is unauthenticated and must stay that way.** An uptime checker cannot hold a
+  secret. That is only safe because `system_health_summary()` returns counts and ages — a test
+  pins the exact key set. Adding anything about a person or a place turns a status page into a
+  feed of who is stuck and where.
 - **The demo seed refuses to run against production, and production is the default.**
   `deploy.environment` says what a database is, and anything unmarked counts as production.
   `scripts/local-stack/mark-local.sql` is the only way out, and there is deliberately no file
@@ -266,7 +274,7 @@ long done. Work since then has followed the owner's 16-phase spec:
 | 10 Advertising | mostly done — business accounts, campaigns, per-advert approval, labelled serving, real counting. **Stripe is not wired**: it needs the owner's account and keys |
 | 12 Database & backend | done — schema audited and the findings fixed; the entities the spec names all exist |
 | 14 Security, privacy & safety | done — full review in `docs/security-review.md`; account deletion actually deletes now, retention exists, a claims check guards the copy |
-| 16 Deployment & production readiness | done in part — deployed and green; the 10DLC pack is written, not submitted |
+| 16 Deployment & production readiness | done — `/api/health`, CI on every push, env drift check, `docs/production-readiness.md`. What is left needs the owner's accounts, not code |
 
 **Proven working in production**, not just built: a signed-in person files a request, the tick
 escalates it through all three rings, it reaches `unmatched` with nobody available, and the public
@@ -283,11 +291,11 @@ Four layers. Run all of them before claiming anything works.
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
 npm test            94 unit + component tests (vitest)
 npm run test:e2e    168 Playwright tests — android, iphone, tablet, desktop
-supabase test db    622 pgTAP assertions across fifteen suites
+supabase test db    626 pgTAP assertions across fifteen suites
 ```
 
-`prebuild` runs the i18n check, the contact-info parity check and the claims check -- three
-plain node scripts with no runtime of their own. The test suite used to run there too, which meant any problem with the test
+`prebuild` runs four guards -- the i18n check, the contact-info parity check, the claims check
+and the env check -- all plain node scripts with no runtime of their own. The test suite used to run there too, which meant any problem with the test
 environment on Vercel blocked every deploy, and one did. A deploy should not be hostage to a test
 runner; run `npm run verify` yourself instead, or wire it into CI.
 

@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "prebuild": "node scripts/check-messages.mjs && node scripts/gen-contact-info-parity.mjs --check && node scripts/check-claims.mjs",
+    "prebuild": "node scripts/check-messages.mjs && node scripts/gen-contact-info-parity.mjs --check && node scripts/check-claims.mjs && node scripts/check-env.mjs",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
@@ -24,7 +24,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "verify": "npm run typecheck && npm run lint && npm test && npm run build",
-    "claims:check": "node scripts/check-claims.mjs"
+    "claims:check": "node scripts/check-claims.mjs",
+    "env:check": "node scripts/check-env.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",

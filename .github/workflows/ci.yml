@@ -1,0 +1,116 @@
+name: CI
+
+# Every push and every pull request. The whole point is that nobody has to remember to run it.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A second push to the same branch cancels the first. A queue of stale runs helps nobody.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Needs no secrets, so it works the moment this file lands.
+  #
+  # `npm run verify` is typecheck, lint, 94 unit and component tests, and a production build.
+  # The build runs `prebuild` first, which is four guards that have each caught something real:
+  #
+  #   check-messages   English and Spanish key-for-key, arrays compared item by item
+  #   gen-contact-info-parity --check  the SQL and TypeScript twins tested on identical cases
+  #   check-claims     no copy promising emergency rescue, guaranteed help or location tracking
+  #   check-env        .env.example matches what the code actually reads, both directions
+  #
+  # Verified to need no environment: the build completes with .env.local removed entirely.
+  # ---------------------------------------------------------------------------
+  verify:
+    name: typecheck, lint, unit tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run verify
+
+  # ---------------------------------------------------------------------------
+  # The browser suite: 168 tests across android, iphone, tablet and desktop, on Chromium and
+  # real WebKit.
+  #
+  # It drives the app against whatever Supabase the build points at, and it is read-only by
+  # design -- nothing in e2e/ files a request or writes a row, because the project it points at
+  # is production. It runs here only when the two public keys are present as repository secrets;
+  # without them the pages that need data render empty and the suite would fail for the wrong
+  # reason.
+  #
+  # To turn it on, add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY under
+  # Settings -> Secrets and variables -> Actions. Both are public values -- the anon key is
+  # shipped to every browser -- so this is not a secret in the usual sense, only a value.
+  # ---------------------------------------------------------------------------
+  browsers:
+    name: end-to-end (4 viewports, 2 engines)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    if: ${{ github.event_name == 'push' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Check whether this repository has been given the public Supabase values
+        id: config
+        run: |
+          if [ -n "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" ]; then
+            echo "ready=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=no" >> "$GITHUB_OUTPUT"
+            echo "Skipping: add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to run the browser suite." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Install browsers
+        if: steps.config.outputs.ready == 'yes'
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Run the suite
+        if: steps.config.outputs.ready == 'yes'
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_SITE_URL: http://localhost:3101
+          # Belt and braces. Nothing in e2e/ sends a text, and this makes certain of it.
+          SMS_DRY_RUN: "1"
+        run: npm run test:e2e
+
+      - name: Keep the traces when something fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # NOT HERE: the 622 pgTAP assertions.
+  #
+  # They need Postgres with PostGIS and pgTAP, and pgTAP is not in any published PostGIS image --
+  # locally it is installed by hand from a source tarball, which is not something to reproduce in
+  # a workflow that has to be trustworthy. They are run with `supabase test db` against a local
+  # database, or against the linked project before a release.
+  #
+  # Saying so here is better than a job that silently skips and turns the badge green.
+  # ---------------------------------------------------------------------------

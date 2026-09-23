@@ -350,5 +350,36 @@ select lives_ok(
   'at which point the demo seed is allowed to run'
 );
 
+-- ---------------------------------------------------------------------------
+-- 8. The health endpoint cannot become a leak
+--
+-- /api/health is unauthenticated on purpose: an uptime checker has no session and cannot hold a
+-- secret. That only stays safe while the function behind it returns counts and ages. Somebody
+-- adding "and the most recent request" to make a dashboard nicer would turn a status page into
+-- a feed of who is stuck and where.
+-- ---------------------------------------------------------------------------
+
+select ok(
+  not has_function_privilege('anon', 'public.system_health_summary()', 'EXECUTE'),
+  'the health summary is not callable from a browser'
+);
+select ok(
+  not has_function_privilege('authenticated', 'public.system_health_summary()', 'EXECUTE'),
+  'nor by a signed-in member -- the route holds the service key'
+);
+
+select bag_eq(
+  $q$select jsonb_object_keys(public.system_health_summary())$q$,
+  $q$values ('ok'), ('scheduler_age_seconds'), ('sms_queued'), ('sms_failed_24h'),
+           ('notifications_queued'), ('open_requests'), ('approved_active_responders')$q$,
+  'and it returns exactly these keys: every one a count or an age, none of them about a person'
+);
+
+select ok(
+  (select bool_and(jsonb_typeof(public.system_health_summary() -> k) in ('number', 'boolean', 'null'))
+     from jsonb_object_keys(public.system_health_summary()) k),
+  'all of them numbers -- a string here would be the first place a name could hide'
+);
+
 select * from finish();
 rollback;
