@@ -12,7 +12,8 @@ type Message = {
   body: string | null;
   attachment_path: string | null;
   attachment_type: string | null;
-  read_at: string | null;
+  /** A first name. Null for a system line, which belongs to nobody. */
+  sender_name: string | null;
   created_at: string;
   mine: boolean;
 };
@@ -20,12 +21,17 @@ type Message = {
 const POLL_MS = 15_000;
 
 /**
- * The conversation between the person who is stuck and the volunteer who took the job.
+ * The conversation for one recovery: the person who is stuck and everybody helping them.
+ *
+ * It used to be exactly two people. A real recovery often is not -- a winch truck and a tractor
+ * turn up together -- so the thread is now the whole team, and messages carry who said them.
  *
  * This component holds no permission logic at all. It asks request_thread() for the thread; if
- * the caller is not one of the two participants the RPC answers not_found and this renders
+ * the caller has no live row in recovery_participants the RPC answers not_found and this renders
  * nothing. A signed-out visitor holding a shared status link therefore sees no trace of it --
- * not a locked panel, not a sign-in prompt, nothing. There is nothing to be curious about.
+ * not a locked panel, not a sign-in prompt, nothing. There is nothing to be curious about. The
+ * same is true of a helper who withdrew: they keep their history, they stop seeing what is said
+ * next.
  *
  * Polling rather than realtime. Fifteen seconds is well inside the rhythm of "I'm at the gate" /
  * "be there in twenty", and it costs one request instead of a websocket held open on a phone
@@ -125,13 +131,22 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
                   : "mr-auto border-line bg-surface-sunk"
               }`}
             >
+              {/* Who said it. Redundant with two people; necessary with a team, where "they" is
+                  ambiguous and a system line belongs to nobody. */}
+              {!message.mine && message.sender_name ? (
+                <p className="text-xs font-semibold text-ink-soft">{message.sender_name}</p>
+              ) : null}
               {message.body ? (
                 <p className="whitespace-pre-wrap text-base">{message.body}</p>
               ) : null}
               <p className="mt-1 text-xs text-ink-faint">
                 {relative(message.created_at)}
-                {/* Only meaningful on your own messages: "they have seen it". */}
-                {message.mine && message.read_at ? ` · ${t("read")}` : ""}
+                {/* No read receipt. It used to read `read_at` on the message, which worked only
+                    because there were exactly two people: "not mine and read" meant the other
+                    one saw it. With a team that is meaningless -- seen by whom? -- so unread is
+                    now tracked per participant and the per-message flag is gone. A group read
+                    indicator is a separate piece of work, and showing a stale one would be worse
+                    than showing none. */}
               </p>
             </li>
           ))}
