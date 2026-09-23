@@ -51,9 +51,18 @@ export const config = {
   // manifest, robots.txt, sitemap.xml, offline.html, /brand/*.png — are covered by the
   // extension rule already.
   //
+  // `monitoring` is the Sentry tunnel (tunnelRoute in next.config.ts). It is a rewrite to
+  // Sentry's ingest rather than a route in the app, so sending it through the locale middleware
+  // would look for /en/monitoring and find nothing. It resolves before this middleware today and
+  // works without the exclusion — which is exactly why it is written down here. The failure mode
+  // if that ordering ever changes is silence: events stop arriving, nothing throws, and an app
+  // with broken error tracking is indistinguishable from an app with no errors. Verified in
+  // production by posting to /monitoring with the o/p/r query params the SDK sends and getting
+  // 401 from Sentry's ingest rather than 404 from Next.
+  //
   // The backslash must be doubled: this is a JS string, so "\\." is what the regex engine
   // receives as `\.`. Written as "\." it collapses to ".", the pattern becomes `.*..*`, and the
   // matcher then excludes every path of two or more characters — which silently 404s every
   // unprefixed URL in the app while the bare "/" keeps working.
-  matcher: ["/((?!api|auth|_next|_vercel|.*\\..*).*)"],
+  matcher: ["/((?!api|auth|monitoring|_next|_vercel|.*\\..*).*)"],
 };
