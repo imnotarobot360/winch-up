@@ -32,7 +32,7 @@ export async function GET() {
   let smsQueued: number | null = null;
   let notificationsQueued: number | null = null;
   let openRequests: number | null = null;
-  let approvedResponders: number | null = null;
+  let reachableVolunteers: number | null = null;
   const problems: string[] = [];
   const warnings: string[] = [];
 
@@ -55,14 +55,14 @@ export async function GET() {
         sms_failed_24h?: number | null;
         notifications_queued?: number | null;
         open_requests?: number | null;
-        approved_active_responders?: number | null;
+        reachable_volunteers?: number | null;
       };
 
       schedulerAgeSeconds = health.scheduler_age_seconds ?? null;
       smsQueued = health.sms_queued ?? null;
       notificationsQueued = health.notifications_queued ?? null;
       openRequests = health.open_requests ?? null;
-      approvedResponders = health.approved_active_responders ?? null;
+      reachableVolunteers = health.reachable_volunteers ?? null;
     }
   } catch {
     problems.push("database unreachable");
@@ -84,11 +84,15 @@ export async function GET() {
     }
   }
 
-  // Reported, not alerted on. Zero approved volunteers is this project's actual state today and
-  // is not a fault -- but it is the quietest possible failure, so it belongs on the page that
-  // somebody opens when nothing happened.
-  if (database && approvedResponders === 0) {
-    warnings.push("no approved, active volunteers: a request would reach nobody");
+  // Reported, not alerted on. Zero is this project's actual state today and is not a fault --
+  // but it is the quietest possible failure, so it belongs on the page that somebody opens when
+  // nothing happened.
+  //
+  // "Reachable", not "approved". Approval stopped gating anything when membership became
+  // universal, and this warning went on counting it: it would have stayed silent while every
+  // member had alerts switched off, which is exactly the situation it exists to catch.
+  if (database && reachableVolunteers === 0) {
+    warnings.push("no volunteers are available to help: a request would reach nobody");
   }
 
   const healthy = database && problems.length === 0;
@@ -104,7 +108,7 @@ export async function GET() {
         smsQueued,
         notificationsQueued,
         openRequests,
-        approvedResponders,
+        reachableVolunteers,
       },
       problems,
       warnings,

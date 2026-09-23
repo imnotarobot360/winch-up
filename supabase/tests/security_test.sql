@@ -371,7 +371,7 @@ select ok(
 select bag_eq(
   $q$select jsonb_object_keys(public.system_health_summary())$q$,
   $q$values ('ok'), ('scheduler_age_seconds'), ('sms_queued'), ('sms_failed_24h'),
-           ('notifications_queued'), ('open_requests'), ('approved_active_responders')$q$,
+           ('notifications_queued'), ('open_requests'), ('reachable_volunteers')$q$,
   'and it returns exactly these keys: every one a count or an age, none of them about a person'
 );
 
