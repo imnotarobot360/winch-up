@@ -16,6 +16,11 @@ supabase/.branches
 supabase/.temp
 supabase/.env
 
+# Generated VAPID pair. `npm run push:keys` writes here so the private key lands in a file
+# rather than a terminal that gets scrolled back through or pasted into a chat. Copy the three
+# values into Vercel and delete it.
+vapid-keys.txt
+
 .DS_Store
 Thumbs.db
 *.log
