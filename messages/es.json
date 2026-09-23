@@ -1725,14 +1725,18 @@
       "cancelled": "Tu solicitud fue cancelada.",
       "expired": "Tu solicitud se venció.",
       "unmatched": "Nadie ha contestado todavía. Te mostramos algunas opciones de paga.",
-      "reassigned": "Otro voluntario tomó tu rescate."
+      "reassigned": "Otro voluntario tomó tu rescate.",
+      "helper_status": "Alguien en tu rescate se movió",
+      "helper_withdrew": "Alguien se retiró del rescate",
+      "helper_joined": "Se sumó otra persona"
     },
     "responder": {
       "responder_notified": "Alguien cerca de ti necesita ayuda — {short_code}.",
       "thanked": "Te dieron las gracias por {short_code}."
     },
     "message": {
-      "new": "Mensaje nuevo en {short_code}."
+      "new": "Mensaje nuevo en {short_code}.",
+      "recovery": "Nuevo mensaje en tu rescate"
     },
     "community": {
       "reply": "Alguien respondió a tu publicación."

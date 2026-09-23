@@ -381,5 +381,96 @@ select isnt_empty(
   'and the chat records why, for whoever is still reading it'
 );
 
+-- ---------------------------------------------------------------------------
+-- 8. A message tells the rest of the team, and only the rest
+-- ---------------------------------------------------------------------------
+
+reset role;
+
+-- Put the team back: requester A, helpers B and C.
+update public.recovery_participants set left_at = null, status = 'accepted'
+ where request_id = 'eeee3333-0000-4000-8000-00000000000e';
+
+-- C wants the recovery but not the chatter.
+update public.recovery_participants set muted = true
+ where request_id = 'eeee3333-0000-4000-8000-00000000000e'
+   and user_id = 'cccc1111-0000-4000-8000-00000000000c';
+
+insert into public.request_messages (request_id, sender_user_id, sender_role, body)
+values ('eeee3333-0000-4000-8000-00000000000e', 'aaaa1111-0000-4000-8000-00000000000a',
+        'requester', 'Gate code is 4412');
+
+select is(
+  (select count(*)::int from public.notifications n
+    where n.kind = 'message'
+      and n.params ->> 'preview' like 'Gate code%'
+      and n.user_id = 'bbbb1111-0000-4000-8000-00000000000b'),
+  1,
+  'a message notifies the other people on the recovery'
+);
+
+select is(
+  (select count(*)::int from public.notifications n
+    where n.kind = 'message'
+      and n.params ->> 'preview' like 'Gate code%'
+      and n.user_id = 'aaaa1111-0000-4000-8000-00000000000a'),
+  0,
+  'and never the person who sent it'
+);
+
+select is(
+  (select count(*)::int from public.notifications n
+    where n.kind = 'message'
+      and n.params ->> 'preview' like 'Gate code%'
+      and n.user_id = 'cccc1111-0000-4000-8000-00000000000c'),
+  0,
+  'somebody who muted this recovery is not told about chatter'
+);
+
+-- Scoped to the kinds this phase added, deliberately.
+--
+-- The first version asserted that NO notification anywhere carries the token, and it failed with
+-- five. Those five are Phase 13's, and they are fine: a notification about your own recovery, in
+-- your own authenticated list, carrying your own link. Asserting otherwise would have been me
+-- inventing a rule the codebase never held and then "fixing" working code to match it.
+--
+-- What is worth holding is narrower: the team notifications carry an id, because an id resolves
+-- server-side through recovery_link and a token does not need to travel to say "Mike is on site".
+select is(
+  (select count(*)::int from public.notifications n
+    where n.kind in ('message', 'helper_joined', 'helper_status')
+      and n.url like '%' || (select public_token from public.requests
+                              where id = 'eeee3333-0000-4000-8000-00000000000e') || '%'),
+  0,
+  'the team notifications carry no recovery token'
+);
+
+select isnt_empty(
+  $q$select 1 from public.notifications
+      where kind = 'message' and url like '/recovery/%'$q$,
+  'they carry the request id instead, which resolves server-side for a participant'
+);
+
+-- ---------------------------------------------------------------------------
+-- 9. Resolving a deep link
+-- ---------------------------------------------------------------------------
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"bbbb1111-0000-4000-8000-00000000000b","role":"authenticated"}';
+
+select is(
+  public.recovery_link('eeee3333-0000-4000-8000-00000000000e') ->> 'token',
+  'team-test-token-aaaaaaaaaa',
+  'a participant following a deep link gets their own status token'
+);
+
+set local request.jwt.claims = '{"sub":"dddd1111-0000-4000-8000-00000000000d","role":"authenticated"}';
+
+select is(
+  public.recovery_link('eeee3333-0000-4000-8000-00000000000e') ->> 'error',
+  'not_found',
+  'and anybody else gets nothing, so a guessed id opens nothing'
+);
+
 select * from finish();
 rollback;

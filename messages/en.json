@@ -1725,14 +1725,18 @@
       "cancelled": "Your request was cancelled.",
       "expired": "Your request timed out.",
       "unmatched": "Nobody has answered yet. We've shown you some paid options.",
-      "reassigned": "A different volunteer has taken your recovery."
+      "reassigned": "A different volunteer has taken your recovery.",
+      "helper_status": "Someone on your recovery moved",
+      "helper_withdrew": "A helper dropped out",
+      "helper_joined": "Another helper joined"
     },
     "responder": {
       "responder_notified": "Somebody near you needs a hand — {short_code}.",
       "thanked": "You got a thank-you for {short_code}."
     },
     "message": {
-      "new": "New message on {short_code}."
+      "new": "New message on {short_code}.",
+      "recovery": "New message on your recovery"
     },
     "community": {
       "reply": "Somebody replied to your post."

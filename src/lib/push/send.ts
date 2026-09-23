@@ -16,11 +16,19 @@ import es from "../../../messages/es.json";
  *
  * WHAT GOES IN A PUSH PAYLOAD
  *
- * The kind of thing, and nothing else. A push notification is delivered by Apple, Google or
- * Mozilla and is rendered on a lock screen that anybody standing nearby can read, so it says
- * "someone needs help nearby" and never a name, a number, a pin or a status token. Tapping it
- * opens the app, which is authenticated, and the detail lives there. This is the same rule the
- * error tracker follows for the same reason.
+ * What is DISPLAYED is the kind of thing and nothing else. A push notification is rendered on a
+ * lock screen that anybody standing nearby can read, so the title says "someone needs help
+ * nearby" and never a name, a number, a pin or a set of coordinates. Tapping it opens the app,
+ * which is authenticated, and the detail lives there.
+ *
+ * The `url` is not displayed, and it may contain a status token: Phase 13's notifications link
+ * to /r/<token>, which is the member's own link to their own recovery. That is acceptable here
+ * and nowhere else, for one specific reason — a Web Push payload is encrypted to the
+ * subscription's own keys, so Apple, Google and Mozilla relay it without being able to read it.
+ * Only the browser that registered decrypts it.
+ *
+ * The team notifications added later link to /recovery/<id> instead, not because a token here
+ * would be a leak, but because nothing needs one to say "Mike is on site".
  */
 
 const MESSAGES = { en, es } as Record<string, Record<string, unknown>>;
@@ -79,6 +87,7 @@ type Claim = {
   title_key: string;
   params: Record<string, unknown> | null;
   locale: string;
+  url: string | null;
 };
 
 export type PushDrainResult = {
@@ -117,9 +126,13 @@ export async function drainPush(limit = 100): Promise<PushDrainResult> {
       // Deliberately thin. See the note at the top of this file.
       title: title ?? "Winch Up",
       kind: claim.kind,
-      // Where tapping it should land. A path, never a token: /r/<token> in a payload would put
-      // the key to a live recovery on a lock screen.
-      url: typeof claim.params?.url === "string" ? claim.params.url : "/me",
+      // Where tapping it should land.
+      //
+      // This read claim.params?.url, which app.notify never sets -- the url has its own column --
+      // so every push ever built here would have opened /me regardless of what it was about.
+      // Unnoticed because push has never run in production and the one delivery test I wrote
+      // checked that a payload arrived, not where it pointed.
+      url: claim.url ?? "/me",
     });
 
     try {
