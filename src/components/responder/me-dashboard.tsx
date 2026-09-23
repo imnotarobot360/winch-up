@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { Button, Callout, Card, Field, TextInput } from "@/components/ui/primitives";
+import { Button, Callout, Card, Checkbox, Field, TextInput } from "@/components/ui/primitives";
 import { ReportForm } from "@/components/incident/report-form";
 import { RequestThread } from "@/components/messages/request-thread";
 import { LocationShare } from "@/components/responder/location-share";
@@ -88,6 +88,9 @@ export function MeDashboard() {
   // Keyed by request: a volunteer holding two offers must not see the ETA they typed for one
   // pre-filled into the other, or accept the second with the first ones number.
   const [etas, setEtas] = useState<Record<string, string>>({});
+  // Keyed the same way and for the same reason: acknowledging that you have the gear for a mud
+  // recovery says nothing about the rollover in the next card.
+  const [acks, setAcks] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -183,10 +186,33 @@ export function MeDashboard() {
 
       {error ? <Callout tone="danger">{t(`errors.${error}`)}</Callout> : null}
 
+      {/* Spec section 2: the two things a member can do, side by side, before anything else on
+          the screen. They are the same size on purpose -- this product is one community where
+          the person who needs pulling out today is the one doing the pulling next weekend, and a
+          dashboard that made one of these the main action and the other a link would be quietly
+          arguing otherwise. */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Link
+          href="/request"
+          className="tap-target flex items-center justify-center rounded-field bg-brand px-6 text-center text-lg font-bold text-on-brand"
+        >
+          {t("requestHelp")}
+        </Link>
+        <Link
+          href="/help"
+          className="tap-target flex items-center justify-center rounded-field border-2 border-line bg-surface px-6 text-center text-lg font-bold text-ink"
+        >
+          {t("helpSomeone")}
+        </Link>
+      </div>
+
+      {/* `pending` used to mean "you are waiting for an admin and cannot be dispatched to". It
+          means "nobody has checked you yet" now, and nothing hangs on it, so the copy no longer
+          asks anybody to wait for something that is not coming. */}
       {profile.approval === "pending" ? (
-        <Callout tone="brand">
-          <p className="font-bold">{t("pendingTitle")}</p>
-          <p className="mt-1">{t("pendingBody")}</p>
+        <Callout tone="neutral">
+          <p className="font-bold">{t("unverifiedTitle")}</p>
+          <p className="mt-1">{t("unverifiedBody")}</p>
         </Callout>
       ) : null}
 
@@ -194,7 +220,9 @@ export function MeDashboard() {
         <Callout tone="danger">{t("notApproved")}</Callout>
       ) : null}
 
-      {profile.approval === "approved" ? (
+      {/* No longer gated on approval: availability is the member's own switch now, and hiding it
+          behind a verification they may never get would leave them with no way to be reached. */}
+      {profile.approval !== "banned" ? (
         <Card className="space-y-3">
           <p className="text-lg font-semibold">
             {profile.availability === "active" ? t("onCall") : t("paused")}
@@ -316,17 +344,33 @@ export function MeDashboard() {
                 />
               </Field>
 
+              {/* The in-app twin of texting `1`. It offers; it does not take the job. The old
+                  button called accept_request and was gated on approval -- both of those went
+                  with this phase, and the grant on accept_request was revoked, so leaving it
+                  would have been a button that always failed. */}
+              <Checkbox
+                id={`ack-${row.request_id}`}
+                checked={acks[row.request_id] ?? false}
+                onChange={(next) =>
+                  setAcks((current) => ({ ...current, [row.request_id]: next }))
+                }
+              >
+                {t("equipmentAck")}
+              </Checkbox>
+
               <Button
                 type="button"
-                disabled={busy || profile.approval !== "approved"}
+                disabled={busy || !(acks[row.request_id] ?? false)}
                 onClick={() =>
-                  run("accept_request", {
+                  run("offer_assistance", {
                     p_request_id: row.request_id,
+                    p_note: null,
                     p_eta_minutes: etas[row.request_id] ? Number(etas[row.request_id]) : null,
+                    p_equipment_ack: true,
                   })
                 }
               >
-                {t("takeIt")}
+                {t("offerToHelp")}
               </Button>
               <Button
                 type="button"

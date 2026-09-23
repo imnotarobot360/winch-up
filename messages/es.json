@@ -223,8 +223,6 @@
     "goJoin": "Confirmar mi número",
     "greeting": "Qué tal, {name}",
     "stats": "{count, plural, =0 {Aún sin rescates} one {# rescate} other {# rescates}}",
-    "pendingTitle": "Esperando aprobación",
-    "pendingBody": "Un administrador revisa cada registro. No recibirá avisos hasta que lo haga.",
     "notApproved": "Esta cuenta no está aprobada para recibir avisos. Comuníquese con los administradores del grupo si cree que es un error.",
     "onCall": "Está disponible",
     "onCallHint": "Le avisamos cuando alguien cerca necesite su equipo.",
@@ -244,7 +242,6 @@
     "needsSecondTruck": "Necesita segunda troca",
     "etaLabel": "¿En cuánto llega?",
     "etaHint": "Minutos. Es opcional, pero es lo primero que le van a preguntar.",
-    "takeIt": "Yo lo tomo",
     "pass": "Paso",
     "historyTitle": "Sus trabajos anteriores",
     "profileTitle": "Sus datos",
@@ -281,7 +278,13 @@
         "not_a_responder": "Todavía no está registrado como voluntario.",
         "failed": "No funcionó. Intente de nuevo."
       }
-    }
+    },
+    "requestHelp": "Pedir ayuda",
+    "helpSomeone": "Ayudar a alguien",
+    "offerToHelp": "Ofrecerme a ayudar",
+    "equipmentAck": "Tengo el equipo que esto necesita y puedo hacerlo con seguridad",
+    "unverifiedTitle": "Aún sin verificar",
+    "unverifiedBody": "Un administrador todavía no ha revisado tu perfil. Eso no te impide ayudar a nadie — solo significa que tus ofrecimientos aún no llevan la insignia de verificado."
   },
   "board": {
     "title": "Tablero abierto",
@@ -302,6 +305,45 @@
     "viewMap": "Mapa",
     "mapLabel": "Mapa de solicitudes abiertas",
     "mapUnavailable": "El mapa aún no está configurado. La lista muestra las mismas solicitudes."
+  },
+  "help": {
+    "title": "Ayuda a alguien",
+    "subtitle": "Solicitudes de rescate abiertas cerca de ti. Si puedes ayudar con seguridad, ofrécete.",
+    "privacyNote": "Las ubicaciones aquí son aproximadas, como a una milla. El punto exacto y la forma de contactar se comparten solo con la persona que el conductor elija.",
+    "empty": "No hay nada abierto cerca de ti ahora mismo. Eso es buena señal.",
+    "milesAway": "a {miles} mi",
+    "distanceUnknown": "Distancia desconocida",
+    "county": "condado de {county}",
+    "approxArea": "zona aproximada",
+    "needsTractor": "Necesita tractor",
+    "needsSecondTruck": "Necesita una segunda troca",
+    "equipmentNeeded": "Piden: {list}",
+    "openArea": "Abrir la zona en mapas",
+    "offerToHelp": "Ofrecerme a ayudar",
+    "alreadyOffered": "Tu ofrecimiento está registrado. El conductor elige quién va.",
+    "withdraw": "Retirar mi ofrecimiento",
+    "safetyPrompt": "Ofrécete solo si puedes llegar y hacerlo con seguridad. Puedes echarte para atrás en cualquier momento, y nadie está obligado a ir.",
+    "equipmentAck": "Tengo el equipo que esto necesita y puedo hacerlo con seguridad",
+    "etaLabel": "¿Cuánto tardas en llegar? (minutos, opcional)",
+    "etaPlaceholder": "40",
+    "etaInvalid": "Pon un número de minutos entre 1 y 600, o déjalo vacío.",
+    "noteLabel": "Algo que deban saber (opcional)",
+    "notePlaceholder": "Llevo winch y correas",
+    "noteHint": "Sin teléfonos ni enlaces. Podrán hablar directamente cuando te elijan.",
+    "sendOffer": "Enviar mi ofrecimiento",
+    "cancel": "Cancelar",
+    "errors": {
+      "already_covered": "Ya eligieron a otra persona para este rescate.",
+      "already_closed": "Este rescate está cerrado.",
+      "own_request": "Esta es tu propia solicitud.",
+      "not_signed_in": "Inicia sesión para ofrecer ayuda.",
+      "no_recovery_profile": "No pudimos crear tu perfil de ayudante. Inténtalo de nuevo.",
+      "equipment_not_acknowledged": "Confirma que tienes el equipo y que puedes hacerlo con seguridad.",
+      "offer_not_possible": "Ya no puedes ofrecerte en este rescate.",
+      "no_open_offer": "No tienes un ofrecimiento abierto en este rescate.",
+      "not_found": "Esa solicitud ya no existe.",
+      "server_error": "Algo salió mal. Inténtalo de nuevo."
+    }
   },
   "post": {
     "title": "Publicar esto en el grupo",
@@ -979,7 +1021,17 @@
       "empty_note": "Escriba algo primero.",
       "no_responder": "Todavía nadie ha aceptado esta solicitud.",
       "already_thanked": "Ya envió un agradecimiento."
-    }
+    },
+    "offersTitle": "{count, plural, one {# voluntario se ofreció} other {# voluntarios se ofrecieron}}",
+    "offersBody": "Elige a quien mejor te convenga. Nadie va en camino hasta que elijas.",
+    "offerVerified": "Verificado",
+    "offerMiles": "a {miles} mi",
+    "offerEta": "Dice que como {minutes} minutos",
+    "offerAccept": "Elegir a {name}",
+    "offerDecline": "Este no",
+    "offersPrivacyNote": "Cuando elijas a alguien, esa persona recibe tu nombre, tu número y tu ubicación exacta, y tú recibes los suyos. A los demás se les avisa que ya está cubierto.",
+    "awaitingChoiceTitle": "Alguien se ofreció",
+    "awaitingChoiceBody": "Elige quién va. Nadie va en camino hasta que elijas."
   },
   "report": {
     "openLink": "¿Algo salió mal? Repórtelo.",

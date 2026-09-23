@@ -223,8 +223,6 @@
     "goJoin": "Confirm my number",
     "greeting": "Hey {name}",
     "stats": "{count, plural, =0 {No recoveries yet} one {# recovery} other {# recoveries}}",
-    "pendingTitle": "Waiting for approval",
-    "pendingBody": "An admin reviews every signup. You won't get call-outs until they do.",
     "notApproved": "This account isn't approved for call-outs. Contact the group admins if you think that's wrong.",
     "onCall": "You're on call",
     "onCallHint": "We'll text you when someone nearby needs your gear.",
@@ -244,7 +242,6 @@
     "needsSecondTruck": "Needs a second truck",
     "etaLabel": "How long until you get there?",
     "etaHint": "Minutes. Optional, but it is the first thing they will ask.",
-    "takeIt": "I'll take it",
     "pass": "Pass",
     "historyTitle": "Your past jobs",
     "profileTitle": "Your details",
@@ -281,7 +278,13 @@
         "not_a_responder": "You're not signed up as a volunteer yet.",
         "failed": "That didn't work. Try again."
       }
-    }
+    },
+    "requestHelp": "Request help",
+    "helpSomeone": "Help someone",
+    "offerToHelp": "Offer to help",
+    "equipmentAck": "I have the gear this needs and I can do it safely",
+    "unverifiedTitle": "Not verified yet",
+    "unverifiedBody": "An admin has not checked your profile. That does not stop you helping anyone — it just means your offers do not carry a verified badge yet."
   },
   "board": {
     "title": "Open board",
@@ -302,6 +305,45 @@
     "viewMap": "Map",
     "mapLabel": "Map of open requests",
     "mapUnavailable": "The map is not set up yet. The list shows the same requests."
+  },
+  "help": {
+    "title": "Help someone",
+    "subtitle": "Open recovery requests near you. If you can safely help, offer.",
+    "privacyNote": "Locations here are approximate, to about a mile. The exact spot and a way to reach them are shared only with the person the driver picks.",
+    "empty": "Nothing open near you right now. That is a good sign.",
+    "milesAway": "{miles} mi away",
+    "distanceUnknown": "Distance unknown",
+    "county": "{county} County",
+    "approxArea": "approximate area",
+    "needsTractor": "Needs a tractor",
+    "needsSecondTruck": "Needs a second truck",
+    "equipmentNeeded": "Asked for: {list}",
+    "openArea": "Open the area in maps",
+    "offerToHelp": "Offer to help",
+    "alreadyOffered": "Your offer is in. The driver chooses who comes out.",
+    "withdraw": "Take my offer back",
+    "safetyPrompt": "Only offer if you can get there and do this safely. You can turn back at any point, and nobody is obliged to go.",
+    "equipmentAck": "I have the gear this needs and I can do it safely",
+    "etaLabel": "How long to get there? (minutes, optional)",
+    "etaPlaceholder": "40",
+    "etaInvalid": "Give a number of minutes between 1 and 600, or leave it blank.",
+    "noteLabel": "Anything they should know (optional)",
+    "notePlaceholder": "Winch and straps aboard",
+    "noteHint": "No phone numbers or links. You can talk directly once they pick you.",
+    "sendOffer": "Send my offer",
+    "cancel": "Cancel",
+    "errors": {
+      "already_covered": "Someone else has already been picked for this one.",
+      "already_closed": "This recovery is closed.",
+      "own_request": "This is your own request.",
+      "not_signed_in": "Sign in to offer help.",
+      "no_recovery_profile": "We could not set up your helper profile. Try again.",
+      "equipment_not_acknowledged": "Confirm you have the gear and can do this safely.",
+      "offer_not_possible": "You cannot offer on this one any more.",
+      "no_open_offer": "You do not have an open offer on this one.",
+      "not_found": "That request no longer exists.",
+      "server_error": "Something went wrong. Try again."
+    }
   },
   "post": {
     "title": "Post this to the group",
@@ -979,7 +1021,17 @@
       "empty_note": "Write something first.",
       "no_responder": "Nobody has accepted this request yet.",
       "already_thanked": "You've already sent a thank-you."
-    }
+    },
+    "offersTitle": "{count, plural, one {# volunteer has offered} other {# volunteers have offered}}",
+    "offersBody": "Pick whoever suits you best. Nobody is on their way until you choose.",
+    "offerVerified": "Verified",
+    "offerMiles": "{miles} mi away",
+    "offerEta": "Says about {minutes} minutes",
+    "offerAccept": "Pick {name}",
+    "offerDecline": "Not this one",
+    "offersPrivacyNote": "When you pick someone, they get your name, your number and your exact location, and you get theirs. The others are told it is covered.",
+    "awaitingChoiceTitle": "Someone has offered",
+    "awaitingChoiceBody": "Pick who comes out. Nobody is on their way until you do."
   },
   "report": {
     "openLink": "Something go wrong? Report it.",

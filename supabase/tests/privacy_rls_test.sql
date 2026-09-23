@@ -270,22 +270,49 @@ select is(
 );
 
 -- ---------------------------------------------------------------------------
--- 8. Pending volunteers are inert
+-- 8. An unverified member sees their invitations, and nothing sensitive in them
 -- ---------------------------------------------------------------------------
+--
+-- This section used to assert that somebody awaiting approval saw nothing at all, because they
+-- could not be dispatched to and therefore had no invitations to see. Universal membership means
+-- the ring reaches them, so they do -- and the question worth asking changed with it.
+--
+-- "Sees nothing" was never the protection. The protection is that what they see is stripped of
+-- the two things that matter, by column-level privileges that no policy mistake can hand back.
+-- So these assertions now check that directly, which is a stronger claim than a count of zero:
+-- a zero could be produced by a broken join, and did not depend on the grants at all.
 
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"00000000-0000-4000-8000-000000000004","role":"authenticated"}';
 
+-- They see exactly the requests they were invited to, and no others.
 select is(
   (select count(*)::int from requests),
-  0,
-  'a volunteer awaiting approval sees no requests at all'
+  (select count(*)::int
+     from dispatches d
+     join responders r on r.id = d.responder_id
+    where r.user_id = '00000000-0000-4000-8000-000000000004'),
+  'an unverified member sees exactly the requests they were invited to'
 );
 
-select is(
-  (select count(*)::int from responder_feed()),
-  0,
-  'a volunteer awaiting approval has an empty feed'
+select isnt_empty(
+  'select 1 from responder_feed()',
+  'and their feed is no longer empty, because the ring now reaches them'
+);
+
+-- The part that must never change, whoever is asking.
+select throws_ok(
+  'select requester_phone from requests limit 1',
+  '42501',
+  null,
+  'the requester phone is still refused at the column level'
+);
+
+select throws_ok(
+  'select location from requests limit 1',
+  '42501',
+  null,
+  'and so is the exact pin'
 );
 
 reset role;

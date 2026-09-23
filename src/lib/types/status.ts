@@ -94,7 +94,31 @@ export type StatusPayload = {
   photos: { path: string; sort: number }[];
   timeline: TimelineEntry[];
   responder: StatusResponder | null;
+  /**
+   * Volunteers who have put their hand up and are waiting to be chosen (spec section 8, steps 4
+   * and 5). Empty once somebody is accepted -- `responder` is the answer from then on.
+   *
+   * No phone number here, deliberately. Contact details are released in one direction at one
+   * moment, and that moment is acceptance. This list is also visible to anyone holding the
+   * status link, which gets forwarded around, so it carries a first name and a vehicle and
+   * nothing that would let a stranger reach a volunteer directly.
+   */
+  offers: StatusOffer[];
   pro_options: ProOption[] | null;
+};
+
+export type StatusOffer = {
+  id: string;
+  first_name: string;
+  vehicle_class: string;
+  vehicle_desc: string | null;
+  distance_miles: number | null;
+  eta_minutes: number | null;
+  note: string | null;
+  origin: "ring" | "self";
+  /** An admin has checked them. A badge, not a gate -- see 20260923000100_universal_membership. */
+  verified: boolean;
+  offered_at: string;
 };
 
 /** Status page payload plus the signed photo URLs the server minted for this render. */

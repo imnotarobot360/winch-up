@@ -176,6 +176,34 @@ async function handleAuth(req, res, url, body) {
   }
 
   if (route === "/token" && req.method === "POST") {
+    // Email and password. GoTrue routes this through /token?grant_type=password, and until now
+    // the shim only understood refresh tokens -- which meant the whole of email/password sign-in,
+    // the way production actually works, could not be exercised locally at all. Every signed-in
+    // screen had to be tested through the phone-OTP path or not tested.
+    //
+    // The password is checked against the real bcrypt hash in auth.users with the real crypt(),
+    // so a wrong password fails here the way it fails in production. What is NOT here is
+    // everything that makes GoTrue safe: no rate limiting, no lockout, no confirmation checks.
+    // That is the same bargain the rest of this file makes, and the same reason it says, loudly,
+    // that it belongs nowhere near production.
+    if (url.searchParams.get("grant_type") === "password") {
+      const rows = await sql(
+        `select id::text, coalesce(phone, ''), encrypted_password is not null
+               and encrypted_password = extensions.crypt(${quote(parsed.password ?? "")}, encrypted_password)
+           from auth.users
+          where email = ${quote(parsed.email ?? "")}`,
+      );
+
+      if (!rows.length || rows[0][2] !== "t") {
+        return json(400, {
+          error: "invalid_grant",
+          error_description: "Invalid login credentials",
+        });
+      }
+
+      return json(200, sessionFor({ id: rows[0][0], phone: rows[0][1] }));
+    }
+
     const claims = verifyJwt(parsed.refresh_token);
     if (!claims?.sub) return json(401, { error: "invalid_grant" });
 

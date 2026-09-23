@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 
+import { acceptOfferAction, declineOfferAction } from "@/app/actions/offers";
 import {
   cancelRequestAction,
   markRecoveredAction,
@@ -95,6 +96,23 @@ export function StatusView({
     setPending(false);
   }
 
+  /**
+   * Choosing a volunteer.
+   *
+   * Goes through `run` like every other action on this page, which means it refetches
+   * afterwards rather than patching state locally. That matters more here than elsewhere: two
+   * offers can arrive while this screen is open, and the authoritative answer to "who is coming"
+   * is the one the database gives after the row lock, not the one this component assumed.
+   */
+  async function acceptOffer(dispatchId: string) {
+    await run(() => acceptOfferAction(token, dispatchId));
+  }
+
+  /** Passing on one volunteer. The request stays open and others can still offer. */
+  async function declineOffer(dispatchId: string) {
+    await run(() => declineOfferAction(token, dispatchId));
+  }
+
   async function share() {
     const url = window.location.href;
     const title = t("shareTitle", { code: data.short_code });
@@ -117,14 +135,32 @@ export function StatusView({
     }
   }
 
+  /**
+   * Somebody has offered and the requester has not chosen yet.
+   *
+   * This is the state that did not exist before the offers model, and it is the one the rest of
+   * this screen has to be told about: the request is technically still 'unmatched', but telling
+   * a stranded driver that nobody is coming — and listing paid tow operators underneath —
+   * while a volunteer sits waiting to be picked is both wrong and expensive for them.
+   */
+  const awaitingChoice = !data.responder && data.offers.length > 0;
+
   return (
     <main className="mx-auto w-full max-w-xl space-y-5 px-4 py-6">
+      {/* `unmatched` means the dispatcher ran out of people to ring. It used to also mean nobody
+          had put their hand up, because those were the same thing. They are not any more: a
+          member can find a request on /help and offer long after the rings are done. Left alone,
+          this page told somebody "No volunteer yet" directly above "1 volunteer has offered". */}
       <header>
         <p className="font-mono text-base text-ink-faint">{data.short_code}</p>
         <h1 className="text-3xl font-bold leading-tight">
-          {tEnum(`requestStatus.${data.status}`)}
+          {awaitingChoice
+            ? t("awaitingChoiceTitle")
+            : tEnum(`requestStatus.${data.status}`)}
         </h1>
-        <p className="mt-1 text-base text-ink-soft">{t(`headline.${data.status}`)}</p>
+        <p className="mt-1 text-base text-ink-soft">
+          {awaitingChoice ? t("awaitingChoiceBody") : t(`headline.${data.status}`)}
+        </p>
       </header>
 
       {data.status === "dispatching" || data.status === "submitted" ? (
@@ -134,6 +170,78 @@ export function StatusView({
             miles: data.dispatch.radius_miles ?? 15,
           })}
         </Callout>
+      ) : null}
+
+      {/* Spec section 8, steps 4 and 5. This is the screen the phase exists for: the person who
+          is stuck decides who comes out, instead of the first volunteer to text winning the job
+          before anybody told them somebody had replied. */}
+      {!data.responder && data.offers.length > 0 ? (
+        <Card className="space-y-4 border-brand">
+          <div>
+            <h2 className="text-xl font-bold">
+              {t("offersTitle", { count: data.offers.length })}
+            </h2>
+            <p className="mt-1 text-base text-ink-soft">{t("offersBody")}</p>
+          </div>
+
+          <ul className="space-y-3">
+            {data.offers.map((offer) => (
+              <li key={offer.id} className="rounded-2xl border border-line p-4">
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="text-lg font-bold">
+                    {offer.first_name}
+                    {offer.verified ? (
+                      <span className="ml-2 rounded-full bg-good-tint px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-good">
+                        {t("offerVerified")}
+                      </span>
+                    ) : null}
+                  </p>
+                  {offer.distance_miles != null ? (
+                    <span className="shrink-0 text-sm text-ink-soft">
+                      {t("offerMiles", { miles: offer.distance_miles })}
+                    </span>
+                  ) : null}
+                </div>
+
+                <p className="text-base text-ink-soft">
+                  {offer.vehicle_desc ?? tEnum(`vehicleClass.${offer.vehicle_class}`)}
+                </p>
+
+                {offer.eta_minutes != null ? (
+                  <p className="mt-1 font-semibold">
+                    {t("offerEta", { minutes: offer.eta_minutes })}
+                  </p>
+                ) : null}
+
+                {offer.note ? (
+                  <p className="mt-1 text-base text-ink-soft">{offer.note}</p>
+                ) : null}
+
+                <div className="mt-3 flex flex-wrap gap-3">
+                  <Button
+                    size="md"
+                    disabled={pending}
+                    onClick={() => void acceptOffer(offer.id)}
+                  >
+                    {t("offerAccept", { name: offer.first_name })}
+                  </Button>
+                  <Button
+                    size="md"
+                    variant="secondary"
+                    disabled={pending}
+                    onClick={() => void declineOffer(offer.id)}
+                  >
+                    {t("offerDecline")}
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {/* Said once, here, because accepting is the moment their number is handed over and
+              there is no taking it back. */}
+          <p className="text-sm text-ink-faint">{t("offersPrivacyNote")}</p>
+        </Card>
       ) : null}
 
       {data.responder ? (
@@ -163,7 +271,10 @@ export function StatusView({
         </Card>
       ) : null}
 
-      {data.status === "unmatched" ? (
+      {/* Suppressed while somebody is waiting to be picked. The paid list is there for a driver
+          nobody has offered to help; showing it next to a free volunteer's offer would push
+          somebody towards paying for a tow they may not need. */}
+      {data.status === "unmatched" && !awaitingChoice ? (
         <Card className="space-y-3 border-danger">
           <h2 className="text-xl font-bold">{t("unmatchedTitle")}</h2>
           <p className="text-base text-ink-soft">{t("unmatchedBody")}</p>
