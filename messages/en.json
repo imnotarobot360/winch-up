@@ -97,7 +97,9 @@
     "availableTitle": "Available to help",
     "availableLabel": "I can be called out to help someone",
     "availableHint": "Turn this on to get alerts when somebody near you is stuck. You can still browse requests and offer help with it off — nobody is ever obliged to go.",
-    "availableFailed": "We could not save that. Try again."
+    "availableFailed": "We could not save that. Try again.",
+    "notifyBody": "Alerts, messages and which devices hear about them.",
+    "notifyCta": "Notification settings"
   },
   "vehicles": {
     "title": "Your rigs",
@@ -1747,6 +1749,32 @@
     "event": {
       "soon": "{title} is coming up."
     }
+  },
+  "notifySettings": {
+    "pageTitle": "Notifications",
+    "pageBody": "What we tell you about, and on which devices. Every switch saves as you flip it.",
+    "backToAccount": "Back to account",
+    "saveFailed": "That did not save. Try again.",
+    "devicesTitle": "Your devices",
+    "deviceUnknown": "A browser",
+    "deviceLastUsed": "Last alert {when}",
+    "deviceNeverUsed": "No alerts sent yet",
+    "deviceForget": "Forget",
+    "helpingTitle": "Helping others",
+    "availableLabel": "Available to help",
+    "availableHint": "Lets us alert you when somebody near you is stuck. With this off you can still browse requests and offer help — nobody is ever obliged to go.",
+    "nearbyLabel": "Nearby recovery alerts",
+    "nearbyHint": "Someone within range needs a hand.",
+    "recoveryTitle": "Your own recoveries",
+    "statusLabel": "Recovery updates",
+    "statusHint": "A helper joining, arriving or dropping out, and the recovery being cancelled or finished.",
+    "chatLabel": "Messages",
+    "chatHint": "New messages in a recovery conversation. You can also mute one recovery from its own page.",
+    "otherTitle": "Everything else",
+    "communityLabel": "Community replies and reactions",
+    "marketingLabel": "News and offers",
+    "marketingHint": "Off unless you turn it on. Nothing about a live recovery is ever sent this way.",
+    "osNote": "Your phone or browser has its own notification setting, and it wins over all of these. If nothing arrives, check there too."
   },
   "push": {
     "title": "Alerts on this device",

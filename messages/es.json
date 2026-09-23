@@ -97,7 +97,9 @@
     "availableTitle": "Disponible para ayudar",
     "availableLabel": "Pueden llamarme para ayudar a alguien",
     "availableHint": "Actívalo para recibir avisos cuando alguien cerca de ti esté atascado. Aun con esto apagado puedes ver las solicitudes y ofrecerte — nadie está obligado a ir nunca.",
-    "availableFailed": "No pudimos guardarlo. Inténtalo de nuevo."
+    "availableFailed": "No pudimos guardarlo. Inténtalo de nuevo.",
+    "notifyBody": "Avisos, mensajes y en qué dispositivos llegan.",
+    "notifyCta": "Configuración de avisos"
   },
   "vehicles": {
     "title": "Sus vehículos",
@@ -1747,6 +1749,32 @@
     "event": {
       "soon": "{title} ya viene."
     }
+  },
+  "notifySettings": {
+    "pageTitle": "Avisos",
+    "pageBody": "De qué te avisamos, y en qué dispositivos. Cada interruptor se guarda al momento.",
+    "backToAccount": "Volver a la cuenta",
+    "saveFailed": "No se guardó. Inténtalo de nuevo.",
+    "devicesTitle": "Tus dispositivos",
+    "deviceUnknown": "Un navegador",
+    "deviceLastUsed": "Último aviso {when}",
+    "deviceNeverUsed": "Todavía sin avisos",
+    "deviceForget": "Olvidar",
+    "helpingTitle": "Ayudar a otros",
+    "availableLabel": "Disponible para ayudar",
+    "availableHint": "Nos permite avisarte cuando alguien cerca está atascado. Con esto apagado aún puedes ver las solicitudes y ofrecerte — nadie está obligado a ir nunca.",
+    "nearbyLabel": "Avisos de rescates cercanos",
+    "nearbyHint": "Alguien dentro del alcance necesita una mano.",
+    "recoveryTitle": "Tus propios rescates",
+    "statusLabel": "Novedades del rescate",
+    "statusHint": "Alguien que se suma, llega o se retira, y el rescate cancelado o terminado.",
+    "chatLabel": "Mensajes",
+    "chatHint": "Mensajes nuevos en la conversación de un rescate. También puedes silenciar un rescate desde su propia página.",
+    "otherTitle": "Todo lo demás",
+    "communityLabel": "Respuestas y reacciones de la comunidad",
+    "marketingLabel": "Novedades y ofertas",
+    "marketingHint": "Apagado salvo que lo actives. Nunca se envía nada de un rescate en curso por aquí.",
+    "osNote": "Tu teléfono o navegador tiene su propia configuración de avisos, y manda sobre todas estas. Si no te llega nada, revísala también."
   },
   "push": {
     "title": "Avisos en este dispositivo",

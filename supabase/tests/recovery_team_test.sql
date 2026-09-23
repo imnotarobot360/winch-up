@@ -472,5 +472,44 @@ select is(
   'and anybody else gets nothing, so a guessed id opens nothing'
 );
 
+-- ---------------------------------------------------------------------------
+-- 10. A member can see and set their own preferences
+-- ---------------------------------------------------------------------------
+--
+-- profiles is column-granted in both directions, so a new preference column is born invisible as
+-- well as unwritable. That failure is silent and nasty: a PostgREST select naming an ungranted
+-- column 403s the WHOLE row, the screen falls back to its defaults, and every switch renders in a
+-- plausible-looking off state with nothing saying no.
+--
+-- It cost available_to_help an entire phase of being broken on /account -- read as null, shown as
+-- off -- before a settings page made it obvious. These assertions are here so the next column
+-- added fails a test instead of shipping a lie.
+
+reset role;
+
+select ok(
+  has_column_privilege('authenticated', 'public.profiles', c, 'SELECT'),
+  'a member can read their own ' || c
+) from unnest(array[
+  'available_to_help', 'notify_recovery', 'notify_recovery_status',
+  'notify_chat', 'notify_community', 'notify_marketing'
+]) as c;
+
+select ok(
+  has_column_privilege('authenticated', 'public.profiles', c, 'UPDATE'),
+  'and can set their own ' || c
+) from unnest(array[
+  'notify_recovery', 'notify_recovery_status', 'notify_chat',
+  'notify_community', 'notify_marketing'
+]) as c;
+
+-- The exception, and why. available_to_help is written through set_available_to_help(), which
+-- also creates the recovery capability row the dispatcher matches against. A direct UPDATE grant
+-- would let a client set the flag without the row: available, never rung, no error anywhere.
+select ok(
+  not has_column_privilege('authenticated', 'public.profiles', 'available_to_help', 'UPDATE'),
+  'but available_to_help is set only through the RPC that also creates the capability row'
+);
+
 select * from finish();
 rollback;
