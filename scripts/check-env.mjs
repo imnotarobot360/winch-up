@@ -26,7 +26,7 @@ const root = join(here, "..");
 /**
  * Set by the platform, not by a person. Nobody puts NODE_ENV in .env.example.
  */
-const PLATFORM = new Set(["NODE_ENV", "VERCEL_ENV", "VERCEL_URL", "CI"]);
+const PLATFORM = new Set(["NODE_ENV", "NEXT_RUNTIME", "VERCEL_ENV", "VERCEL_URL", "CI"]);
 
 /**
  * Documented for a human, read by something other than the app: the Supabase CLI, the SQL
@@ -36,6 +36,9 @@ const PLATFORM = new Set(["NODE_ENV", "VERCEL_ENV", "VERCEL_URL", "CI"]);
 const DOCUMENTED_BUT_NOT_READ_BY_THE_APP = new Map([
   ["SUPABASE_PROJECT_REF", "used by the Supabase CLI, not by the running app"],
   ["SUPABASE_DB_URL", "used to push schema from a terminal, never by the app"],
+  ["SENTRY_ORG", "read by next.config.ts at build time to upload source maps"],
+  ["SENTRY_PROJECT", "read by next.config.ts at build time to upload source maps"],
+  ["SENTRY_AUTH_TOKEN", "read by next.config.ts at build time to upload source maps"],
 ]);
 
 function walk(dir, files = []) {

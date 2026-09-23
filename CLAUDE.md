@@ -160,6 +160,11 @@ docs/                     decisions + runbooks
   document `TWILIO_WEBHOOK_SECRET` and `ADMIN_ALERT_PHONES`; neither is read anywhere, and an
   owner following the guide would have believed the webhook was secured by the first and admins
   paged by the second. Neither was true. `npm run env:check` fails the build on drift now.
+- **Nothing reaches the error tracker unscrubbed, and session replay stays off.** A crash here
+  happens while somebody is stuck, which is when their phone number and coordinates are closest
+  to the exception. `src/lib/observability/scrub.ts` redacts them plus the `/r/<token>` recovery
+  link, and has fourteen tests. The Sentry browser SDK is imported **dynamically** on purpose: a
+  static import cost +61 kB on every page, which the request wizard cannot afford.
 - **`/api/health` is unauthenticated and must stay that way.** An uptime checker cannot hold a
   secret. That is only safe because `system_health_summary()` returns counts and ages — a test
   pins the exact key set. Adding anything about a person or a place turns a status page into a
@@ -289,7 +294,7 @@ Four layers. Run all of them before claiming anything works.
 
 ```
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
-npm test            94 unit + component tests (vitest)
+npm test            108 unit + component tests (vitest)
 npm run test:e2e    168 Playwright tests — android, iphone, tablet, desktop
 supabase test db    626 pgTAP assertions across fifteen suites
 ```

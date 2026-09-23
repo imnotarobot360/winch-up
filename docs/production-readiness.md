@@ -44,7 +44,7 @@ The list Phase 16 asks for, with the honest state of each.
 | Push notification credentials | **Not built.** No service worker push, no VAPID keys, no mobile app. The delivery log records a push request as suppressed with the reason | Owner decision |
 | Map provider credentials | **Done.** Mapbox token set, and `e2e/resilience.spec.ts` proves a dead tile server does not take the board down | — |
 | Stripe configuration | **Not wired.** Needs the owner's Stripe account and keys. The schema is ready: every Stripe identifier is unique, so a replayed webhook is a no-op by construction | **Owner** |
-| Monitoring and error tracking | **Partly.** `/api/health` is built and needs no credentials. A hosted error tracker is a paid service and this project does not add those without asking | **Owner decision** — see below |
+| Monitoring and error tracking | **Done, inert until configured.** `/api/health` needs no credentials; Sentry is wired and does nothing until `NEXT_PUBLIC_SENTRY_DSN` is set | **Owner** sets the DSN |
 | Database backups | **Not confirmed.** Supabase's automatic backups depend on the plan. Check what the project is actually on | **Owner** |
 | Rate limiting | **Done.** Surveyed across all 34 member-callable write RPCs in Phase 14; the reasoning is in `docs/security-review.md` | — |
 | Health checks | **Done.** `/api/health` | — |
@@ -77,13 +77,58 @@ state and not a fault. It is still the quietest possible way for this product to
 
 ## Error tracking
 
-Not added, deliberately. `CLAUDE.md` says no paid services without asking, and every hosted
-error tracker becomes paid at some volume.
+Wired, and doing nothing until you set a DSN. Until then there are no requests, no overhead and
+no behaviour change — verified by building with no environment at all.
 
-If you want one, Sentry's free tier is ample here and the wiring is small — say so and I will add
-it behind a `SENTRY_DSN` that leaves the app unchanged when unset, the same way `SMS_DRY_RUN`
-works. Until then, errors land in Vercel's function logs, which are searchable and retained for
-the plan's window.
+**To turn it on**
+
+1. Create a free Sentry account and a project of type **Next.js**. I cannot create accounts.
+2. Copy the DSN it gives you.
+3. In Vercel, set `NEXT_PUBLIC_SENTRY_DSN` for Production and Preview.
+4. **Redeploy.** Vercel injects environment variables when a deployment is created, not when it
+   serves — this project has been caught by that before.
+
+Optionally, for stack traces that name a line of TypeScript rather than a column in a minified
+chunk, also set `SENTRY_ORG`, `SENTRY_PROJECT` and `SENTRY_AUTH_TOKEN`. The auth token is a real
+secret; the DSN is not, and is shipped to every browser by design.
+
+**What it will never send**
+
+This app handles phone numbers, exact coordinates and live recovery links, so an error report is
+a privacy surface — a crash happens while somebody is stuck, which is exactly when their data is
+closest to the exception.
+
+- `sendDefaultPii` is off: no IP addresses, no request bodies.
+- **Session replay is off, and should stay off.** It records what a person did on screen. Here
+  that is a video of somebody's worst evening, including the pin they dropped on their own
+  location.
+- Performance tracing is off: a large amount of data about a small number of people, in exchange
+  for knowing a page took 800ms.
+- Every event passes through `src/lib/observability/scrub.ts` first, which redacts phone numbers
+  in six formats, coordinates precise enough to drive to, email addresses, anything shaped like a
+  key or token, long digit runs, and the `/r/<token>` recovery link — the worst of them, because
+  it is the key to a live recovery and anyone with dashboard access could paste it into a browser
+  and watch.
+- Cookies, headers, request bodies and the user object are deleted outright.
+
+There are fourteen tests for the scrubber. One of them caught a real weakness while it was being
+written: with the patterns in the wrong order a fourteen-digit string came out as
+`id [redacted]9876`, leaking its tail. Read them before changing it.
+
+**The bundle cost, and what was done about it**
+
+Adding the SDK with a normal import put **+61 kB on every page**, taking the shared bundle from
+103 kB to 164 kB. That cost lands hardest on the request wizard, which is opened by somebody
+sitting in a field on one bar of signal — the exact person this product exists for.
+
+The browser SDK is therefore imported dynamically, inside the check for a DSN. With no DSN it is
+never fetched; with one it loads after the page is interactive. The shared bundle is **106 kB**,
+so the standing cost is +3 kB rather than +61, and the request wizard's first load went from
+214 kB back to 156 kB.
+
+The trade: an error thrown in the first moments of page load, before the SDK resolves, is missed
+in the browser. Server-rendered failures are caught regardless, and those are most of the ones
+that matter here.
 
 ## Backups
 
