@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 
+import { TeamPanel, type TeamMember } from "@/components/recovery/team-panel";
 import { Button, Callout, Card, TextArea } from "@/components/ui/primitives";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
@@ -51,6 +52,10 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
   };
 
   const [messages, setMessages] = useState<Message[] | null>(null);
+  const [team, setTeam] = useState<(TeamMember & { is_me?: boolean })[]>([]);
+  // The server decides this, not the caller: a recovery that is over stops accepting messages
+  // whatever the page thinks its state is.
+  const [readOnly, setReadOnly] = useState(false);
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,8 +72,16 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
       return;
     }
 
-    const result = data as { ok: boolean; messages?: Message[] };
+    const result = data as {
+      ok: boolean;
+      messages?: Message[];
+      team?: (TeamMember & { is_me?: boolean })[];
+      read_only?: boolean;
+    };
+
     setMessages(result.ok ? (result.messages ?? []) : null);
+    setTeam(result.ok ? (result.team ?? []) : []);
+    setReadOnly(Boolean(result.read_only));
   }, [requestId]);
 
   useEffect(() => {
@@ -118,6 +131,25 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
 
       {error ? <Callout tone="danger">{t(`errors.${error}`)}</Callout> : null}
 
+      {/* This member's own controls only -- the roster is rendered once, by the page above. The
+          first version showed the full panel here too, which put the same list of helpers on
+          screen twice, one card apart. Controls live here because only participants can open the
+          thread, so only participants see buttons that act on their own membership. */}
+      {team.some((m) => m.is_me && m.role === "helper") ? (
+        <div className="border-b border-line pb-4">
+          <TeamPanel
+            requestId={requestId}
+            team={team}
+            controlsOnly
+            mine={(() => {
+              const me = team.find((m) => m.is_me);
+              return me ? { role: me.role, status: me.status } : null;
+            })()}
+            onChanged={() => void load()}
+          />
+        </div>
+      ) : null}
+
       {messages.length === 0 ? (
         <p className="text-base text-ink-soft">{t("empty")}</p>
       ) : (
@@ -155,7 +187,7 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
 
       <div ref={endRef} />
 
-      {closed ? (
+      {closed || readOnly ? (
         <p className="text-sm text-ink-faint">{t("closedNote")}</p>
       ) : (
         <form onSubmit={send} className="space-y-2">

@@ -16,6 +16,7 @@ import {
   Field,
   TextArea,
 } from "@/components/ui/primitives";
+import { TeamPanel } from "@/components/recovery/team-panel";
 import { ReportForm } from "@/components/incident/report-form";
 import { RequestThread } from "@/components/messages/request-thread";
 import { mapAppUrl } from "@/lib/geo";
@@ -241,6 +242,16 @@ export function StatusView({
           {/* Said once, here, because accepting is the moment their number is handed over and
               there is no taking it back. */}
           <p className="text-sm text-ink-faint">{t("offersPrivacyNote")}</p>
+        </Card>
+      ) : null}
+
+      {/* Who is coming. Sits above the contact card on purpose: with a team, "a volunteer is on
+          the way" is no longer the whole answer, and the person waiting wants to know a tractor
+          is coming as well as a winch before they want a phone number. Read-only here -- a
+          helper's own controls live in the thread, which only participants can open. */}
+      {data.team.length > 1 ? (
+        <Card className="border-good">
+          <TeamPanel requestId={data.id} team={data.team} />
         </Card>
       ) : null}
 

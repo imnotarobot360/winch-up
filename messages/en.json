@@ -859,6 +859,15 @@
       "community_feed": "Community feed",
       "trails": "Trails",
       "resources": "Guides"
+    },
+    "participantStatus": {
+      "accepted": "Accepted",
+      "preparing": "Getting ready",
+      "en_route": "On the way",
+      "on_site": "On site",
+      "assisting": "Working on it",
+      "finished": "Finished",
+      "withdrawn": "Dropped out"
     }
   },
   "emergency": {
@@ -1064,7 +1073,7 @@
   },
   "thread": {
     "title": "Messages",
-    "privateNote": "Just you and the volunteer on this job. Nobody else can see this, including anyone you shared the status link with.",
+    "privateNote": "Everyone on this recovery can read this — you and whoever is helping. Nobody else can, including anyone you shared the status link with.",
     "empty": "Nothing yet. Say where you are, or what the ground is like.",
     "placeholder": "Gate code is 4412, blue Tacoma past the cattle guard…",
     "composeLabel": "Your message",
@@ -1080,6 +1089,27 @@
       "rate_limited": "That's a lot of messages. Give it a minute.",
       "bad_attachment_type": "Only photos can be attached.",
       "failed": "That didn't send. Try again."
+    }
+  },
+  "team": {
+    "title": "Recovery team",
+    "count": "{helpers, plural, =0 {Nobody coming yet} one {# person coming} other {# people coming}}",
+    "someone": "A member",
+    "roleRequester": "Stuck",
+    "yourStatus": "Where are you?",
+    "leave": "I can no longer make it",
+    "leaveConfirm": "This tells everyone on the recovery that you are not coming, and puts the request back in front of other members. You can offer again later.",
+    "leaveYes": "Yes, I have to drop out",
+    "leaveNo": "Never mind",
+    "errors": {
+      "not_signed_in": "Sign in first.",
+      "not_found": "You are not on this recovery.",
+      "not_a_helper": "Only helpers set a status.",
+      "already_closed": "This recovery is closed.",
+      "bad_status": "That status is not one we know.",
+      "use_withdraw": "Use the leave button instead.",
+      "requester_cannot_withdraw": "You cannot leave your own recovery. Cancel it instead.",
+      "server_error": "Something went wrong. Try again."
     }
   },
   "common": {

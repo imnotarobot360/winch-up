@@ -241,5 +241,145 @@ select cmp_ok(
   'and the helper still has an unread message, because somebody else read it, not them'
 );
 
+-- ---------------------------------------------------------------------------
+-- 6. A helper says where they have got to
+-- ---------------------------------------------------------------------------
+--
+-- Status lives on the participant, not the request: a winch truck can be on site while a tractor
+-- is still loading, and neither fact is "the recovery is on_site". The request moves when the
+-- FIRST helper arrives.
+
+reset role;
+-- Through sync_recovery_lead, not a hand-written UPDATE. `requests_assigned_states_have_responder`
+-- refuses an accepted request with nobody assigned, which is the constraint doing exactly its job:
+-- the only honest way into that state is to have a helper.
+select app.sync_recovery_lead('eeee3333-0000-4000-8000-00000000000e');
+
+select is(
+  (select status::text from public.requests where id = 'eeee3333-0000-4000-8000-00000000000e'),
+  'accepted',
+  'a helper rejoining puts the recovery back to accepted'
+);
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"bbbb1111-0000-4000-8000-00000000000b","role":"authenticated"}';
+
+select is(
+  public.set_my_participant_status('eeee3333-0000-4000-8000-00000000000e', 'en_route') ->> 'ok',
+  'true',
+  'a helper can say they are on the way'
+);
+
+select is(
+  (select status::text from public.recovery_participants
+    where request_id = 'eeee3333-0000-4000-8000-00000000000e'
+      and user_id = 'bbbb1111-0000-4000-8000-00000000000b'),
+  'en_route',
+  'and it is recorded against them, not against the recovery'
+);
+
+-- Asserting on `requests` and `request_messages` needs the owner role back: requests is behind
+-- RLS and request_messages has no grants at all, so as `authenticated` the first returns no row
+-- (NULL, not a wrong answer) and the second is refused outright. Act as the member, check as the
+-- owner.
+reset role;
+select is(
+  (select status::text from public.requests where id = 'eeee3333-0000-4000-8000-00000000000e'),
+  'accepted',
+  'one helper setting off does not move the recovery -- nobody has arrived'
+);
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"bbbb1111-0000-4000-8000-00000000000b","role":"authenticated"}';
+
+select is(
+  public.set_my_participant_status('eeee3333-0000-4000-8000-00000000000e', 'on_site') ->> 'ok',
+  'true',
+  'and then that they have arrived'
+);
+
+reset role;
+select is(
+  (select status::text from public.requests where id = 'eeee3333-0000-4000-8000-00000000000e'),
+  'on_site',
+  'the FIRST arrival does move the recovery, which is what somebody waiting needs to see'
+);
+
+select isnt_empty(
+  $q$select 1 from public.request_messages
+      where request_id = 'eeee3333-0000-4000-8000-00000000000e'
+        and sender_role = 'system' and body like '%on site%'$q$,
+  'and the chat says so, so the team is not guessing'
+);
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"bbbb1111-0000-4000-8000-00000000000b","role":"authenticated"}';
+
+-- The refusals, each one a thing the UI must not be the only guard against.
+select is(
+  public.set_my_participant_status('eeee3333-0000-4000-8000-00000000000e', 'withdrawn') ->> 'error',
+  'use_withdraw',
+  'leaving is not a status change: it revokes access and may hand over the lead'
+);
+
+select is(
+  public.set_my_participant_status('eeee3333-0000-4000-8000-00000000000e', 'teleported') ->> 'error',
+  'bad_status',
+  'an unknown status from a stale client is a refusal, not a 500'
+);
+
+set local request.jwt.claims = '{"sub":"dddd1111-0000-4000-8000-00000000000d","role":"authenticated"}';
+select is(
+  public.set_my_participant_status('eeee3333-0000-4000-8000-00000000000e', 'en_route') ->> 'error',
+  'not_found',
+  'somebody who is not on the recovery cannot set a status on it'
+);
+
+set local request.jwt.claims = '{"sub":"aaaa1111-0000-4000-8000-00000000000a","role":"authenticated"}';
+select is(
+  public.set_my_participant_status('eeee3333-0000-4000-8000-00000000000e', 'en_route') ->> 'error',
+  'not_a_helper',
+  'and the person who is stuck is not travelling anywhere'
+);
+
+-- ---------------------------------------------------------------------------
+-- 7. Leaving
+-- ---------------------------------------------------------------------------
+
+select is(
+  public.withdraw_from_recovery('eeee3333-0000-4000-8000-00000000000e') ->> 'error',
+  'requester_cannot_withdraw',
+  'the requester cannot withdraw from their own recovery -- they cancel it'
+);
+
+set local request.jwt.claims = '{"sub":"bbbb1111-0000-4000-8000-00000000000b","role":"authenticated"}';
+
+select is(
+  public.withdraw_from_recovery('eeee3333-0000-4000-8000-00000000000e') ->> 'ok',
+  'true',
+  'a helper who cannot make it can say so'
+);
+
+select is(
+  (public.request_thread('eeee3333-0000-4000-8000-00000000000e') ->> 'error'),
+  'not_found',
+  'and immediately stops seeing the conversation'
+);
+
+reset role;
+
+select is(
+  (select status::text from public.requests where id = 'eeee3333-0000-4000-8000-00000000000e'),
+  'unmatched',
+  'with nobody left coming, the recovery says so instead of leaving somebody waiting'
+);
+
+select isnt_empty(
+  $q$select 1 from public.request_messages
+      where request_id = 'eeee3333-0000-4000-8000-00000000000e'
+        and sender_role = 'system' and body like '%no longer make it%'$q$,
+  'and the chat records why, for whoever is still reading it'
+);
+
 select * from finish();
 rollback;

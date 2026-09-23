@@ -859,6 +859,15 @@
       "community_feed": "Comunidad",
       "trails": "Caminos",
       "resources": "Guías"
+    },
+    "participantStatus": {
+      "accepted": "Aceptado",
+      "preparing": "Alistándose",
+      "en_route": "En camino",
+      "on_site": "En el lugar",
+      "assisting": "Trabajando",
+      "finished": "Terminó",
+      "withdrawn": "Se retiró"
     }
   },
   "emergency": {
@@ -1064,8 +1073,8 @@
   },
   "thread": {
     "title": "Mensajes",
-    "privateNote": "Solo usted y el voluntario de este trabajo. Nadie más lo ve, ni siquiera quien reciba el enlace de estado.",
-    "empty": "Nada todavía. Diga dónde está, o cómo está el terreno.",
+    "privateNote": "Todos los que están en este rescate pueden leer esto: tú y quienes te ayudan. Nadie más, ni siquiera alguien con quien hayas compartido el enlace de estado.",
+    "empty": "Nada todavía. Di dónde estás, o cómo está el terreno.",
     "placeholder": "El código del portón es 4412, Tacoma azul pasando el guardaganado…",
     "composeLabel": "Su mensaje",
     "send": "Enviar",
@@ -1080,6 +1089,27 @@
       "rate_limited": "Son muchos mensajes. Espere un minuto.",
       "bad_attachment_type": "Solo se pueden adjuntar fotos.",
       "failed": "No se envió. Intente de nuevo."
+    }
+  },
+  "team": {
+    "title": "Equipo de rescate",
+    "count": "{helpers, plural, =0 {Nadie viene todavía} one {# persona en camino} other {# personas en camino}}",
+    "someone": "Un miembro",
+    "roleRequester": "Atascado",
+    "yourStatus": "¿Dónde estás?",
+    "leave": "Ya no puedo ir",
+    "leaveConfirm": "Esto avisa a todos en el rescate que no vas, y devuelve la solicitud a los demás miembros. Puedes ofrecerte de nuevo más tarde.",
+    "leaveYes": "Sí, tengo que retirarme",
+    "leaveNo": "Mejor no",
+    "errors": {
+      "not_signed_in": "Inicia sesión primero.",
+      "not_found": "No estás en este rescate.",
+      "not_a_helper": "Solo quienes ayudan marcan un estado.",
+      "already_closed": "Este rescate está cerrado.",
+      "bad_status": "Ese estado no lo reconocemos.",
+      "use_withdraw": "Usa el botón de retirarte.",
+      "requester_cannot_withdraw": "No puedes salir de tu propio rescate. Cancélalo.",
+      "server_error": "Algo salió mal. Inténtalo de nuevo."
     }
   },
   "common": {

@@ -104,7 +104,21 @@ export type StatusPayload = {
    * nothing that would let a stranger reach a volunteer directly.
    */
   offers: StatusOffer[];
+  /**
+   * Everybody still on the recovery (spec section 4). Names, vehicles and kit; no phone numbers.
+   * `responder` below is still the lead and still the only place a number is released.
+   */
+  team: StatusTeamMember[];
   pro_options: ProOption[] | null;
+};
+
+export type StatusTeamMember = {
+  role: "requester" | "helper";
+  status: string;
+  name: string | null;
+  vehicle: string | null;
+  equipment: string[] | null;
+  joined_at: string;
 };
 
 export type StatusOffer = {
