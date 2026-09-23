@@ -111,9 +111,25 @@ closest to the exception.
   and watch.
 - Cookies, headers, request bodies and the user object are deleted outright.
 
-There are fourteen tests for the scrubber. One of them caught a real weakness while it was being
-written: with the patterns in the wrong order a fourteen-digit string came out as
-`id [redacted]9876`, leaking its tail. Read them before changing it.
+There are eighteen tests for the scrubber. Two of them exist because of defects that were real,
+and the difference between how the two were found is the useful part.
+
+The first was caught by a unit test while the scrubber was being written: with the patterns in the
+wrong order a fourteen-digit string came out as `id [redacted]9876`, leaking its tail.
+
+The second could not have been caught that way. The path rules — the ones that turn `/r/<token>`
+into `/r/[token]` — lived in `scrubUrl`, and `scrubDeep` calls `scrubUrl` only for a key literally
+named `url`. Every test passed, because each one asked whether `scrubUrl` redacted a token and it
+always did. What no test asked was how often a real event puts a token under a key named `url`,
+and the answer is almost never: it arrives as a thrown message, a fetch breadcrumb, a stack frame
+filename. This was found by pointing a real DSN at a local build, throwing an error containing a
+phone number, a token and a set of coordinates, and reading the payload off the wire before it
+left the browser. The phone and the coordinates were redacted. The token was sitting in plain
+text, in the one field the tests never looked at.
+
+The path rules now run in `scrubText`, so every string gets them. The lesson worth keeping is that
+a unit test proves a function does what it says, and proves nothing about whether that function is
+on the path the data actually takes. For a privacy control, read the wire.
 
 **The bundle cost, and what was done about it**
 

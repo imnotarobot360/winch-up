@@ -163,8 +163,12 @@ docs/                     decisions + runbooks
 - **Nothing reaches the error tracker unscrubbed, and session replay stays off.** A crash here
   happens while somebody is stuck, which is when their phone number and coordinates are closest
   to the exception. `src/lib/observability/scrub.ts` redacts them plus the `/r/<token>` recovery
-  link, and has fourteen tests. The Sentry browser SDK is imported **dynamically** on purpose: a
-  static import cost +61 kB on every page, which the request wizard cannot afford.
+  link, and has eighteen tests. The path rules that redact `/r/<token>` run in `scrubText`, so
+  **every** string gets them — they used to live in `scrubUrl`, which `scrubDeep` calls only for a
+  key named `url`, and a token in an error message went out in plain text past a green test suite.
+  Never move a redaction rule onto a path that depends on what Sentry happened to label a field.
+  The Sentry browser SDK is imported **dynamically** on purpose: a static import cost +61 kB on
+  every page, which the request wizard cannot afford.
 - **`/api/health` is unauthenticated and must stay that way.** An uptime checker cannot hold a
   secret. That is only safe because `system_health_summary()` returns counts and ages — a test
   pins the exact key set. Adding anything about a person or a place turns a status page into a

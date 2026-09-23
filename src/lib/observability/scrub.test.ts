@@ -110,6 +110,49 @@ describe("a whole event", () => {
     expect(() => scrubDeep(deep)).not.toThrow();
   });
 
+  /**
+   * The regression group. Every test above this point asked whether `scrubUrl` redacts a token,
+   * and it always did — the leak was that almost nothing in a real event goes through `scrubUrl`.
+   * These ask the question the wire asked: is the token gone, wherever it happens to be sitting?
+   */
+  it("redacts a status token in a plain error message, not only in a url field", () => {
+    const scrubbed = scrubDeep({
+      message: "dispatch failed for +15125550123 at 30.26721,-97.74311 — see /r/Xk3nQ7pLmT9vB2rW8dYz",
+    });
+
+    expect(scrubbed.message).not.toContain("Xk3nQ7pLmT9vB2rW8dYz");
+    expect(scrubbed.message).toContain("/r/[token]");
+    // and still says what broke
+    expect(scrubbed.message).toContain("dispatch failed");
+  });
+
+  it("redacts a status token in a stack frame and a breadcrumb message", () => {
+    const scrubbed = scrubDeep({
+      exception: {
+        values: [{ stacktrace: { frames: [{ filename: "/r/Xk3nQ7pLmT9vB2rW8dYz/page.js" }] } }],
+      },
+      breadcrumbs: [{ message: "fetch GET /r/Xk3nQ7pLmT9vB2rW8dYz/status 404" }],
+    });
+
+    expect(JSON.stringify(scrubbed)).not.toContain("Xk3nQ7pLmT9vB2rW8dYz");
+  });
+
+  it("stops a path rule at the end of the token rather than eating the sentence", () => {
+    // `[^/?#]+` matches spaces. In a URL that never mattered; in prose it would have swallowed
+    // everything after the token, including the part that says what went wrong.
+    const scrubbed = scrubText("opening /r/Xk3nQ7pLmT9vB2rW8dYz raised a timeout after 7 minutes");
+
+    expect(scrubbed).toBe("opening /r/[token] raised a timeout after 7 minutes");
+  });
+
+  it("redacts a token that contains a long digit run", () => {
+    // Ordering guard: if the digit patterns ran first they would break the token into pieces the
+    // path rule no longer matches, leaving most of it in place.
+    const scrubbed = scrubText("see /r/aa1234567890bb for details");
+
+    expect(scrubbed).toBe("see /r/[token] for details");
+  });
+
   it("leaves the parts of an error that make it useful", () => {
     const scrubbed = scrubDeep({
       message: "advance_dispatch failed: ring 2 had no candidates",

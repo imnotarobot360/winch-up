@@ -35,12 +35,24 @@ const SECRET = /\b(ey[A-Za-z0-9_-]{10,}|sb_[a-z]+_[A-Za-z0-9_-]{10,}|sk_[A-Za-z0
 
 /**
  * Path segments that carry a secret or an identifier. `/r/<token>` is the live recovery link.
+ *
+ * These run against ALL text, not only against things Sentry labelled as a URL. That distinction
+ * cost a real leak: the rules used to live in `scrubUrl`, which `scrubDeep` calls only for a key
+ * literally named `url`, so a token in an error *message* went out intact. Caught by reading an
+ * actual event off the wire — `dispatch failed ... see /r/demo-accepted-token-cccccc` — which the
+ * unit tests could not catch, because they were asking whether `scrubUrl` worked and it did. A
+ * status token reaches the tracker as prose far more often than as a tagged URL: a thrown
+ * message, a fetch breadcrumb, a stack frame filename in a route chunk.
+ *
+ * The trailing class is the token/slug/uuid alphabet rather than "anything up to the next
+ * delimiter". In a URL those are the same thing; in free text they are not, and the loose version
+ * would run across the spaces and swallow the rest of the sentence.
  */
 const PATH_RULES: [RegExp, string][] = [
-  [/\/r\/[^/?#]+/g, "/r/[token]"],
-  [/\/post\/[^/?#]+/g, "/post/[id]"],
-  [/\/trails\/[^/?#]+/g, "/trails/[slug]"],
-  [/\/resources\/[^/?#]+/g, "/resources/[slug]"],
+  [/\/r\/[A-Za-z0-9_-]+/g, "/r/[token]"],
+  [/\/post\/[A-Za-z0-9_-]+/g, "/post/[id]"],
+  [/\/trails\/[A-Za-z0-9_-]+/g, "/trails/[slug]"],
+  [/\/resources\/[A-Za-z0-9_-]+/g, "/resources/[slug]"],
 ];
 
 export const REDACTED = "[redacted]";
@@ -48,14 +60,21 @@ export const REDACTED = "[redacted]";
 /**
  * Scrub free text: a message, a stack frame, a breadcrumb.
  *
- * Order matters, and getting it wrong leaves a tail. Emails and keys go first, because either
- * can contain digits the number patterns would chew through. Then long digit runs, and only
- * then phone numbers: with phones first, a fourteen-digit string had its leading eleven digits
- * matched as a phone and the remaining three left in plain sight — `id [redacted]9876`. A test
- * caught that, which is the entire reason it exists.
+ * Order matters, and getting it wrong leaves a tail. Path rules go first, so a token is replaced
+ * whole while it is still intact: run them after the digit patterns and a token containing a long
+ * digit run is already broken into `/r/abc[redacted]def`, which no longer matches. Then emails and
+ * keys, because either can contain digits the number patterns would chew through. Then long digit
+ * runs, and only then phone numbers: with phones first, a fourteen-digit string had its leading
+ * eleven digits matched as a phone and the remaining three left in plain sight — `id
+ * [redacted]9876`. A test caught that, which is the entire reason it exists.
  */
 export function scrubText(input: string): string {
-  return input
+  let out = input;
+  for (const [pattern, replacement] of PATH_RULES) {
+    out = out.replace(pattern, replacement);
+  }
+
+  return out
     .replace(EMAIL, REDACTED)
     .replace(SECRET, REDACTED)
     .replace(LONG_DIGITS, REDACTED)
@@ -68,15 +87,12 @@ export function scrubText(input: string): string {
  *
  * The query string is dropped whole rather than filtered. This app puts nothing sensitive in one
  * today, and a denylist of parameter names is a promise about every parameter anybody adds later.
+ *
+ * That dropping is all this adds over `scrubText` now — the path rules moved down into the text
+ * pass, where every string gets them.
  */
 export function scrubUrl(input: string): string {
-  let url = input.split("#")[0].split("?")[0];
-
-  for (const [pattern, replacement] of PATH_RULES) {
-    url = url.replace(pattern, replacement);
-  }
-
-  return scrubText(url);
+  return scrubText(input.split("#")[0].split("?")[0]);
 }
 
 type Loose = Record<string, unknown>;
