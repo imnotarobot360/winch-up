@@ -162,3 +162,23 @@ Chromium will not give you one. What can be proved locally is everything up to t
 register a subscription with a genuine P-256 key and an unreachable endpoint, drain, and the
 delivery comes back `failed` with `getaddrinfo ENOTFOUND`, which means the payload encrypted and
 the VAPID JWT signed.
+
+## The E2E rate limit, which is the app working
+
+`limits.max_requests_per_ip_per_hour` is 5 and everything local comes from `::1`.
+`membership.spec.ts` files two requests a pass and `recovery-team.spec.ts` files one, so two full
+local passes exhaust the hour's allowance. The next run fails partway through the wizard with
+something that does not read as a rate limit at all — a Send button that stops working, or a
+filing that silently returns the previous request.
+
+Clear the bucket between passes:
+
+```bash
+psql -h 127.0.0.1 -p 55432 -U postgres -d winchup -c "delete from rate_limit_hits where bucket_key like 'request:%';"
+```
+
+Do not raise the setting to make the tests pass. The limiter is one of the few things standing
+between this app and somebody filling the board with junk, and the suites are the only place it
+is ever exercised against a real browser.
+
+On CI the database is built fresh each run, so it never comes up there.

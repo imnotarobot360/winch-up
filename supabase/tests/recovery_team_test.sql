@@ -654,5 +654,66 @@ select ok(
   'and they are told, which is the message that moved from acceptance to closure'
 );
 
+-- ---------------------------------------------------------------------------
+-- The second helper's way back to the recovery (20260923002500)
+--
+-- The third place the one-winner assumption was load-bearing, and the one that would have made
+-- the rest useless in the field. my_responder_profile() found current_job through
+-- requests.accepted_responder_id = me.id -- the LEAD -- so a helper who joined the team matched
+-- nothing. /me showed them no job card, and because the dashboard renders the group chat and the
+-- arrival controls inside that card, they had no thread and no way to say "on site" either.
+--
+-- Accepted onto a recovery, with no route back to it.
+-- ---------------------------------------------------------------------------
+
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"cccc1111-0000-4000-8000-00000000000c","role":"authenticated"}';
+
+select is(
+  public.my_responder_profile() -> 'current_job' ->> 'short_code',
+  'TX-TEAM2',
+  'the second helper sees the recovery they joined on their own dashboard'
+);
+
+select is(
+  public.my_responder_profile() -> 'current_job' ->> 'is_lead',
+  'false',
+  'marked as not theirs to lead, so the page does not imply otherwise'
+);
+
+reset role;
+
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"bbbb1111-0000-4000-8000-00000000000b","role":"authenticated"}';
+
+select is(
+  public.my_responder_profile() -> 'current_job' ->> 'is_lead',
+  'true',
+  'and the lead still sees theirs, marked as theirs'
+);
+
+reset role;
+
+-- A helper who withdrew keeps their history and loses the live job, which is the same rule the
+-- thread uses. Same function, same phrase -- left_at is null, not merely a row.
+insert into public.recovery_participants (request_id, user_id, responder_id, role, status, left_at)
+values ('eeee4444-0000-4000-8000-00000000000e', 'aaaa1111-0000-4000-8000-00000000000a',
+        null, 'helper', 'withdrawn', now())
+on conflict (request_id, user_id) where user_id is not null do nothing;
+
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"aaaa1111-0000-4000-8000-00000000000a","role":"authenticated"}';
+
+select is(
+  public.my_responder_profile(),
+  null,
+  'somebody with no volunteer profile at all gets null rather than an error'
+);
+
+reset role;
+
 select * from finish();
 rollback;
