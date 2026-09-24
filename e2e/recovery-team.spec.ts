@@ -155,18 +155,97 @@ async function leaveAnyCurrentJob(page: Page) {
   }
 }
 
+type Picked = { lat: number; lng: number; viaMap: boolean };
+
+/**
+ * Choose the recovery point, on the map when there is a map to use.
+ *
+ * The map needs NEXT_PUBLIC_MAPBOX_TOKEN at build time. It is in .env.local locally and is not a
+ * CI secret today, so this falls back to pasting coordinates rather than failing a run for a
+ * missing credential -- and says which path it took, loudly, so "the map leg is covered" is never
+ * assumed on a run where it was skipped.
+ *
+ * The map path deliberately PANS before confirming. Confirming the seed coordinate would pass
+ * just as well if the picker were painted on, and prove nothing about the pin being connected to
+ * the map.
+ */
+async function pickLocation(page: Page): Promise<Picked> {
+  await page.getByRole("button", { name: /^(map|mapa)$/i }).first().click();
+
+  // Either the map came up or the fallback did. Waiting on body text rather than a locator keeps
+  // this independent of which one wins.
+  await page.waitForFunction(
+    () => /confirm this spot|confirmar este punto|couldn't load|no se pudo cargar/i.test(document.body.innerText),
+    undefined,
+    { timeout: 30_000 },
+  );
+
+  const mapUp = await page
+    .getByRole("button", { name: /confirm this spot|confirmar este punto/i })
+    .count();
+
+  if (!mapUp) {
+    console.warn(
+      "\n  MAP LEG SKIPPED: no NEXT_PUBLIC_MAPBOX_TOKEN at build time, so the picker showed its\n" +
+        "  fallback. Falling back to pasted coordinates. The map-to-chat assertions below are\n" +
+        "  reduced accordingly -- this run did NOT cover the map.\n",
+    );
+    await page.getByRole("button", { name: /paste|pegar/i }).click();
+    await page.getByLabel(/paste a location|pega una ubicación/i).pressSequentially(PIN);
+    await page.getByRole("button", { name: /find it|buscar/i }).click();
+    await expect(page.getByText(/got your location|tenemos tu ubicación/i)).toBeVisible({
+      timeout: 15_000,
+    });
+    const [lat, lng] = PIN.split(",").map((n) => Number(n.trim()));
+    return { lat, lng, viaMap: false };
+  }
+
+  // Move somewhere that is not the seed, so the coordinate that ends up in the database can only
+  // have come from the map.
+  const canvas = page.locator("canvas.mapboxgl-canvas").first();
+  await expect(canvas).toBeVisible({ timeout: 15_000 });
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error("the map canvas has no box");
+
+  await page.mouse.move(box.x + box.width * 0.35, box.y + box.height * 0.7);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.45, { steps: 12 });
+  await page.mouse.up();
+  await page.waitForTimeout(1_200);
+
+  const readout = await page.locator("p.font-mono").last().innerText();
+  const m = readout.match(/(-?\d+\.\d+),\s*(-?\d+\.\d+)/);
+  if (!m) throw new Error(`no coordinate readout on the picker, saw: ${readout}`);
+  const lat = Number(m[1]);
+  const lng = Number(m[2]);
+
+  // Panning must have actually changed it. If this fires, the pin is decorative.
+  expect(
+    Math.abs(lat - 29.7604) + Math.abs(lng - -95.3698),
+    "panning the map should move the coordinate away from the seed",
+  ).toBeGreaterThan(0.0001);
+
+  await page.getByRole("button", { name: /confirm this spot|confirmar este punto/i }).click();
+
+  // The form takes it only on confirm, and says so.
+  await expect(page.getByText(/got your location|tenemos tu ubicación/i)).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(
+    page.getByRole("button", { name: /spot confirmed|punto confirmado/i }),
+    "the confirm button reports the spot as taken",
+  ).toBeVisible();
+
+  return { lat, lng, viaMap: true };
+}
+
 async function fileRequest(page: Page, note: string): Promise<string> {
   await page.goto("/request");
 
   await page.getByText(/nobody is hurt or in danger|nadie está herido/i).first().click();
   await page.getByRole("button", { name: /^(next|siguiente)$/i }).click();
 
-  await page.getByRole("button", { name: /paste|pegar/i }).click();
-  await page.getByLabel(/paste a location|pega una ubicación/i).pressSequentially(PIN);
-  await page.getByRole("button", { name: /find it|buscar/i }).click();
-  await expect(page.getByText(/got your location|tenemos tu ubicación/i)).toBeVisible({
-    timeout: 15_000,
-  });
+  const picked = await pickLocation(page);
   await page.getByRole("button", { name: /^(next|siguiente)$/i }).click();
 
   // Photos skipped: uploads need storage-api, which the local stack answers 501 to on purpose.
@@ -193,8 +272,12 @@ async function fileRequest(page: Page, note: string): Promise<string> {
   await page.getByRole("button", { name: /send request|enviar/i }).click();
 
   await page.waitForURL(/\/r\//, { timeout: 30_000 });
+  lastPicked = picked;
   return page.url();
 }
+
+/** What the most recent fileRequest chose. Read by the assertions after the helpers join. */
+let lastPicked: Picked | null = null;
 
 async function offerOn(page: Page, note: string, eta: string) {
   await page.goto("/help");
@@ -303,6 +386,13 @@ test.describe("a recovery team, its conversation, and the person who is not on i
       "and cannot read what the team said",
     ).toHaveCount(0);
 
+    // The status page shows the team and the timeline. What it must not hand a non-participant is
+    // the private location card -- the exact point, phrased as somewhere to drive to.
+    await expect(
+      page.getByRole("heading", { name: /recovery location/i }),
+      "nor is an admin given the private location card",
+    ).toHaveCount(0);
+
     await signOut(page);
 
     /* ------------------------------------------- B: the lead, from their own screen */
@@ -317,6 +407,59 @@ test.describe("a recovery team, its conversation, and the person who is not on i
       page.getByText(/gate code is four four one two/i).first(),
       "the lead can read what the requester said",
     ).toBeVisible({ timeout: 20_000 });
+
+    /* ---------------------------------------------- the map coordinate, end to end */
+
+    // This is the link the rest of the suite did not cover: a point chosen on the map, through
+    // the wizard, into the database, out through request_thread's participant gate, and onto the
+    // screen of somebody who has to drive to it. Every step in between is tested separately; none
+    // of that proves the number survives the whole trip.
+    const picked = lastPicked;
+    expect(picked, "fileRequest should have recorded what it picked").not.toBeNull();
+
+    await expect(
+      page.getByRole("heading", { name: /recovery location/i }),
+      "the helper gets a location card in the conversation",
+    ).toBeVisible({ timeout: 20_000 });
+
+    const cardCoords = await page
+      .locator("p.font-mono")
+      .filter({ hasText: /-?\d+\.\d+,\s*-?\d+\.\d+/ })
+      .first()
+      .innerText();
+    const cm = cardCoords.match(/(-?\d+\.\d+),\s*(-?\d+\.\d+)/);
+    expect(cm, `no coordinate in the location card, saw: ${cardCoords}`).not.toBeNull();
+
+    // The wizard prints five decimals and the card prints six, so this compares numbers rather
+    // than strings. A metre is about 0.00001 degrees; 0.00002 is the rounding, not a tolerance
+    // for being wrong.
+    expect(
+      Math.abs(Number(cm![1]) - picked!.lat),
+      "the latitude in the chat is the one picked on the map",
+    ).toBeLessThan(0.00002);
+    expect(
+      Math.abs(Number(cm![2]) - picked!.lng),
+      "and so is the longitude",
+    ).toBeLessThan(0.00002);
+
+    // The navigation link has to carry the same point. A card that displays the right coordinate
+    // and navigates to a rounded one sends somebody to the wrong field with no way to notice.
+    const nav = page.getByRole("link", { name: /open in navigation|abrir en navegación/i });
+    await expect(nav, "there is a way to navigate to it").toBeVisible();
+    const href = await nav.getAttribute("href");
+    const hm = href?.match(/destination=(-?\d+\.\d+),(-?\d+\.\d+)/);
+    expect(hm, `the navigation link carries no destination: ${href}`).not.toBeNull();
+    expect(
+      Math.abs(Number(hm![1]) - picked!.lat) + Math.abs(Number(hm![2]) - picked!.lng),
+      "and it points at the confirmed point, not a rounded version of it",
+    ).toBeLessThan(0.00002);
+
+    // Said once, where it is true: this run either exercised the map or it did not.
+    if (!picked!.viaMap) {
+      console.warn(
+        "  NOTE: the coordinate above came from the paste fallback, not the map -- no Mapbox token.",
+      );
+    }
 
     await sayInThread(page, `${note} bringing the long strap`);
 

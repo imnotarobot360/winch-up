@@ -92,6 +92,10 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXT_PUBLIC_SITE_URL: http://localhost:3101
+          # Optional. Without it the recovery-team suite still passes -- it falls back to pasting
+          # coordinates and says so in the log -- but the map leg of that test does not run. Add
+          # the secret to cover it. A public pk. token, URL-restricted, is what belongs here.
+          NEXT_PUBLIC_MAPBOX_TOKEN: ${{ secrets.NEXT_PUBLIC_MAPBOX_TOKEN }}
           # Belt and braces. Nothing in e2e/ sends a text, and this makes certain of it.
           SMS_DRY_RUN: "1"
         run: npm run test:e2e
