@@ -87,6 +87,27 @@ That drops and recreates `winchup`, applies the stubs, every migration in filena
 `supabase/seed.sql`, `mark-local.sql` and `supabase/seeds/demo.sql`. Use `--db <name>` for a
 scratch database and `--no-demo` to stop before the demo accounts.
 
+**Add `--restart-stack` to bring PostgREST and the gateway back up with it.** Dropping the
+database disconnects both -- `(force)` does exactly that -- and neither returns on its own, so a
+plain rebuild leaves you with two dead ports and an app getting connection refused from a stack
+that was running a minute ago.
+
+```bash
+node scripts/local-stack/rebuild.mjs --restart-stack
+```
+
+It stops whatever is listening on 54321 and 54322 and waits for the ports to actually clear
+before starting anything, because a second PostgREST alongside the first gives you one serving a
+schema cache for a database that no longer exists. Then it polls each one until it answers and
+finishes with a real RPC through gateway → PostgREST → Postgres, so "ok" means the whole path
+works rather than that two ports are open.
+
+If PostgREST dies instantly with `0xC0000135` and an empty log, that is STATUS_DLL_NOT_FOUND:
+`postgrest.exe` links against libpq and its OpenSSL DLLs, which live in `pgsql/bin` and are not
+on the system PATH. The script puts that directory on the child's PATH for exactly this reason,
+and says so if it happens anyway. An empty log file is the tell -- the process dies before it can
+write a line.
+
 **Why a script rather than a for-loop over the files.** Two migrations contain a
 `create or replace function` that changes the function's return type, which Postgres refuses:
 
