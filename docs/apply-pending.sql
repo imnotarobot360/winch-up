@@ -12,22 +12,33 @@
 -- ---------------------------------------------------------------------------------------------
 -- HOW TO RUN IT
 --
--- From the repo root, with the connection string in an environment variable so it never lands in
--- a shell history file, a screenshot or a chat window. Supabase gives it to you under
--- Project Settings -> Database -> Connection string -> URI. Use the SESSION pooler or the direct
--- connection, NOT the transaction pooler: this runs multi-statement files and creates types.
+-- Run it from the REPO ROOT, in any terminal. The \i paths below are relative to it.
 --
---   Bash:
---     read -rs SUPABASE_DB_URL && export SUPABASE_DB_URL
---     psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f docs/apply-pending.sql
+-- Get the connection string from the Supabase dashboard: Connect -> Session pooler -> URI. Use
+-- the session pooler or the direct connection, NOT the transaction pooler -- this runs
+-- multi-statement files and creates types, which the transaction pooler cannot do.
+--
+-- Then DELETE THE PASSWORD out of it, leaving the colon off too:
+--
+--     postgresql://postgres.abcdef:MyPassword@aws-0-us-east-1.pooler.supabase.com:5432/postgres
+--     postgresql://postgres.abcdef@aws-0-us-east-1.pooler.supabase.com:5432/postgres
+--
+-- psql then prompts for it, reads it without echoing, and the password never reaches your shell
+-- history, your scrollback or a screenshot. This is simpler and safer than juggling an
+-- environment variable, and it avoids the fact that the obvious PowerShell incantation for
+-- reading a secret (ConvertFrom-SecureString -AsPlainText) only exists in PowerShell 7.
 --
 --   PowerShell:
---     $env:SUPABASE_DB_URL = Read-Host -AsSecureString | ConvertFrom-SecureString -AsPlainText
---     psql $env:SUPABASE_DB_URL -v ON_ERROR_STOP=1 -f docs/apply-pending.sql
+--     & "C:\\Users\\jjser\\tools\\pgsql\\bin\\psql.exe" "<URI-without-password>" -v ON_ERROR_STOP=1 -f docs/apply-pending.sql
+--
+--   Bash / Git Bash:
+--     "/c/Users/jjser/tools/pgsql/bin/psql.exe" "<URI-without-password>" -v ON_ERROR_STOP=1 -f docs/apply-pending.sql
+--
+-- psql is not on PATH on this machine; it lives under tools/pgsql/bin. Any psql 14 or newer works.
 --
 -- Then confirm, which is the part that is not optional:
 --
---     psql "$SUPABASE_DB_URL" -f docs/verify-which-migrations.sql
+--     psql "<URI-without-password>" -f docs/verify-which-migrations.sql
 --
 -- Every row should read `done`. Any `>>> RE-RUN` names the file to look at.
 --
@@ -82,6 +93,6 @@
 notify pgrst, 'reload schema';
 
 \echo ''
-\echo 'Applied. Now run: psql "$SUPABASE_DB_URL" -f docs/verify-which-migrations.sql'
+\echo 'Applied. Now run the same psql command with -f docs/verify-which-migrations.sql'
 \echo 'Every row should say done.'
 \echo ''
