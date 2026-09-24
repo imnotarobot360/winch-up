@@ -107,8 +107,14 @@ export type StatusPayload = {
   /**
    * Everybody still on the recovery (spec section 4). Names, vehicles and kit; no phone numbers.
    * `responder` below is still the lead and still the only place a number is released.
+   *
+   * Optional because this is a wire type, not a guarantee. It only exists on a database that has
+   * had 20260923001600 applied, and the app deploys on a different schedule from the migrations
+   * -- Vercel on a push to main, the SQL by hand. A frontend that is briefly ahead of the schema
+   * must degrade, not throw: `data.team.length` on an older database is a TypeError on the one
+   * page a stranded driver is watching.
    */
-  team: StatusTeamMember[];
+  team?: StatusTeamMember[];
   pro_options: ProOption[] | null;
 };
 

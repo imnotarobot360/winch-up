@@ -146,6 +146,12 @@ export function StatusView({
    */
   const awaitingChoice = !data.responder && data.offers.length > 0;
 
+  // Absent on a database that has not had 20260923001600 applied yet. The app ships on a push to
+  // main and the migrations go by hand, so there is a window where this page is newer than the
+  // schema it is reading -- and an unguarded .length here is a TypeError on the one screen
+  // somebody stuck in a field is watching.
+  const team = data.team ?? [];
+
   return (
     <main className="mx-auto w-full max-w-xl space-y-5 px-4 py-6">
       {/* `unmatched` means the dispatcher ran out of people to ring. It used to also mean nobody
@@ -263,9 +269,9 @@ export function StatusView({
           the way" is no longer the whole answer, and the person waiting wants to know a tractor
           is coming as well as a winch before they want a phone number. Read-only here -- a
           helper's own controls live in the thread, which only participants can open. */}
-      {data.team.length > 1 ? (
+      {team.length > 1 ? (
         <Card className="border-good">
-          <TeamPanel requestId={data.id} team={data.team} />
+          <TeamPanel requestId={data.id} team={team} />
         </Card>
       ) : null}
 

@@ -300,6 +300,13 @@ docs/                     decisions + runbooks
   assertions. `e2e/recovery-team.spec.ts` drives four real accounts through four sign-in screens
   for exactly this reason, and it costs the local per-IP request budget — see
   `scripts/local-stack/README.md`.
+- **A field an RPC has only just started returning is OPTIONAL in its TypeScript type.** The app
+  deploys on a push to main and the migrations go across by hand, so there is always a window
+  where the frontend is ahead of the schema. `data.team.length` on a database without
+  20260923001600 is a TypeError on the one page a stranded driver is watching — verified by
+  pointing a build at the older RPC and loading `/r/<token>`: `Cannot read properties of
+  undefined`, blank page. Type it `field?:`, read it through a `?? []`, and the same window
+  costs a missing panel instead of a dead page.
 - **`npm run build` runs the i18n check first** (`prebuild`). A missing Spanish key fails the
   build rather than silently falling back to English.
 
