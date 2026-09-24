@@ -310,6 +310,23 @@ docs/                     decisions + runbooks
   pointing a build at the older RPC and loading `/r/<token>`: `Cannot read properties of
   undefined`, blank page. Type it `field?:`, read it through a `?? []`, and the same window
   costs a missing panel instead of a dead page.
+- **Supabase Auth sends the verification and reset emails, and must keep doing so.** It mints
+  those single-use tokens; `src/app/auth/callback/route.ts` does the PKCE exchange server-side
+  and validates `next` against open redirects. Branding them is an SMTP setting plus a pasted
+  template in the Supabase dashboard, NOT code. `src/lib/email/send.ts` deliberately sends only
+  the emails Supabase has no opinion about -- welcome, and the account-security notices -- because
+  hand-rolling verification tokens in application code would mean minting credentials here.
+- **`help@winch-up.com` does not exist.** As of 2026-09-24 the domain has no MX, no SPF and no
+  DMARC: nothing can receive there and nothing is authorised to send as it. So `EMAIL_PROVIDER`
+  is unset, the driver is `none`, and a send renders the message, records it as `skipped` with a
+  reason, and returns without throwing. That last part is deliberate -- a signup must not fail
+  because email is unconfigured. `docs/email-setup.md` has the DNS work, which needs the owner.
+- **`email_deliveries` holds no address, no subject, no body and no action URL.** The action URL
+  in a verification email IS a credential, so a log of them would be worth more than the mail it
+  records; the body is reproducible from the template key and locale because the copy lives in
+  TypeScript. The column list is pinned by a test for the same reason `ad_daily_stats`'s is.
+  The FK is `on delete set null`, so deleting an account can never be blocked by a log row and
+  can never erase the evidence that mail went out either.
 - **`npm run build` runs the i18n check first** (`prebuild`). A missing Spanish key fails the
   build rather than silently falling back to English.
 
@@ -352,9 +369,9 @@ Four layers. Run all of them before claiming anything works.
 
 ```
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
-npm test            134 unit + component tests (vitest)
+npm test            165 unit + component tests (vitest)
 npm run test:e2e    188 Playwright tests — android, iphone, tablet, desktop
-supabase test db    762 pgTAP assertions across seventeen suites
+supabase test db    782 pgTAP assertions across eighteen suites
 ```
 
 `prebuild` runs four guards -- the i18n check, the contact-info parity check, the claims check
