@@ -212,6 +212,12 @@ local passes exhaust the hour's allowance. The next run fails partway through th
 something that does not read as a rate limit at all — a Send button that stops working, or a
 filing that silently returns the previous request.
 
+Observed 2026-09-24, so you know what it looks like: the last wizard step posts, nothing happens,
+and Playwright reports `page.waitForURL: Timeout 30000ms exceeded`. Nothing in the terminal says
+"rate limit". The sentence "Too many requests from this connection" is rendered on the page and
+captured in `test-results/<test>/error-context.md` — read that file first when a wizard test
+times out on submit, before suspecting the wizard.
+
 Clear the bucket between passes:
 
 ```bash

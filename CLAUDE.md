@@ -388,6 +388,15 @@ respect to each other, and Playwright has no way to express that.
 The whole suite is 3.0 minutes on one worker against 3.2 on two, because the build dominates and
 the contention was costing retries. Parallelism here buys nothing and has never bought anything.
 
+**The suite spends a rate limit, so two full passes in one hour exhaust it.** A run files 3
+requests and `limits.max_requests_per_ip_per_hour` is 5. The next run then fails in a way that
+does not read as a rate limit at all: the wizard never navigates and Playwright reports
+`page.waitForURL: Timeout 30000ms exceeded` on the final step. The banner that names the cause is
+in `test-results/<test>/error-context.md`, not in the terminal, so read that before diagnosing
+anything. Clear the bucket between passes — `delete from rate_limit_hits where bucket_key like
+'request:%'` — and do NOT raise the setting instead; the reasoning is in
+`scripts/local-stack/README.md`, which is the detailed home for this.
+
 Four projects: android and desktop on Chromium, iphone and tablet on real WebKit
 (`npx playwright install webkit` once). WebKit is not decoration — it found two failures the
 Chromium run did not, both of them in the tests rather than the product. Playwright's `fill()`
