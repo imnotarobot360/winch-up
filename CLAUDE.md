@@ -370,6 +370,18 @@ and the build gate's `--check` catches you if you forget.
 E2E runs against `next build && next start`, not `next dev`, with `workers: 2`. Both are
 explained in `playwright.config.ts` and both were learned the hard way.
 
+**Stop any dev server before running it.** `next dev` and `next build` share `.next`, so a
+running preview corrupts the build mid-flight and the suite fails with things that look like
+product bugs -- `Could not find files for /_error in .next/build-manifest.json`, then a pile of
+unrelated pages failing to prerender. It cost 14 failures that were all one cause; with the dev
+server stopped and `.next` cleared, the same run gave 4. If a run fails oddly and broadly, check
+for a dev server before reading anything else.
+
+**Four projects on one server with two workers produces real flake.** The link-crawl tests in
+`navigation.spec.ts` and `public-pages.spec.ts` fetch dozens of URLs each and occasionally get
+`ECONNRESET` or `socket hang up` from `next start`. They pass in isolation every time. Before
+treating a failure in those two files as a regression, re-run that one file with `--workers=1`.
+
 Four projects: android and desktop on Chromium, iphone and tablet on real WebKit
 (`npx playwright install webkit` once). WebKit is not decoration — it found two failures the
 Chromium run did not, both of them in the tests rather than the product. Playwright's `fill()`
