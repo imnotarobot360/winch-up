@@ -1006,12 +1006,17 @@
       "validation_failed": "Something in the form isn't right. Go back and check.",
       "contact_info_not_allowed": "Take the phone number or link out — this part is shown publicly.",
       "account_required": "You need an account to send a request. Sign in and we'll bring you back here."
+    },
+    "groups": {
+      "location": "Location",
+      "details": "Details",
+      "review": "Review"
     }
   },
   "status": {
     "headline": {
       "submitted": "We've got your request and we're lining up volunteers.",
-      "dispatching": "We're texting volunteers near you. Keep this page open.",
+      "dispatching": "We're notifying volunteers near you. Keep this page open.",
       "unmatched": "Nobody has taken it yet. Here are some paid options while we keep trying.",
       "accepted": "A volunteer is on the way. Stay with your vehicle if it's safe.",
       "on_site": "Your volunteer says they're on site.",
@@ -1062,7 +1067,8 @@
     "offersMoreTitle": "{count, plural, one {# more volunteer has offered} other {# more volunteers have offered}}",
     "offersMoreBody": "Somebody is already coming. If you need a second rig — a tractor as well as a winch — you can add them to the team.",
     "offerAdd": "Add {name} to the team",
-    "offersMorePrivacyNote": "Anyone you add gets your name, your number and your exact location, the same as the first."
+    "offersMorePrivacyNote": "Anyone you add gets your name, your number and your exact location, the same as the first.",
+    "sentTitle": "Request sent"
   },
   "report": {
     "openLink": "Something go wrong? Report it.",

@@ -29,6 +29,7 @@ import {
 
 import { LocationStep, type LocationValue } from "./location-step";
 import { PhotoStep } from "./photo-step";
+import { StepProgress } from "./step-progress";
 
 /**
  * One question per screen.
@@ -230,11 +231,20 @@ export function RequestWizard() {
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-xl flex-col">
-      <header className="sticky top-0 z-10 border-b border-line bg-surface px-4 py-3">
-        <p className="text-sm font-medium text-ink-faint">
-          {t("progress", { current: stepIndex + 1, total: STEPS.length })}
-        </p>
-        <h1 className="text-2xl font-bold leading-tight">{t(`steps.${step}.title`)}</h1>
+      <header className="sticky top-0 z-10 space-y-2 border-b border-line bg-surface px-4 py-3">
+        {/* The reference's three dots over the eight-step flow. The groups are real -- where you
+            are, what you need, what you agree to -- so this is not decoration bolted on to match
+            a mockup; it is information the wizard always had and never showed. */}
+        <StepProgress
+          step={step}
+          labels={[t("groups.location"), t("groups.details"), t("groups.review")]}
+        />
+        <div>
+          <p className="text-sm font-medium text-ink-faint">
+            {t("progress", { current: stepIndex + 1, total: STEPS.length })}
+          </p>
+          <h1 className="text-2xl font-bold leading-tight">{t(`steps.${step}.title`)}</h1>
+        </div>
       </header>
 
       <main className="flex-1 space-y-5 px-4 py-5">

@@ -1006,6 +1006,11 @@
       "validation_failed": "Algo en el formulario no está bien. Regrese y revise.",
       "contact_info_not_allowed": "Quite el número de teléfono o el enlace: esta parte se muestra públicamente.",
       "account_required": "Necesita una cuenta para enviar una solicitud. Inicie sesión y lo traemos de vuelta aquí."
+    },
+    "groups": {
+      "location": "Ubicación",
+      "details": "Detalles",
+      "review": "Revisar"
     }
   },
   "status": {
@@ -1062,7 +1067,8 @@
     "offersMoreTitle": "{count, plural, one {# voluntario más se ofreció} other {# voluntarios más se ofrecieron}}",
     "offersMoreBody": "Ya viene alguien en camino. Si necesita un segundo equipo — un tractor además del winch — puede sumarlo al equipo.",
     "offerAdd": "Sumar a {name} al equipo",
-    "offersMorePrivacyNote": "Quien usted sume recibe su nombre, su número y su ubicación exacta, igual que el primero."
+    "offersMorePrivacyNote": "Quien usted sume recibe su nombre, su número y su ubicación exacta, igual que el primero.",
+    "sentTitle": "Solicitud enviada"
   },
   "report": {
     "openLink": "¿Algo salió mal? Repórtelo.",

@@ -159,6 +159,34 @@ export function StatusView({
           member can find a request on /help and offer long after the rings are done. Left alone,
           this page told somebody "No volunteer yet" directly above "1 volunteer has offered". */}
       <header>
+        {/* Screen 6 of the design reference. Shown only while the request is still being worked
+            -- submitted or dispatching -- because that is the window where "it sent" is the thing
+            the person needs to know. Once somebody has offered or accepted, the news is who is
+            coming, and a tick confirming a thing that happened ten minutes ago is in the way.
+
+            The reference also shows an estimated arrival time. Nothing in this system knows one
+            before a volunteer says it, so there is none here. An invented ETA is the cruellest
+            possible placeholder: somebody sitting in the dark deciding whether to keep waiting. */}
+        {data.status === "submitted" || data.status === "dispatching" ? (
+          <div className="mb-3 flex flex-col items-center gap-2 text-center">
+            <span
+              aria-hidden
+              className="flex size-16 items-center justify-center rounded-full border-4 border-good text-good"
+            >
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M4 12.5l5 5L20 6.5"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <p className="text-2xl font-bold text-ink">{t("sentTitle")}</p>
+          </div>
+        ) : null}
+
         <p className="font-mono text-base text-ink-faint">{data.short_code}</p>
         <h1 className="text-3xl font-bold leading-tight">
           {awaitingChoice
