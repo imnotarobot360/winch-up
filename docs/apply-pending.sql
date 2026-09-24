@@ -52,7 +52,25 @@
 --
 -- Every file is written to be safe to run twice (create or replace, if not exists, on conflict
 -- do nothing), so re-running after a fix is fine.
+
 -- ---------------------------------------------------------------------------------------------
+
+-- OUT OF TIMESTAMP ORDER, ON PURPOSE.
+--
+-- 20260923001700 ends with a create-or-replace of claim_push_deliveries that changes its return
+-- type, which Postgres refuses outright on any database that already has the 20260923000400
+-- version. 002600 does the drop that makes it possible. Run in filename order, 001700 fails and
+-- ON_ERROR_STOP halts the whole run before reaching the file that fixes it.
+--
+-- Run first, 002600 puts the function in its final shape, and 001700's version of the same
+-- statement then has a matching signature and goes through as an ordinary no-op replace. One
+-- clean pass instead of a documented manual workaround.
+--
+-- Safe to hoist because it depends on nothing above it: the function reads notifications,
+-- notification_deliveries, push_subscriptions and responders, all of which exist from 000400.
+\echo ''
+\echo '=== First: the one statement in 001700 that cannot succeed without this ==='
+\i supabase/migrations/20260923002600_claim_push_url.sql
 
 \echo ''
 \echo '=== Recovery teams: the labels, the table, and who can read a conversation ==='

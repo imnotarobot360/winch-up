@@ -63,7 +63,7 @@ with expected(kind, name, detail, migration, file) as (
     ('function', 'notify_on_recovery_message',            '', '001700', '20260923001700_chat_notifications.sql'),
     ('function', 'recovery_link',                         '', '001700', '20260923001700_chat_notifications.sql'),
     ('trigger',  'request_messages_notify',               '', '001700', '20260923001700_chat_notifications.sql'),
-    ('hasref',   'claim_push_deliveries',          'n.url', '001700', '20260923001700_chat_notifications.sql'),
+    ('hasref',   'claim_push_deliveries',          'n.url', '002600', '20260923002600_claim_push_url.sql'),
     ('colgrant', 'profiles.notify_chat',           'SELECT', '001800', '20260923001800_notify_column_grants.sql'),
     ('colgrant', 'profiles.notify_chat',           'UPDATE', '001800', '20260923001800_notify_column_grants.sql'),
     ('colgrant', 'profiles.notify_recovery_status','SELECT', '001800', '20260923001800_notify_column_grants.sql'),
