@@ -61,6 +61,16 @@ export function BoardMap({ rows, fill = false }: { rows: BoardRow[]; fill?: bool
           attributionControl: true,
         });
 
+        // A token that exists but is rejected -- revoked, expired, or URL-restricted to a domain
+        // this is not being served from -- fails AFTER construction, so the absent-token guard
+        // above never sees it. Without this the map draws an empty grey box that looks like a
+        // working map of nowhere, which is exactly what happened when the token was restricted.
+        // Caught here it becomes the same honest notice a missing token gives.
+        instance.on("error", (event) => {
+          const status = (event.error as Error & { status?: number })?.status;
+          if ((status === 401 || status === 403) && !cancelled) setFailed(true);
+        });
+
         instance.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
 
         const bounds = new mapboxgl.LngLatBounds();
