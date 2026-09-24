@@ -52,7 +52,7 @@ with expected(kind, name, detail, migration, file) as (
     ('trigger',  'requests_add_requester_participant',    '', '001200', '20260923001200_thread_access.sql'),
     ('function', 'sync_lead_participant',                 '', '001300', '20260923001300_team_membership_sync.sql'),
     ('trigger',  'requests_sync_lead_participant',        '', '001300', '20260923001300_team_membership_sync.sql'),
-    ('hasref',   'accept_offer_by_token', 'recovery_participants', '001300', '20260923001300_team_membership_sync.sql'),
+    ('hasref',   'sync_lead_participant', 'accepted_responder_id', '001300', '20260923001300_team_membership_sync.sql'),
     ('function', 'set_my_participant_status',             '', '001400', '20260923001400_participant_actions.sql'),
     ('function', 'withdraw_from_recovery',                '', '001400', '20260923001400_participant_actions.sql'),
     ('function', 'set_recovery_mute',                     '', '001400', '20260923001400_participant_actions.sql'),
@@ -68,7 +68,24 @@ with expected(kind, name, detail, migration, file) as (
     ('colgrant', 'profiles.notify_chat',           'UPDATE', '001800', '20260923001800_notify_column_grants.sql'),
     ('colgrant', 'profiles.notify_recovery_status','SELECT', '001800', '20260923001800_notify_column_grants.sql'),
     ('colgrant', 'profiles.notify_recovery_status','UPDATE', '001800', '20260923001800_notify_column_grants.sql'),
-    ('colgrant', 'profiles.available_to_help',     'SELECT', '001800', '20260923001800_notify_column_grants.sql')
+    ('colgrant', 'profiles.available_to_help',     'SELECT', '001800', '20260923001800_notify_column_grants.sql'),
+    ('enum',     'sms_state.suppressed',                  '', '001900', '20260923001900_sms_suppressed.sql'),
+    ('setting',  'sms.outbound_enabled',                  '', '002000', '20260923002000_sms_off.sql'),
+    ('hasref',   'queue_sms',         'sms.outbound_enabled', '002000', '20260923002000_sms_off.sql'),
+    ('hasref',   'scrub_request',                  'params', '002000', '20260923002000_sms_off.sql'),
+    ('hasref',   'scrub_responder',          'sms_messages', '002000', '20260923002000_sms_off.sql'),
+    ('column',   'request_messages.client_id',            '', '002100', '20260923002100_message_client_id.sql'),
+    ('hasref',   'send_request_message',        'client_id', '002100', '20260923002100_message_client_id.sql'),
+    ('hasref',   'request_thread',              'client_id', '002100', '20260923002100_message_client_id.sql'),
+    ('function', 'broadcast_recovery_change',             '', '002200', '20260923002200_realtime_broadcast.sql'),
+    ('trigger',  'request_messages_broadcast',            '', '002200', '20260923002200_realtime_broadcast.sql'),
+    ('trigger',  'recovery_participants_broadcast',       '', '002200', '20260923002200_realtime_broadcast.sql'),
+    ('hasref',   'assign_responder',            'v_is_lead', '002300', '20260923002300_second_helper.sql'),
+    ('function', 'stand_down_open_offers',                '', '002300', '20260923002300_second_helper.sql'),
+    ('trigger',  'requests_stand_down_offers',            '', '002300', '20260923002300_second_helper.sql'),
+    ('hasref',   'accept_offer_by_token', 'assign_responder', '002300', '20260923002300_second_helper.sql'),
+    ('hasref',   'get_request_by_token', '''unmatched'', ''accepted'', ''on_site'')', '002400', '20260923002400_offers_after_accept.sql'),
+    ('hasref',   'my_responder_profile', 'recovery_participants', '002500', '20260923002500_second_helper_dashboard.sql')
 ),
 checked as (
   select
@@ -125,6 +142,11 @@ checked as (
            and column_name = split_part(e.name, '.', 2)
            and grantee = 'authenticated'
            and privilege_type = e.detail)
+      -- A settings row is the whole of a feature flag. Missing, app.setting_bool falls back to
+      -- its default -- which for sms.outbound_enabled happens to be the same answer, so the
+      -- absence would never show up as a behaviour change, only as a switch the owner cannot find.
+      when 'setting' then exists (
+        select 1 from public.app_settings where key = e.name)
     end as found
   from expected e
 )

@@ -258,6 +258,48 @@ docs/                     decisions + runbooks
 - **Admin RPCs are granted to `authenticated`, not `service_role`.** The gate is `auth.uid()` via
   `app.require_admin()`, so there is no shared key that grants admin. Every mutating admin RPC
   writes an audit row; keep that true for new ones.
+- **Recovery SMS is off at `app.queue_sms`, which is the only writer to the outbox.**
+  `sms.outbound_enabled` ships `false`; push and in-app carry recoveries now. A suppressed
+  message still gets a row — "why did nobody get told" needs an answer — but with the phone
+  redacted, the params dropped and a terminal state the drain cannot see, so turning the switch
+  back on does not release a backlog of texts about recoveries that finished weeks ago. Phone OTP
+  is a different path entirely and is unaffected. Do not add a second outbox writer.
+- **The scrub reaches `sms_messages.params`, and `scrub_responder` reaches the outbox at all.**
+  Both were missing until 2026-09-23. `responder.assigned` params hold the requester's phone,
+  their name and the pin to five decimals, so redacting `to_phone` and leaving `params` meant
+  account deletion did not delete it. And `scrub_responder` never touched `sms_messages`, so a
+  volunteer's number survived their own deletion unless a stranger later deleted theirs. Anything
+  new that puts a phone, a name or a position in a jsonb column belongs in both functions.
+- **Realtime is a broadcast, never `postgres_changes`, and `request_messages` stays shut.**
+  That table has no policy and no grant to `authenticated` — it is served only through
+  `request_thread()`, which returns a first name instead of a user id. A `postgres_changes`
+  subscription therefore connects, reports SUBSCRIBED and delivers nothing, forever, which looks
+  exactly like a working feature. Granting SELECT to fix that hands every participant the
+  `sender_user_id` of everyone else. The database sends a nudge carrying only the request id,
+  authorised by `app.is_request_participant()`, and the content is re-read through the RPC. The
+  fifteen-second poll underneath is the floor and is not optional: the socket path cannot be
+  tested against the local stack, which has no realtime server.
+- **Every chat message carries an idempotency key minted by the browser before the first
+  attempt.** A retry over one bar of signal cannot tell whether the first attempt landed, and both
+  obvious answers are wrong. `request_messages_sender_client_idx` makes the second row
+  impossible. The duplicate check is answered *before* the rate limit (the first attempt paid for
+  it) and *before* the closed check (a message written while the recovery was live did happen, and
+  answering `closed` would leave the phone retrying it forever).
+- **`my_responder_profile()` resolves `current_job` through `recovery_participants`, not
+  `accepted_responder_id`.** The dashboard renders the group chat and the arrival controls inside
+  that card, so keying it on the lead meant a second helper was accepted onto a recovery and then
+  had no route back to it. It returns ONE job, with the member's own lead job as the tie-break.
+- **A team only forms if all three layers allow it.** `app.assign_responder` must accept a second
+  helper, `get_request_by_token` must keep returning outstanding offers after the first
+  acceptance, and the status page must keep rendering them. All three were gated on
+  `accepted_responder_id is null` and fixing any one alone leaves the feature broken while
+  looking fixed. An outstanding offer now survives an acceptance and is stood down when the
+  recovery ends, by a trigger rather than by a line in each function that can end one.
+- **pgTAP suites that build a team by inserting `recovery_participants` prove nothing about
+  whether anyone can join one.** That is how the above survived a phase with 686 passing
+  assertions. `e2e/recovery-team.spec.ts` drives four real accounts through four sign-in screens
+  for exactly this reason, and it costs the local per-IP request budget — see
+  `scripts/local-stack/README.md`.
 - **`npm run build` runs the i18n check first** (`prebuild`). A missing Spanish key fails the
   build rather than silently falling back to English.
 
@@ -284,6 +326,8 @@ long done. Work since then has followed the owner's 16-phase spec:
 | 12 Database & backend | done — schema audited and the findings fixed; the entities the spec names all exist |
 | 14 Security, privacy & safety | done — full review in `docs/security-review.md`; account deletion actually deletes now, retention exists, a claims check guards the copy |
 | 16 Deployment & production readiness | done — `/api/health`, CI on every push, env drift check, `docs/production-readiness.md`. What is left needs the owner's accounts, not code |
+| Universal membership | done — every member can ask for help and offer it; no separate volunteer account, no approval gate, the requester picks from offers |
+| Recovery teams & group chat | done in code, **not yet applied to production** — `recovery_participants`, one thread per recovery for the whole team, per-participant unread and mute, notification settings screen, recovery SMS switched off, an offline send queue, Realtime broadcast over a polling floor |
 
 **Proven working in production**, not just built: a signed-in person files a request, the tick
 escalates it through all three rings, it reaches `unmatched` with nobody available, and the public
@@ -298,9 +342,9 @@ Four layers. Run all of them before claiming anything works.
 
 ```
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
-npm test            108 unit + component tests (vitest)
-npm run test:e2e    168 Playwright tests — android, iphone, tablet, desktop
-supabase test db    626 pgTAP assertions across fifteen suites
+npm test            128 unit + component tests (vitest)
+npm run test:e2e    188 Playwright tests — android, iphone, tablet, desktop
+supabase test db    732 pgTAP assertions across sixteen suites
 ```
 
 `prebuild` runs four guards -- the i18n check, the contact-info parity check, the claims check
@@ -343,8 +387,15 @@ holding the phone at 11pm, not for whoever wrote the code.
    requires an account. The `public_token` is still how the status page is reached — an account
    says who filed it, not who may read it.
 3. Phone numbers are stored E.164, US only (`^\+1[0-9]{10}$`).
-4. One winning responder per request. The schema allows additional "assist" dispatches later, but
-   there is only one `accepted_responder_id`.
+4. ~~One winning responder per request.~~ **Changed 2026-09-23:** a recovery is a TEAM. Any
+   number of helpers can be accepted onto one, because a winch truck and a tractor turning up
+   together is the normal case. `recovery_participants` is the team; `accepted_responder_id` is
+   still there and still singular, maintained as the LEAD — the first helper accepted — so the
+   sixty-odd places that read it keep working.
+
+   "A double accept must be impossible" is unchanged as a rule but be exact about what it is a
+   rule *about*: two people must never both believe they are the assigned lead. It never meant
+   only one person may come out.
 5. `/board` shows the blurred pin **even after acceptance**, controlled by the
    `board.reveal_exact_after_accept` setting (default `false`). Flip the setting if the owner wants
    the exact pin public once a volunteer is assigned.
