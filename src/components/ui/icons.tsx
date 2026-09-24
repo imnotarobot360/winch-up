@@ -148,3 +148,22 @@ export const EQUIPMENT_ICONS = {
   tire_repair: IconTireRepair,
   jack_lifting: IconJack,
 } as const;
+
+/**
+ * Weather, and a chevron.
+ *
+ * Added for the resources list, where the design reference gives every category a line icon and a
+ * chevron saying it goes somewhere. Same grid, same stroke, no fills -- a cloud that needed a fill
+ * to read would be drawn wrong, not special.
+ */
+export const IconCloud = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M7 18h9.5a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.6-1.2A4 4 0 0 0 7 18Z" />
+  </Svg>
+);
+
+export const IconChevronRight = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M9 5l7 7-7 7" />
+  </Svg>
+);

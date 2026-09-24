@@ -4,8 +4,17 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { deleteAccount } from "@/app/actions/account";
+import {
+  IconDoc,
+  IconHook,
+  IconPin,
+  IconRing,
+  IconTruck,
+  IconWinch,
+} from "@/components/ui/icons";
+import { MenuList } from "@/components/ui/menu-list";
 import { Button, Callout, Card, Field, TextInput, Toggle } from "@/components/ui/primitives";
-import { Link, useRouter } from "@/i18n/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
 type Profile = {
@@ -138,29 +147,54 @@ export function AccountForm({ email }: { email: string }) {
           </Field>
         </Card>
 
-        <Card className="space-y-3">
-          <h2 className="text-xl font-semibold">{t("vehiclesTitle")}</h2>
-          <p className="text-base text-ink-soft">{t("vehiclesBody")}</p>
-          <Link
-            href="/account/vehicles"
-            className="tap-target flex w-full items-center justify-center rounded-field border-2 border-line px-4 text-center text-lg font-semibold"
-          >
-            {t("vehiclesCta")}
-          </Link>
-        </Card>
+        {/* Screen 12's menu. Every row goes to a route that exists, and the labels say where
+            they actually go rather than repeating the reference's -- there is no standalone
+            "My equipment" screen in this product, it is part of the volunteer details form, so
+            that is what the row is called and where it leads. A menu item that opens nothing is
+            worse than one fewer menu item.
 
-        {/* Notifications live on their own screen now. Eight switches once devices are counted,
-            and they used to be spread across three cards here. */}
-        <Card className="space-y-3">
-          <h2 className="text-xl font-semibold">{t("notifyTitle")}</h2>
-          <p className="text-base text-ink-soft">{t("notifyBody")}</p>
-          <Link
-            href="/account/notifications"
-            className="tap-target flex w-full items-center justify-center rounded-field border-2 border-line px-4 text-center text-lg font-semibold"
-          >
-            {t("notifyCta")}
-          </Link>
-        </Card>
+            Two of these were full cards with a heading, a paragraph and a button each. Six of
+            those would be two screens of scrolling for six links. */}
+        <MenuList
+          items={[
+            {
+              href: "/account/vehicles",
+              label: t("menuVehicles"),
+              hint: t("menuVehiclesHint"),
+              icon: <IconTruck size={22} />,
+            },
+            {
+              href: "/join",
+              label: t("menuEquipment"),
+              hint: t("menuEquipmentHint"),
+              icon: <IconWinch size={22} />,
+            },
+            {
+              href: "/me",
+              label: t("menuRecoveries"),
+              hint: t("menuRecoveriesHint"),
+              icon: <IconHook size={22} />,
+            },
+            {
+              href: "/trails",
+              label: t("menuTrails"),
+              hint: t("menuTrailsHint"),
+              icon: <IconPin size={22} />,
+            },
+            {
+              href: "/account/notifications",
+              label: t("menuNotifications"),
+              hint: t("menuNotificationsHint"),
+              icon: <IconRing size={22} />,
+            },
+            {
+              href: "/resources",
+              label: t("menuResources"),
+              hint: t("menuResourcesHint"),
+              icon: <IconDoc size={22} />,
+            },
+          ]}
+        />
 
         <Card className="space-y-3">
           <h2 className="text-xl font-semibold">{t("privacyTitle")}</h2>

@@ -102,7 +102,19 @@
     "availableHint": "Turn this on to get alerts when somebody near you is stuck. You can still browse requests and offer help with it off — nobody is ever obliged to go.",
     "availableFailed": "We could not save that. Try again.",
     "notifyBody": "Alerts, messages and which devices hear about them.",
-    "notifyCta": "Notification settings"
+    "notifyCta": "Notification settings",
+    "menuVehicles": "My vehicles",
+    "menuVehiclesHint": "The rigs you drive",
+    "menuEquipment": "My equipment",
+    "menuEquipmentHint": "What you carry, and how far you'll drive",
+    "menuRecoveries": "My recoveries",
+    "menuRecoveriesHint": "Jobs you came out to, and your current one",
+    "menuTrails": "Trails",
+    "menuTrailsHint": "Browse trails and the ones you saved",
+    "menuNotifications": "Notifications",
+    "menuNotificationsHint": "What reaches your phone, and which devices",
+    "menuResources": "Recovery guides",
+    "menuResourcesHint": "Gear, safety, etiquette, what to do first"
   },
   "vehicles": {
     "title": "Your rigs",

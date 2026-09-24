@@ -102,7 +102,19 @@
     "availableHint": "Actívalo para recibir avisos cuando alguien cerca de ti esté atascado. Aun con esto apagado puedes ver las solicitudes y ofrecerte — nadie está obligado a ir nunca.",
     "availableFailed": "No pudimos guardarlo. Inténtalo de nuevo.",
     "notifyBody": "Avisos, mensajes y en qué dispositivos llegan.",
-    "notifyCta": "Configuración de avisos"
+    "notifyCta": "Configuración de avisos",
+    "menuVehicles": "Mis vehículos",
+    "menuVehiclesHint": "Los equipos que maneja",
+    "menuEquipment": "Mi equipo",
+    "menuEquipmentHint": "Lo que lleva y hasta dónde maneja",
+    "menuRecoveries": "Mis rescates",
+    "menuRecoveriesHint": "Trabajos a los que salió y el actual",
+    "menuTrails": "Rutas",
+    "menuTrailsHint": "Explore rutas y las que guardó",
+    "menuNotifications": "Notificaciones",
+    "menuNotificationsHint": "Qué llega a su teléfono y en qué dispositivos",
+    "menuResources": "Guías de rescate",
+    "menuResourcesHint": "Equipo, seguridad, etiqueta, qué hacer primero"
   },
   "vehicles": {
     "title": "Sus vehículos",
