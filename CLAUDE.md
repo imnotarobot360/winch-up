@@ -278,7 +278,10 @@ docs/                     decisions + runbooks
   `sender_user_id` of everyone else. The database sends a nudge carrying only the request id,
   authorised by `app.is_request_participant()`, and the content is re-read through the RPC. The
   fifteen-second poll underneath is the floor and is not optional: the socket path cannot be
-  tested against the local stack, which has no realtime server.
+  tested against the local stack, which has no realtime server. Production DOES have the realtime
+  schema -- 20260923002200's guarded block created `recovery_broadcast_listen` there rather than
+  skipping -- so the authorisation half is live and only the end-to-end socket delivery is still
+  unproven.
 - **Every chat message carries an idempotency key minted by the browser before the first
   attempt.** A retry over one bar of signal cannot tell whether the first attempt landed, and both
   obvious answers are wrong. `request_messages_sender_client_idx` makes the second row
@@ -334,7 +337,7 @@ long done. Work since then has followed the owner's 16-phase spec:
 | 14 Security, privacy & safety | done — full review in `docs/security-review.md`; account deletion actually deletes now, retention exists, a claims check guards the copy |
 | 16 Deployment & production readiness | done — `/api/health`, CI on every push, env drift check, `docs/production-readiness.md`. What is left needs the owner's accounts, not code |
 | Universal membership | done — every member can ask for help and offer it; no separate volunteer account, no approval gate, the requester picks from offers |
-| Recovery teams & group chat | done in code, **not yet applied to production** — `recovery_participants`, one thread per recovery for the whole team, per-participant unread and mute, notification settings screen, recovery SMS switched off, an offline send queue, Realtime broadcast over a polling floor |
+| Recovery teams & group chat | **done and live** (2026-09-24) — `recovery_participants`, one thread per recovery for the whole team, per-participant unread and mute, notification settings screen, recovery SMS switched off, an offline send queue, Realtime broadcast over a polling floor. All 26 migrations verified applied in production |
 
 **Proven working in production**, not just built: a signed-in person files a request, the tick
 escalates it through all three rings, it reaches `unmatched` with nobody available, and the public
