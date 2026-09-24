@@ -1863,5 +1863,31 @@
     "helpSomeone": "Ayudar a alguien",
     "noneOpen": "Nada abierto ahora mismo. Qué bueno.",
     "openCount": "{count, plural, one {# rescate abierto cerca} other {# rescates abiertos cerca}}"
+  },
+  "members": {
+    "title": "Miembros cerca",
+    "subtitle": "Miembros que eligieron aparecer y están dispuestos a salir.",
+    "searchLabel": "Buscar miembros",
+    "searchPlaceholder": "Buscar por nombre…",
+    "filterAll": "Todos",
+    "loading": "Buscando…",
+    "failed": "No se pudieron cargar los miembros. Intente de nuevo.",
+    "emptyTitle": "Todavía no hay nadie en la lista.",
+    "emptyBody": "Los miembros aparecen aquí cuando activan 'mostrar mi perfil' y 'disponible para ayudar'. Las dos vienen apagadas hasta que alguien decida lo contrario.",
+    "emptyFiltered": "Nadie coincide con eso.",
+    "available": "Disponible",
+    "someone": "Un miembro",
+    "milesAway": "a {miles} mi"
+  },
+  "memberProfile": {
+    "title": "Miembro",
+    "someone": "Un miembro",
+    "available": "Disponible",
+    "verified": "Revisado por un administrador",
+    "notVerified": "Todavía sin revisar por un administrador; eso no impide que ayude nadie.",
+    "equipment": "Lo que lleva",
+    "recoveries": "Rescates a los que salió",
+    "milesAway": "A unas {miles} mi",
+    "howToReach": "Aquí no hay mensajes directos. Si se ofrece en su rescate, o usted en el suyo, la conversación se abre con él."
   }
 }

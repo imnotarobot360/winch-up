@@ -1863,5 +1863,31 @@
     "helpSomeone": "Help someone",
     "noneOpen": "Nothing open right now. Good.",
     "openCount": "{count, plural, one {# recovery open near you} other {# recoveries open near you}}"
+  },
+  "members": {
+    "title": "Nearby members",
+    "subtitle": "Members who chose to be listed and are up for a call-out.",
+    "searchLabel": "Search members",
+    "searchPlaceholder": "Search by name…",
+    "filterAll": "All",
+    "loading": "Looking…",
+    "failed": "Could not load members. Try again.",
+    "emptyTitle": "Nobody listed yet.",
+    "emptyBody": "Members appear here once they turn on both 'show my profile' and 'available to help'. Both are off until somebody chooses otherwise.",
+    "emptyFiltered": "Nobody matches that.",
+    "available": "Available",
+    "someone": "A member",
+    "milesAway": "{miles} mi away"
+  },
+  "memberProfile": {
+    "title": "Member",
+    "someone": "A member",
+    "available": "Available",
+    "verified": "Checked by an admin",
+    "notVerified": "Not checked by an admin yet — that does not stop anyone helping.",
+    "equipment": "What they carry",
+    "recoveries": "Recoveries they came out to",
+    "milesAway": "About {miles} mi away",
+    "howToReach": "There is no direct messaging here. If they offer on your recovery, or you offer on theirs, the conversation opens with it."
   }
 }
