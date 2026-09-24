@@ -377,10 +377,16 @@ unrelated pages failing to prerender. It cost 14 failures that were all one caus
 server stopped and `.next` cleared, the same run gave 4. If a run fails oddly and broadly, check
 for a dev server before reading anything else.
 
-**Four projects on one server with two workers produces real flake.** The link-crawl tests in
-`navigation.spec.ts` and `public-pages.spec.ts` fetch dozens of URLs each and occasionally get
-`ECONNRESET` or `socket hang up` from `next start`. They pass in isolation every time. Before
-treating a failure in those two files as a regression, re-run that one file with `--workers=1`.
+**`workers: 1`, and do not raise it.** It was 2 and that was still too many. Two separate
+failures came out of it, both of which cost a diagnosis each before being recognised as
+contention: the link-crawl tests in `navigation.spec.ts` and `public-pages.spec.ts` intermittently
+got `ECONNRESET` from `next start`, and `membership.spec.ts` and `recovery-team.spec.ts` -- both
+serial state-machine suites driving the same demo accounts -- could run at the same time and
+cancel each other's open request. Each file is serial internally; nothing made them serial with
+respect to each other, and Playwright has no way to express that.
+
+The whole suite is 3.0 minutes on one worker against 3.2 on two, because the build dominates and
+the contention was costing retries. Parallelism here buys nothing and has never bought anything.
 
 Four projects: android and desktop on Chromium, iphone and tablet on real WebKit
 (`npx playwright install webkit` once). WebKit is not decoration — it found two failures the

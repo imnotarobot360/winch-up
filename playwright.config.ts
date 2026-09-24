@@ -44,11 +44,24 @@ export default defineConfig({
 
   timeout: 60_000,
 
-  // Two, not "as many as there are cores". This machine has 20, and Playwright's default put
+  // One, not "as many as there are cores". This machine has 20, and Playwright's default put
   // enough concurrent browsers against a single next start that 18 of 19 tests failed -- every
   // one of which passed when run alone. Pages answer in under half a second here, so the
   // parallelism was buying nothing and costing the entire signal.
-  workers: 2,
+  //
+  // Two was still too many, for two separate reasons:
+  //
+  //   The link-crawl tests in navigation.spec and public-pages.spec fetch dozens of URLs each and
+  //   intermittently got ECONNRESET from next start. Always green alone. That cost three separate
+  //   diagnoses before it was recognised as contention rather than a regression.
+  //
+  //   membership.spec and recovery-team.spec are both serial state-machine suites and both drive
+  //   the same demo accounts. Two workers let them run at the same time, so one suite would cancel
+  //   the other's open request out from under it. Each file is serial internally; nothing made
+  //   them serial with respect to each other, and Playwright has no way to say so.
+  //
+  // The whole suite takes about the same wall time either way, because the build dominates.
+  workers: 1,
 
   webServer: {
     // A production build, not `next dev`.
