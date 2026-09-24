@@ -36,7 +36,39 @@ with expected(kind, name, detail, migration, file) as (
     ('function', 'claim_push_deliveries',                 '', '000400', '20260923000400_push.sql'),
     ('function', 'record_push_result',                    '', '000400', '20260923000400_push.sql'),
     ('function', 'my_requests',                           '', '000600', '20260923000600_my_requests.sql'),
-    ('hasref',   'system_health_summary', 'reachable_volunteers', '000700', '20260923000700_health_reachable.sql')
+    ('hasref',   'system_health_summary', 'reachable_volunteers', '000700', '20260923000700_health_reachable.sql'),
+    ('enum',     'request_event_type.helper_joined',      '', '001000', '20260923001000_team_chat_enums.sql'),
+    ('enum',     'request_event_type.helper_withdrew',    '', '001000', '20260923001000_team_chat_enums.sql'),
+    ('enum',     'request_event_type.helper_status',      '', '001000', '20260923001000_team_chat_enums.sql'),
+    ('enum',     'notification_kind.helper_joined',       '', '001000', '20260923001000_team_chat_enums.sql'),
+    ('enum',     'notification_kind.helper_status',       '', '001000', '20260923001000_team_chat_enums.sql'),
+    ('table',    'recovery_participants',                 '', '001100', '20260923001100_recovery_participants.sql'),
+    ('type',     'participant_role',                      '', '001100', '20260923001100_recovery_participants.sql'),
+    ('type',     'participant_status',                    '', '001100', '20260923001100_recovery_participants.sql'),
+    ('function', 'sync_recovery_lead',                    '', '001100', '20260923001100_recovery_participants.sql'),
+    ('function', 'request_thread',                        '', '001200', '20260923001200_thread_access.sql'),
+    ('function', 'my_unread_counts',                      '', '001200', '20260923001200_thread_access.sql'),
+    ('hasref',   'is_request_participant', 'recovery_participants', '001200', '20260923001200_thread_access.sql'),
+    ('trigger',  'requests_add_requester_participant',    '', '001200', '20260923001200_thread_access.sql'),
+    ('function', 'sync_lead_participant',                 '', '001300', '20260923001300_team_membership_sync.sql'),
+    ('trigger',  'requests_sync_lead_participant',        '', '001300', '20260923001300_team_membership_sync.sql'),
+    ('hasref',   'accept_offer_by_token', 'recovery_participants', '001300', '20260923001300_team_membership_sync.sql'),
+    ('function', 'set_my_participant_status',             '', '001400', '20260923001400_participant_actions.sql'),
+    ('function', 'withdraw_from_recovery',                '', '001400', '20260923001400_participant_actions.sql'),
+    ('function', 'set_recovery_mute',                     '', '001400', '20260923001400_participant_actions.sql'),
+    ('policyref','recovery_participants', 'is_request_participant', '001500', '20260923001500_participants_policy_fix.sql'),
+    ('hasref',   'get_request_by_token',            'team', '001600', '20260923001600_status_team.sql'),
+    ('column',   'profiles.notify_chat',                  '', '001700', '20260923001700_chat_notifications.sql'),
+    ('column',   'profiles.notify_recovery_status',       '', '001700', '20260923001700_chat_notifications.sql'),
+    ('function', 'notify_on_recovery_message',            '', '001700', '20260923001700_chat_notifications.sql'),
+    ('function', 'recovery_link',                         '', '001700', '20260923001700_chat_notifications.sql'),
+    ('trigger',  'request_messages_notify',               '', '001700', '20260923001700_chat_notifications.sql'),
+    ('hasref',   'claim_push_deliveries',          'n.url', '001700', '20260923001700_chat_notifications.sql'),
+    ('colgrant', 'profiles.notify_chat',           'SELECT', '001800', '20260923001800_notify_column_grants.sql'),
+    ('colgrant', 'profiles.notify_chat',           'UPDATE', '001800', '20260923001800_notify_column_grants.sql'),
+    ('colgrant', 'profiles.notify_recovery_status','SELECT', '001800', '20260923001800_notify_column_grants.sql'),
+    ('colgrant', 'profiles.notify_recovery_status','UPDATE', '001800', '20260923001800_notify_column_grants.sql'),
+    ('colgrant', 'profiles.available_to_help',     'SELECT', '001800', '20260923001800_notify_column_grants.sql')
 ),
 checked as (
   select
@@ -72,6 +104,27 @@ checked as (
         select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
          where n.nspname = 'app' and p.proname = e.name
            and pg_get_functiondef(p.oid) not like '%' || e.detail || '%')
+      -- A trigger is the half of a producer that is easy to lose: the function survives a
+      -- re-run of the file, and the CREATE TRIGGER is what a truncated paste drops.
+      when 'trigger' then exists (
+        select 1 from pg_trigger where not tgisinternal and tgname = e.name)
+      -- 001500 replaces a policy of the same name, so existence proves nothing. Only the
+      -- expression does: recursion into its own table is what the old one did.
+      when 'policyref' then exists (
+        select 1 from pg_policies
+         where schemaname = 'public' and tablename = e.name
+           and qual like '%' || e.detail || '%')
+      -- profiles is column-granted in BOTH directions. A column with no SELECT grant does not
+      -- error -- PostgREST 403s the whole row, the screen falls back to defaults, and every
+      -- switch renders in a plausible-looking off state. That is how the availability toggle
+      -- shipped broken and looked fine.
+      when 'colgrant' then exists (
+        select 1 from information_schema.column_privileges
+         where table_schema = 'public'
+           and table_name = split_part(e.name, '.', 1)
+           and column_name = split_part(e.name, '.', 2)
+           and grantee = 'authenticated'
+           and privilege_type = e.detail)
     end as found
   from expected e
 )
