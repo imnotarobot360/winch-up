@@ -7,19 +7,26 @@ import { IconHome, IconHook, IconPeople, IconPin, IconTruck } from "@/components
 import { cn } from "@/lib/utils";
 
 /**
- * The tab bar from the brand mockups.
+ * The tab bar from the brand mockups: Home, Map, SOS, Community, Profile.
  *
- * Every destination here is a route that exists. The mockups show a Community tab and a Profile
- * tab; the feed exists now, and the responder dashboard is what "profile" means in this product,
- * so the second slot is Volunteer. Rules lost its tab to Community -- it is still one tap away
- * from the home page, the request wizard and the volunteer signup, which is where anybody who
- * needs it actually is.
+ * Every destination is a route that already exists, which is why this is five labels rather than
+ * five new screens. Map is /board -- the map of every open request -- because Home is already a
+ * map once you are signed in, and the useful distinction is "mine" against "everybody's".
+ * Profile is /me, the volunteer dashboard, since that is where a member's rigs, kit, recoveries
+ * and availability live; /account is settings and sits one tap deeper, as in the reference.
+ *
+ * The centre action is SOS. It was labelled "Get help", which is the same thing said at greater
+ * length -- and on a phone held by somebody who is stuck, three letters they already know beat a
+ * phrase they have to read.
  *
  * Hidden wherever it would fight the page for the bottom of the screen or the user's attention:
  * the request wizard has its own fixed action bar, and nobody reading a live recovery status,
  * working the admin or moderation queue, or copying a post needs a tab bar under it.
  */
 const HIDDEN = [
+  // Onboarding is full-bleed in the reference and offers its own two ways forward. A tab bar
+  // under it would give a signed-out visitor five destinations that all bounce them to sign in.
+  /^\/welcome$/,
   /^\/request(\/|$)/,
   /^\/r\//,
   /^\/admin(\/|$)/,
@@ -36,22 +43,26 @@ const LEFT: Tab[] = [
     icon: <IconHome size={26} />,
   },
   {
+    // The public board, which is the map of everything happening. Home is a map too once you are
+    // signed in; the difference is that Home is yours and this one is everybody's.
     href: "/board",
-    key: "board",
+    key: "map",
     icon: <IconPin size={26} />,
   },
 ];
 
 const RIGHT: Tab[] = [
   {
-    href: "/me",
-    key: "volunteer",
-    icon: <IconTruck size={26} />,
-  },
-  {
     href: "/community",
     key: "community",
     icon: <IconPeople size={26} />,
+  },
+  {
+    // /me is what "profile" means here: your rigs, your kit, your recoveries, your availability.
+    // /account is settings, one tap further in, which is where the design reference puts it too.
+    href: "/me",
+    key: "profile",
+    icon: <IconTruck size={26} />,
   },
 ];
 
@@ -99,7 +110,7 @@ export function BottomNav() {
             <span className="-mt-6 flex size-16 items-center justify-center rounded-full border-4 border-surface bg-brand text-on-brand shadow-lg">
               <IconHook size={30} />
             </span>
-            <span className="text-center leading-tight">{t("getHelp")}</span>
+            <span className="text-center leading-tight">{t("sos")}</span>
           </Link>
 
           {RIGHT.map(item)}

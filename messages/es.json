@@ -11,7 +11,10 @@
     "getHelp": "Ayuda",
     "volunteer": "Voluntario",
     "rules": "Reglas",
-    "community": "Comunidad"
+    "community": "Comunidad",
+    "map": "Mapa",
+    "sos": "SOS",
+    "profile": "Perfil"
   },
   "auth": {
     "signIn": "Iniciar sesión",
@@ -148,7 +151,7 @@
     "emergencyNote": "Si hay heridos, si alguien está en el agua o en el tráfico, llame primero al 911. Somos voluntarios, no servicios de emergencia.",
     "howTitle": "Cómo funciona",
     "how1": "Díganos dónde está y cómo se atascó. Toma unos dos minutos.",
-    "how2": "Avisamos por mensaje a los voluntarios más cercanos con el equipo adecuado. El primero que responda toma el trabajo.",
+    "how2": "Se avisa a los voluntarios más cercanos con el equipo adecuado. El primero que responda toma el trabajo.",
     "how3": "Usted recibe su nombre, un tiempo estimado y un enlace para seguir todo hasta que salga.",
     "volunteerTitle": "¿Quiere ayudar?",
     "volunteerSoon": "Si usted ya saca gente en los grupos de Facebook, esto es para usted. Le avisamos solo cuando alguien cerca necesita el equipo que usted de verdad tiene.",
@@ -1603,7 +1606,7 @@
           {
             "heading": "Qué pasa después de mandar la solicitud",
             "items": [
-              "Les mandamos mensaje a los voluntarios cerca de ti con lo que necesitas y a qué distancia estás, no con tu número.",
+              "A los voluntarios cerca de ti se les dice qué necesitas y a qué distancia estás, no tu número.",
               "El primero que contesta se lo queda. Nadie es asignado; están eligiendo manejar hasta allá.",
               "Recibes su nombre, su vehículo y un tiempo estimado, y un enlace que puedes ver y compartir.",
               "Si nadie contesta en unos veinticinco minutos, te avisamos y te mostramos operadores de paga. Eso no es una falla tuya."
@@ -1839,5 +1842,18 @@
       "not_signed_in": "Inicia sesión para ver tus notificaciones.",
       "failed": "No cargó. Inténtalo otra vez."
     }
+  },
+  "splash": {
+    "community": "Comunidad de rescate todoterreno"
+  },
+  "welcome": {
+    "title": "Bienvenido",
+    "headline1": "Todoterreneros",
+    "headline2": "ayudando a",
+    "headline3": "todoterreneros.",
+    "body": "Conéctese con dueños de Jeep y 4x4 cerca cuando necesite una mano. Explore rutas, comparta lo que sabe y sea parte de una comunidad más fuerte.",
+    "getStarted": "Empezar",
+    "signIn": "Entrar",
+    "needHelpNow": "¿Atascado ahora mismo? <link>Pida ayuda primero</link>; puede registrarse después."
   }
 }

@@ -12,7 +12,9 @@ import { Link, usePathname } from "@/i18n/navigation";
  * request wizard, where the step header is the thing that has to be read and a second bar above
  * it would only push the question further down a small screen.
  */
-const HIDDEN = [/^\/$/, /^\/request(\/|$)/];
+// /welcome is full-bleed in the design reference and carries its own branding; a second wordmark
+// above it would be the logo twice on one screen.
+const HIDDEN = [/^\/$/, /^\/request(\/|$)/, /^\/welcome$/];
 
 export function AppHeader() {
   const pathname = usePathname();

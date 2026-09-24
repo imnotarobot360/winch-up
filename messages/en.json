@@ -11,7 +11,10 @@
     "getHelp": "Get help",
     "volunteer": "Volunteer",
     "rules": "Rules",
-    "community": "Community"
+    "community": "Community",
+    "map": "Map",
+    "sos": "SOS",
+    "profile": "Profile"
   },
   "auth": {
     "signIn": "Sign in",
@@ -148,7 +151,7 @@
     "emergencyNote": "If anyone is hurt, in water, or in traffic, call 911 first. We are volunteers, not emergency services.",
     "howTitle": "How it works",
     "how1": "Tell us where you are and how you're stuck. Takes about two minutes.",
-    "how2": "We text the nearest volunteers with the right gear. The first one to answer takes it.",
+    "how2": "The nearest volunteers with the right gear are notified. The first one to answer takes it.",
     "how3": "You get their name and an ETA, and a link you can watch until you're out.",
     "volunteerTitle": "Want to help?",
     "volunteerSoon": "If you already pull people out in the Facebook groups, this is for you. We only call you out when someone near you needs the gear you actually have.",
@@ -1603,7 +1606,7 @@
           {
             "heading": "What happens after you send a request",
             "items": [
-              "We text volunteers near you with what you need and how far away you are — not your phone number.",
+              "Volunteers near you are told what you need and how far away you are — not your phone number.",
               "The first one to answer takes it. Nobody is dispatched; they are choosing to drive out.",
               "You get their first name, their vehicle and an ETA, and a link you can watch and share.",
               "If nobody answers within about twenty-five minutes, we tell you, and we show you paid operators instead. That is not a failure of yours."
@@ -1839,5 +1842,18 @@
       "not_signed_in": "Sign in to see your notifications.",
       "failed": "That didn't load. Try again."
     }
+  },
+  "splash": {
+    "community": "Off-road recovery community"
+  },
+  "welcome": {
+    "title": "Welcome",
+    "headline1": "Off-roaders",
+    "headline2": "helping",
+    "headline3": "off-roaders.",
+    "body": "Connect with nearby Jeep and 4x4 owners when you need a hand. Explore trails, share what you know, and be part of a stronger off-road community.",
+    "getStarted": "Get started",
+    "signIn": "Sign in",
+    "needHelpNow": "Stuck right now? <link>Ask for help first</link> — you can sign up after."
   }
 }
