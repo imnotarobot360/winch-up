@@ -126,6 +126,14 @@ export function MapPicker({
           center: [lng, lat],
           zoom: 15,
           attributionControl: true,
+          // The map lives inside a scrolling form. With wheel zoom on, scrolling the page past
+          // the map zooms it instead -- caught in testing, where scrolling down to reach the
+          // confirm button moved the coordinate from ...42576 to ...42581. Small, and it would
+          // have been the difference between a pin on the truck and a pin in the next field.
+          //
+          // Pinch still zooms (touchZoomRotate is a different control) and the +/- buttons are
+          // right there, so nothing is lost on the phone this is built for.
+          scrollZoom: false,
         });
 
         // A failure after construction -- a rejected token, a tile 403 -- surfaces here rather
@@ -146,7 +154,15 @@ export function MapPicker({
           .setLngLat([lng, lat])
           .addTo(instance);
 
+        // While a drag is in progress the marker belongs to the thumb, not to the map centre.
+        // Without this flag the "keep it centred" handler below fights the drag and the pin
+        // springs back as you move it.
+        let dragging = false;
+        marker.on("dragstart", () => {
+          dragging = true;
+        });
         marker.on("dragend", () => {
+          dragging = false;
           const p = marker.getLngLat();
           instance.easeTo({ center: p, duration: 200 });
           move({ lat: p.lat, lng: p.lng });
@@ -159,9 +175,22 @@ export function MapPicker({
           move({ lat: p.lat, lng: p.lng });
         });
 
-        // Panning under the crosshair. moveend rather than move: one write per gesture instead of
-        // one per frame.
+        // Pan-to-place. The marker is pinned to the map centre for the whole gesture, so moving
+        // the map feels like moving the map under a fixed pin -- which is the one-handed gesture
+        // that works beside a stuck truck.
+        //
+        // There used to be a separate SVG crosshair doing this visually while the marker sat at
+        // its own coordinate. Dragging the marker then left a decorative pin at dead centre
+        // pointing somewhere the app had not selected, which is the exact thing the spec warns
+        // against. One pin, and it is always the real one.
+        instance.on("move", () => {
+          if (dragging) return;
+          marker.setLngLat(instance.getCenter());
+        });
+
+        // moveend rather than move for the write: one per gesture instead of one per frame.
         instance.on("moveend", () => {
+          if (dragging) return;
           const c = instance.getCenter();
           marker.setLngLat(c);
           move({ lat: c.lat, lng: c.lng });
@@ -242,22 +271,6 @@ export function MapPicker({
 
       <div className="relative h-72 w-full overflow-hidden rounded-field border-2 border-line">
         <div ref={containerRef} className="h-full w-full" aria-label={label} role="application" />
-        {/* The crosshair sits above the map and never moves. Non-interactive so it cannot eat the
-            taps that are meant to place the pin. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full"
-        >
-          <svg width="36" height="46" viewBox="0 0 36 46" fill="none">
-            <path
-              d="M18 45C18 45 33 28.5 33 18C33 9.7 26.3 3 18 3C9.7 3 3 9.7 3 18C3 28.5 18 45 18 45Z"
-              fill="var(--color-brand)"
-              stroke="white"
-              strokeWidth="3"
-            />
-            <circle cx="18" cy="18" r="5" fill="white" />
-          </svg>
-        </div>
       </div>
 
       <p className="text-center font-mono text-sm text-ink-soft">
