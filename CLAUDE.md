@@ -352,9 +352,9 @@ Four layers. Run all of them before claiming anything works.
 
 ```
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
-npm test            128 unit + component tests (vitest)
+npm test            134 unit + component tests (vitest)
 npm run test:e2e    188 Playwright tests — android, iphone, tablet, desktop
-supabase test db    732 pgTAP assertions across sixteen suites
+supabase test db    762 pgTAP assertions across seventeen suites
 ```
 
 `prebuild` runs four guards -- the i18n check, the contact-info parity check, the claims check
