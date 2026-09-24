@@ -1855,5 +1855,13 @@
     "getStarted": "Empezar",
     "signIn": "Entrar",
     "needHelpNow": "¿Atascado ahora mismo? <link>Pida ayuda primero</link>; puede registrarse después."
+  },
+  "homeMap": {
+    "needHelp": "¿Necesita ayuda?",
+    "needHelpBody": "Envíe una solicitud de rescate a los todoterreneros cercanos.",
+    "sendSos": "Enviar SOS",
+    "helpSomeone": "Ayudar a alguien",
+    "noneOpen": "Nada abierto ahora mismo. Qué bueno.",
+    "openCount": "{count, plural, one {# rescate abierto cerca} other {# rescates abiertos cerca}}"
   }
 }

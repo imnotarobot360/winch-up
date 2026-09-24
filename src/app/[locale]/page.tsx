@@ -1,10 +1,27 @@
 import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import type { BoardRow } from "@/components/board/board-list";
+import { HomeMap } from "@/components/home/home-map";
 import { Callout, Card } from "@/components/ui/primitives";
 import { APP_NAME } from "@/config/app";
 import { Link } from "@/i18n/navigation";
+import { supabaseServer } from "@/lib/supabase/server";
 
+/**
+ * Two different home pages, decided by whether anybody is signed in.
+ *
+ * Signed in, this is screen 4 of the design reference: the map, with the SOS card over it. That
+ * is the right home for somebody who already belongs here -- they do not need to be told what the
+ * app is every time they open it.
+ *
+ * Signed out, it stays the landing page. It is the page search engines index and the page a
+ * stranger reaches from a link in a Facebook group, and replacing it with a map they cannot use
+ * would trade the product's whole front door for a closer match to a mockup.
+ *
+ * The map is not rendered for signed-out visitors at all, rather than rendered empty: it costs a
+ * Mapbox tile load and a 400KB library to show a stranger a map of nothing.
+ */
 export default async function HomePage({
   params,
 }: {
@@ -12,6 +29,23 @@ export default async function HomePage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+
+  const supabase = await supabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    // The same blurred rows the public board serves. A member's own home map is not a reason to
+    // widen what a recovery's location looks like to somebody who is not on it.
+    const { data } = await supabase.rpc("board_requests", { p_limit: 100 });
+    return <HomeMap rows={(data as BoardRow[] | null) ?? []} />;
+  }
+
+  return <LandingPage />;
+}
+
+async function LandingPage() {
 
   const t = await getTranslations("home");
   const tApp = await getTranslations("app");

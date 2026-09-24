@@ -1,5 +1,13 @@
 "use client";
 
+// Mapbox GL's own stylesheet. Without it the canvas draws but every control, marker and the
+// attribution are unpositioned, and the library warns about it in the console on every load --
+// "This page appears to be missing CSS declarations for Mapbox GL JS". map-picker.tsx has always
+// imported it; this file never did, so the board map has been subtly wrong since it was written.
+// Importing in both is correct: bundlers deduplicate it, and neither component should depend on
+// the other having been loaded first.
+import "mapbox-gl/dist/mapbox-gl.css";
+
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
@@ -16,8 +24,12 @@ const OPEN = ["submitted", "dispatching", "unmatched"];
  *
  * Degrades to a notice when NEXT_PUBLIC_MAPBOX_TOKEN is absent, the same way the request wizard's
  * picker does, so a missing token is a missing map rather than a broken page.
+ *
+ * `fill` is for the home dashboard, where the map is the screen rather than a card on it: no
+ * border, no corner radius, and it takes the height of whatever contains it. On /board it stays
+ * a bordered panel with a minimum height, because there it sits in a column with other things.
  */
-export function BoardMap({ rows }: { rows: BoardRow[] }) {
+export function BoardMap({ rows, fill = false }: { rows: BoardRow[]; fill?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
   const t = useTranslations("board");
@@ -91,7 +103,11 @@ export function BoardMap({ rows }: { rows: BoardRow[] }) {
 
   if (failed) {
     return (
-      <div className="flex min-h-64 items-center justify-center rounded-field border-2 border-line bg-surface-sunk p-6 text-center text-ink-soft">
+      <div
+        className={`flex items-center justify-center bg-surface-sunk p-6 text-center text-ink-soft ${
+          fill ? "h-full" : "min-h-64 rounded-field border-2 border-line"
+        }`}
+      >
         {t("mapUnavailable")}
       </div>
     );
@@ -102,7 +118,11 @@ export function BoardMap({ rows }: { rows: BoardRow[] }) {
       ref={containerRef}
       role="application"
       aria-label={t("mapLabel")}
-      className="min-h-[24rem] w-full overflow-hidden rounded-field border-2 border-line"
+      className={
+        fill
+          ? "h-full w-full"
+          : "min-h-[24rem] w-full overflow-hidden rounded-field border-2 border-line"
+      }
     />
   );
 }

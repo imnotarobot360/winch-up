@@ -1855,5 +1855,13 @@
     "getStarted": "Get started",
     "signIn": "Sign in",
     "needHelpNow": "Stuck right now? <link>Ask for help first</link> — you can sign up after."
+  },
+  "homeMap": {
+    "needHelp": "Need help?",
+    "needHelpBody": "Send a recovery request to nearby off-roaders.",
+    "sendSos": "Send SOS",
+    "helpSomeone": "Help someone",
+    "noneOpen": "Nothing open right now. Good.",
+    "openCount": "{count, plural, one {# recovery open near you} other {# recoveries open near you}}"
   }
 }

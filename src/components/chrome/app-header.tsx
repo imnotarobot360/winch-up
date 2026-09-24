@@ -21,6 +21,17 @@ export function AppHeader() {
 
   if (HIDDEN.some((r) => r.test(pathname))) return null;
 
+  return <HeaderBar />;
+}
+
+/**
+ * The bar itself, separated from the decision about whether to show it.
+ *
+ * The home dashboard needs this exact bar but cannot get it from AppHeader, which hides itself on
+ * "/" so the signed-out landing page can open with the full lockup instead. Rather than have two
+ * headers that drift, there is one bar and two callers.
+ */
+export function HeaderBar() {
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-trail/95 backdrop-blur">
       <div className="relative mx-auto flex w-full max-w-xl items-center justify-center px-4 py-2">
