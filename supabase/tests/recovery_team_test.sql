@@ -511,5 +511,148 @@ select ok(
   'but available_to_help is set only through the RPC that also creates the capability row'
 );
 
+-- ---------------------------------------------------------------------------
+-- Getting onto a team through the actual door (20260923002300)
+--
+-- Everything above builds its team by inserting recovery_participants directly, which is how the
+-- gap survived: the table, the chat, the roster and the notifications all worked, and the one
+-- function a requester's "pick" button actually calls refused the second person outright.
+--
+-- app.assign_responder returned {"ok": false, "error": "already_covered"} on the second accept and
+-- marked the remaining offer passed_over on the way through. So this section uses no shortcut. It
+-- drives the real function, on a second recovery, exactly as accept_offer_by_token does.
+-- ---------------------------------------------------------------------------
+
+insert into public.requests (
+  id, public_token, short_code, status, locale, requester_user_id,
+  requester_name, requester_phone, location, vehicle_class, stuck_type, land_type,
+  emergency_ack_at, rules_accepted, waiver_id, waiver_accepted_at
+) values (
+  'eeee4444-0000-4000-8000-00000000000e', 'team-test-token-bbbbbbbbbb', 'TX-TEAM2',
+  'unmatched', 'en', 'dddd1111-0000-4000-8000-00000000000d',
+  'Dee', '+15125557003',
+  extensions.st_setsrid(extensions.st_point(-95.37, 29.76), 4326)::extensions.geography,
+  'truck', 'mud', 'public',
+  now(), true, (select id from public.waivers where slug = 'requester_waiver' and is_current), now()
+) on conflict (id) do nothing;
+
+-- Both put their hand up. Neither has been chosen.
+insert into public.dispatches (request_id, responder_id, state, ring, distance_miles)
+values
+  ('eeee4444-0000-4000-8000-00000000000e', 'bbbb2222-0000-4000-8000-00000000000b', 'offered', 1, 5),
+  ('eeee4444-0000-4000-8000-00000000000e', 'cccc2222-0000-4000-8000-00000000000c', 'offered', 1, 8)
+on conflict do nothing;
+
+select is(
+  app.assign_responder('eeee4444-0000-4000-8000-00000000000e',
+                       'bbbb2222-0000-4000-8000-00000000000b', 30) ->> 'lead',
+  'true',
+  'the first helper accepted becomes the lead'
+);
+
+-- The assertion the whole phase rests on.
+select is(
+  app.assign_responder('eeee4444-0000-4000-8000-00000000000e',
+                       'cccc2222-0000-4000-8000-00000000000c', 45) ->> 'ok',
+  'true',
+  'and a second helper can be accepted onto the same recovery'
+);
+
+select is(
+  (select count(*)::int from public.recovery_participants
+    where request_id = 'eeee4444-0000-4000-8000-00000000000e'
+      and role = 'helper' and left_at is null),
+  2,
+  'a winch truck and a tractor, both on the recovery'
+);
+
+-- What must still be impossible. One lead, decided under the row lock, never reassigned.
+select is(
+  (select accepted_responder_id::text from public.requests
+    where id = 'eeee4444-0000-4000-8000-00000000000e'),
+  'bbbb2222-0000-4000-8000-00000000000b',
+  'the lead is still the first one accepted -- a second helper does not take the job'
+);
+
+select is(
+  (select eta_minutes::int from public.requests where id = 'eeee4444-0000-4000-8000-00000000000e'),
+  30,
+  'and does not overwrite the leads ETA with their own'
+);
+
+select is(
+  app.assign_responder('eeee4444-0000-4000-8000-00000000000e',
+                       'bbbb2222-0000-4000-8000-00000000000b', 30) ->> 'error',
+  'already_yours',
+  'accepting the same person twice is still refused, which is now the only already-* case'
+);
+
+-- ---------------------------------------------------------------------------
+-- An offer survives somebody else being accepted
+-- ---------------------------------------------------------------------------
+
+insert into public.dispatches (request_id, responder_id, state, ring, distance_miles)
+values ('eeee4444-0000-4000-8000-00000000000e', 'dddd2222-0000-4000-8000-00000000000d',
+        'offered', 1, 12)
+on conflict do nothing;
+
+select is(
+  (select state::text from public.dispatches
+    where request_id = 'eeee4444-0000-4000-8000-00000000000e'
+      and responder_id = 'dddd2222-0000-4000-8000-00000000000d'),
+  'offered',
+  'a third offer stands while two helpers are already on the job'
+);
+
+-- Ten minutes later, seeing how buried they are, the requester wants them too. Under the old
+-- behaviour this offer was already passed_over at the moment of the first acceptance and this
+-- choice did not exist.
+select is(
+  app.assign_responder('eeee4444-0000-4000-8000-00000000000e',
+                       'dddd2222-0000-4000-8000-00000000000d', 60) ->> 'ok',
+  'true',
+  'and can still be taken up afterwards, which is the choice the old behaviour destroyed'
+);
+
+-- ---------------------------------------------------------------------------
+-- And is retired when the recovery ends, not before
+-- ---------------------------------------------------------------------------
+
+insert into public.requests (
+  id, public_token, short_code, status, locale, requester_user_id,
+  requester_name, requester_phone, location, vehicle_class, stuck_type, land_type,
+  emergency_ack_at, rules_accepted, waiver_id, waiver_accepted_at
+) values (
+  'eeee5555-0000-4000-8000-00000000000e', 'team-test-token-cccccccccc', 'TX-TEAM3',
+  'unmatched', 'en', 'cccc1111-0000-4000-8000-00000000000c',
+  'Cal', '+15125557002',
+  extensions.st_setsrid(extensions.st_point(-95.37, 29.76), 4326)::extensions.geography,
+  'truck', 'mud', 'public',
+  now(), true, (select id from public.waivers where slug = 'requester_waiver' and is_current), now()
+) on conflict (id) do nothing;
+
+insert into public.dispatches (request_id, responder_id, state, ring, distance_miles)
+values ('eeee5555-0000-4000-8000-00000000000e', 'bbbb2222-0000-4000-8000-00000000000b',
+        'offered', 1, 5)
+on conflict do nothing;
+
+update public.requests set status = 'recovered'
+ where id = 'eeee5555-0000-4000-8000-00000000000e';
+
+select is(
+  (select state::text from public.dispatches
+    where request_id = 'eeee5555-0000-4000-8000-00000000000e'
+      and responder_id = 'bbbb2222-0000-4000-8000-00000000000b'),
+  'passed_over',
+  'an outstanding offer is stood down when the recovery ends'
+);
+
+select ok(
+  exists (select 1 from public.sms_messages
+           where request_id = 'eeee5555-0000-4000-8000-00000000000e'
+             and template_key = 'responder.already_covered'),
+  'and they are told, which is the message that moved from acceptance to closure'
+);
+
 select * from finish();
 rollback;

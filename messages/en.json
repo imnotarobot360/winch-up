@@ -1049,7 +1049,11 @@
     "offerDecline": "Not this one",
     "offersPrivacyNote": "When you pick someone, they get your name, your number and your exact location, and you get theirs. The others are told it is covered.",
     "awaitingChoiceTitle": "Someone has offered",
-    "awaitingChoiceBody": "Pick who comes out. Nobody is on their way until you do."
+    "awaitingChoiceBody": "Pick who comes out. Nobody is on their way until you do.",
+    "offersMoreTitle": "{count, plural, one {# more volunteer has offered} other {# more volunteers have offered}}",
+    "offersMoreBody": "Somebody is already coming. If you need a second rig — a tractor as well as a winch — you can add them to the team.",
+    "offerAdd": "Add {name} to the team",
+    "offersMorePrivacyNote": "Anyone you add gets your name, your number and your exact location, the same as the first."
   },
   "report": {
     "openLink": "Something go wrong? Report it.",

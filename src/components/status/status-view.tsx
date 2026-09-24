@@ -176,13 +176,23 @@ export function StatusView({
       {/* Spec section 8, steps 4 and 5. This is the screen the phase exists for: the person who
           is stuck decides who comes out, instead of the first volunteer to text winning the job
           before anybody told them somebody had replied. */}
-      {!data.responder && data.offers.length > 0 ? (
+      {/* Shown while the recovery is live, whether or not somebody has already been accepted.
+          It used to stop at the first acceptance, which meant the requester could never build the
+          team this phase is named after: the button that would have added a second helper was not
+          on the screen, and the RPC had stopped returning the offers to put on it either. Under a
+          team these people have not been passed over -- their offer stands -- and wanting the
+          tractor as well, once you have seen how buried you are, is the ordinary case. */}
+      {data.offers.length > 0 ? (
         <Card className="space-y-4 border-brand">
           <div>
             <h2 className="text-xl font-bold">
-              {t("offersTitle", { count: data.offers.length })}
+              {data.responder
+                ? t("offersMoreTitle", { count: data.offers.length })
+                : t("offersTitle", { count: data.offers.length })}
             </h2>
-            <p className="mt-1 text-base text-ink-soft">{t("offersBody")}</p>
+            <p className="mt-1 text-base text-ink-soft">
+              {data.responder ? t("offersMoreBody") : t("offersBody")}
+            </p>
           </div>
 
           <ul className="space-y-3">
@@ -224,7 +234,9 @@ export function StatusView({
                     disabled={pending}
                     onClick={() => void acceptOffer(offer.id)}
                   >
-                    {t("offerAccept", { name: offer.first_name })}
+                    {data.responder
+                      ? t("offerAdd", { name: offer.first_name })
+                      : t("offerAccept", { name: offer.first_name })}
                   </Button>
                   <Button
                     size="md"
@@ -241,7 +253,9 @@ export function StatusView({
 
           {/* Said once, here, because accepting is the moment their number is handed over and
               there is no taking it back. */}
-          <p className="text-sm text-ink-faint">{t("offersPrivacyNote")}</p>
+          <p className="text-sm text-ink-faint">
+            {data.responder ? t("offersMorePrivacyNote") : t("offersPrivacyNote")}
+          </p>
         </Card>
       ) : null}
 

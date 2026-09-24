@@ -268,7 +268,18 @@ select ok(
 );
 
 -- ---------------------------------------------------------------------------
--- 4. Double accept — the one that must never happen
+-- 4. Double accept — the one that must never happen, restated for teams
+--
+-- "A double accept must be impossible" is still a rule, but 20260923002300 changed what it is a
+-- rule about. It never meant "only one person may ever come out" -- a winch truck and a tractor
+-- turning up together is the normal case, and the whole group-chat phase exists for it. It meant
+-- two people must never both believe they are THE assigned responder, driving to the same job
+-- each thinking the other is not.
+--
+-- So the invariant these assertions defend is accepted_responder_id: set once, under the row
+-- lock, by whoever gets there first, never reassigned. A second helper joins behind that lead.
+-- The assertions that used to count 'exactly one accepted dispatch' were counting the old
+-- model's shape rather than the rule, and they now say what the rule is.
 -- ---------------------------------------------------------------------------
 
 insert into t_ids values ('race', pg_temp.make_request('test-token-double-accept-1'));
@@ -289,9 +300,27 @@ select is(
     (select id from t_ids where name = 'race'),
     'aaaa0001-0000-4000-8000-000000000004',
     20
+  ) ->> 'lead',
+  'false',
+  'a second volunteer joins the team rather than taking the job or being turned away'
+);
+
+select is(
+  app.accept_request(
+    (select id from t_ids where name = 'race'),
+    'aaaa0001-0000-4000-8000-000000000001',
+    20
   ) ->> 'error',
-  'already_covered',
-  'the second volunteer to answer is told it is already covered'
+  'already_yours',
+  'and accepting the same person twice is still refused'
+);
+
+select is(
+  (select count(*)::int from recovery_participants
+    where request_id = (select id from t_ids where name = 'race')
+      and role = 'helper' and left_at is null),
+  2,
+  'two helpers on the recovery, which is what a team is'
 );
 
 select is(
@@ -310,8 +339,17 @@ select is(
 select is(
   (select count(*)::int from dispatches
     where request_id = (select id from t_ids where name = 'race') and state = 'accepted'),
+  2,
+  'both helpers have an accepted dispatch row -- the count is no longer the invariant'
+);
+
+-- This is. One lead, and it is the first one in, whatever else happened afterwards.
+select is(
+  (select count(*)::int from requests
+    where id = (select id from t_ids where name = 'race')
+      and accepted_responder_id = 'aaaa0001-0000-4000-8000-000000000001'),
   1,
-  'exactly one dispatch row is marked accepted'
+  'and exactly one of them is the lead: the first, unchanged by the second'
 );
 
 select is(
@@ -326,16 +364,18 @@ select is(
   (select count(*)::int from sms_messages
     where request_id = (select id from t_ids where name = 'race')
       and template_key = 'responder.assigned'),
-  1,
-  'only the winner is sent the assignment, which carries the phone and the pin'
+  2,
+  'each helper gets the assignment, which is what carries the phone and the pin'
 );
 
+-- Not once per helper. That message hands over a phone number and an exact location, and the
+-- requester chose the second helper themselves, seconds ago, on their own screen.
 select is(
   (select count(*)::int from sms_messages
     where request_id = (select id from t_ids where name = 'race')
       and template_key = 'requester.accepted'),
   1,
-  'the requester is told who is coming'
+  'the requester is told once, when the lead is set, and not again for each helper they add'
 );
 
 select is(

@@ -1049,7 +1049,11 @@
     "offerDecline": "Este no",
     "offersPrivacyNote": "Cuando elijas a alguien, esa persona recibe tu nombre, tu número y tu ubicación exacta, y tú recibes los suyos. A los demás se les avisa que ya está cubierto.",
     "awaitingChoiceTitle": "Alguien se ofreció",
-    "awaitingChoiceBody": "Elige quién va. Nadie va en camino hasta que elijas."
+    "awaitingChoiceBody": "Elige quién va. Nadie va en camino hasta que elijas.",
+    "offersMoreTitle": "{count, plural, one {# voluntario más se ofreció} other {# voluntarios más se ofrecieron}}",
+    "offersMoreBody": "Ya viene alguien en camino. Si necesita un segundo equipo — un tractor además del winch — puede sumarlo al equipo.",
+    "offerAdd": "Sumar a {name} al equipo",
+    "offersMorePrivacyNote": "Quien usted sume recibe su nombre, su número y su ubicación exacta, igual que el primero."
   },
   "report": {
     "openLink": "¿Algo salió mal? Repórtelo.",
