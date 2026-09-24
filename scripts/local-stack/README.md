@@ -77,8 +77,28 @@ A database that has not been marked calls itself production and will not accept 
 which creates accounts with known passwords and recovery requests that would text real
 volunteers. Production is the default on purpose; there is no file that sets it back.
 
-Then apply `supabase/migrations/*.sql` in filename order, followed by `supabase/seed.sql` and
-`supabase/seeds/demo.sql`.
+Then build it:
+
+```bash
+node scripts/local-stack/rebuild.mjs
+```
+
+That drops and recreates `winchup`, applies the stubs, every migration in filename order,
+`supabase/seed.sql`, `mark-local.sql` and `supabase/seeds/demo.sql`. Use `--db <name>` for a
+scratch database and `--no-demo` to stop before the demo accounts.
+
+**Why a script rather than a for-loop over the files.** Two migrations contain a
+`create or replace function` that changes the function's return type, which Postgres refuses:
+
+    ERROR:  cannot change return type of existing function
+
+They need a `drop function` immediately before them. That knowledge cannot live in the migration
+(editing an applied migration rewrites history) or in a later one (it runs after the failure), so
+it lives in `DROPS_BEFORE` at the top of the script, keyed by the file that needs it. Adding an
+entry there is the correct fix if a rebuild ever fails this way again; the error names the file.
+
+This is local only, and refuses to run against a non-local host. Production is migrated with
+`docs/apply-pending.sql`, which applies only the outstanding batch.
 
 Start the API:
 

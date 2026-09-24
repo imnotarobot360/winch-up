@@ -282,6 +282,25 @@ select is(
 -- So these assertions now check that directly, which is a stronger claim than a count of zero:
 -- a zero could be produced by a broken join, and did not depend on the grants at all.
 
+-- The invitation this section is about, created here rather than assumed.
+--
+-- These assertions used to rely on responder 0004 already having dispatch rows, which is true on
+-- any database that has been clicked about in or had the tick run, and false on one built the
+-- documented way. It passed for weeks and failed the first time anybody rebuilt from scratch --
+-- and it failed on isnt_empty, which is the assertion that would have gone quiet if the feed
+-- genuinely broke. A test that depends on yesterday's dispatches is not testing the feed.
+--
+-- CLAUDE.md already says this about the community and trails suites: counting whatever happens
+-- to be in the database is how a test starts passing or failing on somebody else's session.
+insert into dispatches (request_id, responder_id, state, ring, distance_miles)
+select r.id, resp.id, 'sent', 1, 9
+  from (select id from requests
+         where status in ('submitted', 'dispatching', 'unmatched')
+         order by created_at limit 1) r,
+       (select id from responders
+         where user_id = '00000000-0000-4000-8000-000000000004') resp
+on conflict do nothing;
+
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"00000000-0000-4000-8000-000000000004","role":"authenticated"}';
 
