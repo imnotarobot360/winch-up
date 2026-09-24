@@ -411,6 +411,21 @@ grant execute on function public.recovery_link(uuid) to authenticated, service_r
 -- this is the line that makes that true.
 --
 -- Same shape as 20260923000400 with one column added to the return.
+--
+-- DROP FIRST, and it is not optional. `create or replace function` refuses to change a function's
+-- return type, and adding `url` to a RETURNS TABLE is exactly that:
+--
+--     ERROR:  cannot change return type of existing function
+--
+-- This file applied cleanly against a database that had already been through it, and failed on
+-- production, which still had the 20260923000400 version. Because it is the LAST object in a
+-- 465-line file, everything above it landed and the verification query reported "1 of 6 missing"
+-- -- which reads like a truncated paste rather than a statement that cannot succeed.
+--
+-- Nothing depends on this function's signature except src/lib/push/send.ts, which is deployed
+-- separately and reads the columns by name, so dropping and recreating it costs nothing. The
+-- grant below is re-issued because a drop takes the privileges with it.
+drop function if exists public.claim_push_deliveries(integer);
 
 create or replace function public.claim_push_deliveries(p_limit integer default 100)
 returns table (

@@ -135,13 +135,38 @@ checked as (
       -- error -- PostgREST 403s the whole row, the screen falls back to defaults, and every
       -- switch renders in a plausible-looking off state. That is how the availability toggle
       -- shipped broken and looked fine.
-      when 'colgrant' then exists (
-        select 1 from information_schema.column_privileges
-         where table_schema = 'public'
-           and table_name = split_part(e.name, '.', 1)
-           and column_name = split_part(e.name, '.', 2)
-           and grantee = 'authenticated'
-           and privilege_type = e.detail)
+      --
+      -- Read from pg_attribute.attacl rather than information_schema.column_privileges. That view
+      -- shows only privileges granted TO or BY a currently enabled role, so connecting as a role
+      -- that neither granted them nor is a member of the grantee sees nothing and the check
+      -- reports a grant missing that is plainly there. Locally, where the connection owns
+      -- everything, the two agree exactly -- which is precisely why the difference does not show
+      -- up until it matters, against a pooled production connection.
+      --
+      -- A column-level grant can also be implied by a table-wide one, so both are counted.
+      when 'colgrant' then (
+        exists (
+          select 1
+            from pg_attribute a
+            join pg_class c     on c.oid = a.attrelid
+            join pg_namespace n on n.oid = c.relnamespace
+           cross join lateral aclexplode(a.attacl) x
+            join pg_roles gr    on gr.oid = x.grantee
+           where n.nspname = 'public'
+             and c.relname = split_part(e.name, '.', 1)
+             and a.attname = split_part(e.name, '.', 2)
+             and gr.rolname = 'authenticated'
+             and x.privilege_type = e.detail)
+        or exists (
+          select 1
+            from pg_class c
+            join pg_namespace n on n.oid = c.relnamespace
+           cross join lateral aclexplode(c.relacl) x
+            join pg_roles gr    on gr.oid = x.grantee
+           where n.nspname = 'public'
+             and c.relname = split_part(e.name, '.', 1)
+             and gr.rolname = 'authenticated'
+             and x.privilege_type = e.detail))
       -- A settings row is the whole of a feature flag. Missing, app.setting_bool falls back to
       -- its default -- which for sms.outbound_enabled happens to be the same answer, so the
       -- absence would never show up as a behaviour change, only as a switch the owner cannot find.
@@ -153,7 +178,15 @@ checked as (
 select
   case when count(*) filter (where not found) = 0 then 'done' else '>>> RE-RUN' end as action,
   file,
-  count(*) filter (where not found) || ' of ' || count(*) || ' missing' as state
+  count(*) filter (where not found) || ' of ' || count(*) || ' missing' as state,
+  -- "1 of 6 missing" tells you to re-run a 465-line file and nothing about why. Naming the object
+  -- is the difference between fixing it and guessing at it, and on the run that prompted this it
+  -- was the last object in three separate files -- a pattern that is invisible from a count.
+  coalesce(
+    string_agg(
+      kind || ' ' || name || coalesce(' ~ ' || nullif(detail, ''), '')
+      , E'\n  ' order by name) filter (where not found),
+    '') as missing
 from checked
 group by file
 order by (count(*) filter (where not found) = 0), file;
