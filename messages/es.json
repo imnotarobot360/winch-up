@@ -944,7 +944,13 @@
       },
       "noteLabel": "Algo que ayude a encontrarlo",
       "noteHint": "Opcional. Portón, nombre del camino, alguna referencia, de qué lado del arroyo.",
-      "notePlaceholder": "Pasando el segundo portón de ganado, tractor azul en la vuelta"
+      "notePlaceholder": "Pasando el segundo portón de ganado, tractor azul en la vuelta",
+      "mapRetry": "Intentar el mapa otra vez",
+      "mapConfirm": "Confirmar este punto",
+      "mapConfirmed": "Punto confirmado",
+      "mapStandard": "Mapa",
+      "mapSatellite": "Satélite",
+      "mapHelpFull": "Arrastre el mapa, toque un punto o arrastre el pin. El satélite muestra los árboles y los cruces; aquí afuera un mapa de calles es una línea gris sobre nada."
     },
     "photos": {
       "help": "Una foto le dice al voluntario si traer winche o tractor. Es opcional, pero ayuda mucho.",
@@ -1092,6 +1098,19 @@
     "retrying": "Sigue intentando ({attempts})",
     "queuedCount": "{count, plural, one {# mensaje esperando enviarse} other {# mensajes esperando enviarse}}",
     "offline": "Sin conexión. Lo que envíe queda guardado aquí hasta que la haya.",
+    "locationTitle": "Ubicación del rescate",
+    "locationOpen": "Abrir en navegación",
+    "locationAccuracy": "GPS con precisión de unos {value}",
+    "locationNote": "Cómo entrar: {note}",
+    "locationPrivate": "Solo las personas en este rescate pueden ver esto.",
+    "locationSource": {
+      "gps": "Del GPS de su teléfono",
+      "map_pin": "Marcado en el mapa",
+      "coordinates": "Escrito a mano",
+      "what3words": "De una dirección what3words",
+      "google_maps_link": "De un enlace de Google Maps",
+      "admin_intake": "Ingresado por un administrador"
+    },
     "errors": {
       "not_found": "Esta conversación no está disponible.",
       "empty": "Escriba algo primero.",

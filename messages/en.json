@@ -944,7 +944,13 @@
       },
       "noteLabel": "Anything that helps us find you",
       "noteHint": "Optional. Gate, road name, landmark, which side of the creek.",
-      "notePlaceholder": "Past the second cattle gate, blue tractor at the turn"
+      "notePlaceholder": "Past the second cattle gate, blue tractor at the turn",
+      "mapRetry": "Try the map again",
+      "mapConfirm": "Confirm this spot",
+      "mapConfirmed": "Spot confirmed",
+      "mapStandard": "Map",
+      "mapSatellite": "Satellite",
+      "mapHelpFull": "Drag the map, tap a spot, or drag the pin. Satellite shows the treeline and the crossings — a street map out here is a grey line through nothing."
     },
     "photos": {
       "help": "A photo tells a volunteer whether to bring a winch or a tractor. Optional, but it helps a lot.",
@@ -1092,6 +1098,19 @@
     "retrying": "Still trying ({attempts})",
     "queuedCount": "{count, plural, one {# message waiting to send} other {# messages waiting to send}}",
     "offline": "No connection. Anything you send is held here until there is.",
+    "locationTitle": "Recovery location",
+    "locationOpen": "Open in navigation",
+    "locationAccuracy": "GPS accurate to about {value}",
+    "locationNote": "Getting in: {note}",
+    "locationPrivate": "Only people on this recovery can see this.",
+    "locationSource": {
+      "gps": "From their phone's GPS",
+      "map_pin": "Dropped on the map",
+      "coordinates": "Typed in",
+      "what3words": "From a what3words address",
+      "google_maps_link": "From a Google Maps link",
+      "admin_intake": "Entered by an admin"
+    },
     "errors": {
       "not_found": "This conversation isn't available.",
       "empty": "Type something first.",

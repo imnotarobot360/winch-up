@@ -14,6 +14,35 @@ import {
   type SendResult,
 } from "@/lib/chat/outbox";
 
+/**
+ * The confirmed recovery point, for the people driving to it.
+ *
+ * Optional throughout: it is absent on a database without 20260923002700, and null on a scrubbed
+ * recovery whose exact pin has been destroyed. Both mean "no card", and neither is an error.
+ */
+type RecoveryLocation = {
+  lat: number;
+  lng: number;
+  accuracy_m: number | null;
+  source: string | null;
+  note: string | null;
+  county: string | null;
+};
+
+/**
+ * Exactly the labels in the location_source enum. Checked rather than trusted: next-intl throws
+ * on a missing key, so an enum value added in a migration without matching copy would break the
+ * whole thread rather than one line of it. Unknown values render raw, which is ugly and honest.
+ */
+const LOCATION_SOURCES = new Set([
+  "gps",
+  "map_pin",
+  "coordinates",
+  "google_maps_link",
+  "what3words",
+  "admin_intake",
+]);
+
 type Message = {
   id: string;
   sender_role: "requester" | "responder" | "admin" | "system";
@@ -87,6 +116,7 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [location, setLocation] = useState<RecoveryLocation | null>(null);
   const [queued, setQueued] = useState<QueuedMessage[]>([]);
   const [live, setLive] = useState(false);
   const [offline, setOffline] = useState(false);
@@ -113,11 +143,13 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
       messages?: Message[];
       team?: (TeamMember & { is_me?: boolean })[];
       read_only?: boolean;
+      location?: RecoveryLocation | null;
     };
 
     setMessages(result.ok ? (result.messages ?? []) : null);
     setTeam(result.ok ? (result.team ?? []) : []);
     setReadOnly(Boolean(result.read_only));
+    setLocation(result.ok ? (result.location ?? null) : null);
   }, [requestId]);
 
   const send = useCallback(async (item: QueuedMessage): Promise<SendResult> => {
@@ -282,6 +314,58 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
             })()}
             onChanged={() => void load()}
           />
+        </div>
+      ) : null}
+
+      {/* Where to drive. Above the conversation on purpose -- a helper opening this on the road
+          wants the pin, not to scroll past twenty messages to find it.
+
+          The coordinates are the ones request_thread returned, which are the ones the requester
+          confirmed and the ones the matching ran against. Nothing is recomputed here, so there is
+          no way for this card to disagree with the database about where somebody is. */}
+      {location ? (
+        <div className="space-y-2 rounded-field border-2 border-good bg-surface-sunk p-3">
+          <h3 className="text-base font-semibold">{t("locationTitle")}</h3>
+
+          <p className="font-mono text-base">
+            {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
+          </p>
+
+          {location.source ? (
+            <p className="text-sm text-ink-soft">
+              {/* Named, because "coordinates" covers both a pin dropped on satellite imagery and a
+                  phone fix with 300m of error, and a volunteer deciding whether to trust it to the
+                  metre should be told which. */}
+              {LOCATION_SOURCES.has(location.source)
+                ? t(`locationSource.${location.source}` as never)
+                : location.source}
+            </p>
+          ) : null}
+
+          {location.accuracy_m != null ? (
+            <p className="text-sm text-ink-soft">
+              {t("locationAccuracy", { value: `${Math.round(location.accuracy_m)} m` })}
+            </p>
+          ) : null}
+
+          {location.note ? (
+            <p className="text-base">{t("locationNote", { note: location.note })}</p>
+          ) : null}
+
+          {/* One link for every platform. A geo: URI is the "native" answer and iOS does not
+              handle it, so this is the Google Maps directions URL, which Android hands to the
+              Maps app, iOS hands to Maps or Safari, and a laptop opens in a tab. Six decimals,
+              so the destination is the confirmed point rather than a rounded version of it. */}
+          <a
+            href={`https://www.google.com/maps/dir/?api=1&destination=${location.lat.toFixed(6)},${location.lng.toFixed(6)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="tap-target flex w-full items-center justify-center rounded-field border-2 border-brand bg-brand px-4 text-center text-lg font-semibold text-white"
+          >
+            {t("locationOpen")}
+          </a>
+
+          <p className="text-xs text-ink-faint">{t("locationPrivate")}</p>
         </div>
       ) : null}
 

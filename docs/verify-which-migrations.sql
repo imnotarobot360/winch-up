@@ -85,7 +85,8 @@ with expected(kind, name, detail, migration, file) as (
     ('trigger',  'requests_stand_down_offers',            '', '002300', '20260923002300_second_helper.sql'),
     ('hasref',   'accept_offer_by_token', 'assign_responder', '002300', '20260923002300_second_helper.sql'),
     ('hasref',   'get_request_by_token', '''unmatched'', ''accepted'', ''on_site'')', '002400', '20260923002400_offers_after_accept.sql'),
-    ('hasref',   'my_responder_profile', 'recovery_participants', '002500', '20260923002500_second_helper_dashboard.sql')
+    ('hasref',   'my_responder_profile', 'recovery_participants', '002500', '20260923002500_second_helper_dashboard.sql'),
+    ('hasref',   'request_thread',        'location_source', '002700', '20260923002700_thread_location.sql')
 ),
 checked as (
   select

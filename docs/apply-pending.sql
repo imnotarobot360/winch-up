@@ -103,6 +103,10 @@
 \i supabase/migrations/20260923002400_offers_after_accept.sql
 \i supabase/migrations/20260923002500_second_helper_dashboard.sql
 
+echo ''
+echo '=== The team can see where they are driving to ==='
+i supabase/migrations/20260923002700_thread_location.sql
+
 -- PostgREST caches the schema at startup and does not notice new functions or columns. Without
 -- this the app calls request_thread() and gets "function not found" against a database that
 -- plainly has it -- which reads as the migration not having applied.

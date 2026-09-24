@@ -715,5 +715,115 @@ select is(
 
 reset role;
 
+-- ---------------------------------------------------------------------------
+-- The recovery location in the conversation (20260923002700)
+--
+-- Spec section 8. The team can see where they are driving to. The point of these assertions is
+-- not that the coordinates come back -- it is that they come back to exactly the same people the
+-- conversation does, and to nobody else.
+-- ---------------------------------------------------------------------------
+
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"bbbb1111-0000-4000-8000-00000000000b","role":"authenticated"}';
+
+select is(
+  (public.request_thread('eeee3333-0000-4000-8000-00000000000e') -> 'location' ->> 'lat')::numeric,
+  29.760000::numeric,
+  'a helper on the recovery gets the exact latitude, not the blurred one'
+);
+
+select is(
+  (public.request_thread('eeee3333-0000-4000-8000-00000000000e') -> 'location' ->> 'lng')::numeric,
+  -95.370000::numeric,
+  'and the exact longitude'
+);
+
+-- Six decimals is about 11cm. More than that is float noise dressed up as precision.
+select ok(
+  length(split_part(
+    public.request_thread('eeee3333-0000-4000-8000-00000000000e') -> 'location' ->> 'lat',
+    '.', 2)) <= 6,
+  'rounded to six decimals -- past that it is noise, not accuracy'
+);
+
+select ok(
+  (public.request_thread('eeee3333-0000-4000-8000-00000000000e') -> 'location') ? 'source',
+  'and says how the point was chosen, because a dropped pin and a 300m GPS fix are not the same claim'
+);
+
+-- The one that matters. A location card is somewhere to drive to; it is not a reason to hand
+-- five people the mobile number of somebody stranded on their own at night.
+select ok(
+  not ((public.request_thread('eeee3333-0000-4000-8000-00000000000e') -> 'location')
+        ?| array['phone', 'requester_phone', 'contact']),
+  'the requester''s phone is NOT in the location card'
+);
+
+reset role;
+
+-- ---------------------------------------------------------------------------
+-- And the people who must not see it
+-- ---------------------------------------------------------------------------
+
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"dddd1111-0000-4000-8000-00000000000d","role":"authenticated"}';
+
+select is(
+  public.request_thread('eeee3333-0000-4000-8000-00000000000e') ->> 'error',
+  'not_found',
+  'a member who is not on the recovery gets nothing at all, location included'
+);
+
+reset role;
+
+-- A helper who withdrew keeps their history and stops being told where anybody is. Their truck
+-- is not coming; their access to a stranded stranger's exact position should not outlive that.
+update public.recovery_participants
+   set left_at = now(), status = 'withdrawn'
+ where request_id = 'eeee3333-0000-4000-8000-00000000000e'
+   and user_id = 'bbbb1111-0000-4000-8000-00000000000b';
+
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"bbbb1111-0000-4000-8000-00000000000b","role":"authenticated"}';
+
+select is(
+  public.request_thread('eeee3333-0000-4000-8000-00000000000e') ->> 'error',
+  'not_found',
+  'a helper who dropped out loses the location with the conversation'
+);
+
+reset role;
+
+-- ---------------------------------------------------------------------------
+-- A scrubbed recovery has no location to give
+-- ---------------------------------------------------------------------------
+--
+-- Deletion and retention replace the exact pin with the blurred one. Returning that as "the
+-- recovery location" would send somebody to open country half a mile away -- worse than showing
+-- nothing, because it looks precise.
+
+select app.scrub_request('eeee4444-0000-4000-8000-00000000000e');
+
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"cccc1111-0000-4000-8000-00000000000c","role":"authenticated"}';
+
+select is(
+  public.request_thread('eeee4444-0000-4000-8000-00000000000e') -> 'location',
+  'null'::jsonb,
+  'a scrubbed recovery returns no location rather than the blurred pin dressed up as the real one'
+);
+
+select is(
+  public.request_thread('eeee4444-0000-4000-8000-00000000000e') ->> 'ok',
+  'true',
+  'while the conversation itself still opens, so the history is not lost with it'
+);
+
+reset role;
+
 select * from finish();
 rollback;

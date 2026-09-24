@@ -46,6 +46,9 @@ export function LocationStep({
   const [mode, setMode] = useState<"gps" | "map" | "paste">("gps");
   const [gps, setGps] = useState<GpsState>({ kind: "idle" });
   const [pasted, setPasted] = useState("");
+  // Where the map pin is right now, before anybody has agreed to it. Separate from `value` so
+  // that panning around cannot quietly change what gets submitted.
+  const [pending, setPending] = useState<{ lat: number; lng: number } | null>(null);
   const [pasteError, setPasteError] = useState<string | null>(null);
   const [resolving, setResolving] = useState(false);
   const [note, setNote] = useState(value?.note ?? "");
@@ -135,7 +138,11 @@ export function LocationStep({
     }
   }
 
+  // Order matters: an un-confirmed pin beats a confirmed value, which beats the GPS fix, which
+  // beats the fallback. Switching to Paste and back must not throw away the spot the member was
+  // lining up, and it must not silently promote it either.
   const seed =
+    pending ??
     value ??
     (gps.kind === "fixed" ? { lat: gps.lat, lng: gps.lng } : FALLBACK_CENTER);
 
@@ -211,9 +218,20 @@ export function LocationStep({
             lng={seed.lng}
             label={t("mapLabel")}
             unavailableLabel={t("mapUnavailable")}
-            onChange={(next) =>
-              commit({ ...next, accuracyM: null, source: "map_pin" })
-            }
+            retryLabel={t("mapRetry")}
+            confirmLabel={t("mapConfirm")}
+            confirmedLabel={t("mapConfirmed")}
+            standardLabel={t("mapStandard")}
+            satelliteLabel={t("mapSatellite")}
+            confirmed={value && value.source === "map_pin" ? { lat: value.lat, lng: value.lng } : null}
+            /* Provisional. The pin moving is not the member choosing -- it happens on every pan,
+               including the ones that overshoot. Held here so the coordinate readout and the
+               confirm button track the map, and written to the form only on confirm. */
+            onChange={setPending}
+            onConfirm={(next) => {
+              commit({ ...next, accuracyM: null, source: "map_pin" });
+              setPending(null);
+            }}
           />
         </div>
       ) : null}
