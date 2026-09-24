@@ -171,9 +171,9 @@
   },
   "join": {
     "title": "Ser voluntario",
-    "intro": "Usted ya saca gente. Esto solo le manda un mensaje cuando alguien cerca lo necesita, en vez de que usted ande revisando el grupo esperando alcanzar una publicación a tiempo.",
+    "intro": "Usted ya saca gente. Esto solo se lo pone enfrente cuando alguien cerca lo necesita, en vez de que usted ande revisando el grupo esperando alcanzar una publicación a tiempo.",
     "phoneLabel": "Su número de celular",
-    "phoneHint": "Le mandamos un código para confirmarlo. Este también es el número que recibe los avisos.",
+    "phoneHint": "Le mandamos un código para confirmarlo. Los avisos llegan por la aplicación, y este número solo se le da al conductor cuyo rescate usted tome.",
     "sendCode": "Mándenme un código",
     "sending": "Enviando…",
     "codeLabel": "El código que le acabamos de mandar",
@@ -204,7 +204,7 @@
     "save": "Registrarme",
     "saving": "Guardando…",
     "pendingTitle": "Ya está en la lista",
-    "pendingBody": "Un administrador revisa cada registro antes de que alguien empiece a recibir avisos. Así mantenemos a las empresas de grúas fuera de un grupo de voluntarios. Le avisaremos por mensaje cuando esté aprobado.",
+    "pendingBody": "Un administrador revisa cada registro antes de que alguien empiece a recibir avisos. Así mantenemos a las empresas de grúas fuera de un grupo de voluntarios. Su panel se lo indica cuando esté aprobado.",
     "goToDashboard": "Ir a mi panel",
     "errors": {
       "invalid_phone": "Eso no parece un número de celular de Estados Unidos.",
@@ -219,7 +219,7 @@
       "invalid_location": "No pudimos usar esa ubicación. Intente buscar otra vez.",
       "not_signed_in": "Su sesión venció. Confirme su número otra vez."
     },
-    "smsConsent": "Al darnos su número acepta recibir mensajes de texto de Winch Up sobre solicitudes de rescate cerca de usted y los trabajos que tome. La frecuencia varía: solo le escribimos cuando alguien cerca está atascado. Pueden aplicar tarifas de mensajes y datos. Responda BAJA para darse de baja, AYUDA para ayuda. Consulte nuestros Términos y Política de Privacidad."
+    "smsConsent": "Al darnos su número acepta recibir mensajes de texto de Winch Up sobre solicitudes de rescate cerca de usted y los trabajos que tome. Por ahora esos avisos llegan por la aplicación, y el único mensaje que enviamos es el código para confirmar este número. Pueden aplicar tarifas de mensajes y datos. Responda BAJA para darse de baja, AYUDA para ayuda. Consulte nuestros Términos y Política de Privacidad."
   },
   "me": {
     "pageTitle": "Mi panel",
@@ -231,7 +231,7 @@
     "stats": "{count, plural, =0 {Aún sin rescates} one {# rescate} other {# rescates}}",
     "notApproved": "Esta cuenta no está aprobada para recibir avisos. Comuníquese con los administradores del grupo si cree que es un error.",
     "onCall": "Está disponible",
-    "onCallHint": "Le avisamos cuando alguien cerca necesite su equipo.",
+    "onCallHint": "Los avisos aparecen aquí y en sus notificaciones cuando alguien cerca necesite su equipo.",
     "paused": "Está en pausa",
     "pausedHint": "No recibirá avisos hasta que lo active de nuevo.",
     "pauseMe": "Pausar mis avisos",
@@ -978,7 +978,7 @@
     "contact": {
       "nameLabel": "Su nombre",
       "phoneLabel": "Su número de celular",
-      "phoneHint": "Le mandamos un mensaje con un enlace para seguir el proceso.",
+      "phoneHint": "Para que el voluntario que salga pueda llamarle. Su página de estado se abre en cuanto envíe esto.",
       "privacy": "Su número nunca se muestra públicamente. Solo llega al voluntario que toma su solicitud."
     },
     "consent": {
@@ -1024,7 +1024,7 @@
     "cancelRequest": "Cancelar esta solicitud",
     "cancelConfirm": "¿Cancelar esta solicitud? A los voluntarios que van en camino se les avisará que se detengan.",
     "thankYouLabel": "Dé las gracias (opcional)",
-    "thankYouHint": "Le enviaremos esto al voluntario por mensaje. Sin teléfonos ni enlaces.",
+    "thankYouHint": "Le haremos llegar esto al voluntario. Sin teléfonos ni enlaces.",
     "sendThanks": "Enviar agradecimiento",
     "shareLink": "Compartir este enlace",
     "shareTitle": "Solicitud de rescate {code}",
@@ -1083,6 +1083,11 @@
     "sending": "Enviando…",
     "read": "Visto",
     "closedNote": "Este rescate ya terminó, así que los mensajes están cerrados. Si algo salió mal, use el enlace de reporte abajo.",
+    "waiting": "Esperando señal",
+    "waitingNote": "Guardado en este teléfono hasta que haya señal. Se envía solo: no tiene que volver a escribirlo.",
+    "retrying": "Sigue intentando ({attempts})",
+    "queuedCount": "{count, plural, one {# mensaje esperando enviarse} other {# mensajes esperando enviarse}}",
+    "offline": "Sin conexión. Lo que envíe queda guardado aquí hasta que la haya.",
     "errors": {
       "not_found": "Esta conversación no está disponible.",
       "empty": "Escriba algo primero.",

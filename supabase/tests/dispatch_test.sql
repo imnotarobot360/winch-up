@@ -975,5 +975,100 @@ select is(
 
 reset role;
 
+-- ---------------------------------------------------------------------------
+-- The SMS switch (20260923002000)
+--
+-- Recovery notifications moved to push and in-app, and recovery SMS is off at the source. The
+-- thing worth asserting is not that the flag exists but that the outbox goes quiet WITHOUT going
+-- blind, and that a suppressed row carries nothing a leak could use.
+--
+-- Rows are found by the id queue_sms returns, never by "the most recent one". created_at defaults
+-- to now(), which inside a transaction is the transaction timestamp -- so every row written by
+-- this suite has an identical created_at and "order by created_at desc limit 1" picks an
+-- arbitrary one. That cost three failures that looked like the switch not working.
+-- ---------------------------------------------------------------------------
+
+select is(
+  (select value from app_settings where key = 'sms.outbound_enabled'),
+  'false'::jsonb,
+  'recovery SMS ships off -- a setting that arrives on gets one deploy where it texts real people'
+);
+
+create temp table sms_probe as
+  select app.queue_sms('+15125559701', 'responder.assigned',
+                       jsonb_build_object('requester_phone', '+15125559702', 'lat', 30.12345,
+                                          'requester_name', 'Someone Stuck'),
+                       'en', (select id from requests limit 1)) as off_id;
+
+select isnt(
+  (select off_id from sms_probe), null,
+  'a suppressed message still gets a row: "why did nobody get told" needs an answer'
+);
+
+select is(
+  (select m.state::text from sms_messages m, sms_probe p where m.id = p.off_id),
+  'suppressed',
+  'in a state of its own, which is ours rather than Twilio''s'
+);
+
+select is(
+  (select m.to_phone from sms_messages m, sms_probe p where m.id = p.off_id),
+  '+10000000000',
+  'with no phone number -- an audit trail that accumulates numbers is not a privacy improvement'
+);
+
+select is(
+  (select m.params from sms_messages m, sms_probe p where m.id = p.off_id),
+  '{}'::jsonb,
+  'and no payload, because responder.assigned params carry the phone, the name and the exact pin'
+);
+
+select is(
+  (select m.template_key from sms_messages m, sms_probe p where m.id = p.off_id),
+  'responder.assigned',
+  'it keeps what it was going to say, which is the part that answers the question'
+);
+
+select is(
+  (select count(*)::int from sms_messages m, sms_probe p
+    where m.id = p.off_id and m.state = 'queued'),
+  0,
+  'and the drain cannot pick it up: suppressed is terminal, so flipping the switch back on does not release a backlog of texts about recoveries that finished weeks ago'
+);
+
+-- On.
+update app_settings set value = 'true'::jsonb where key = 'sms.outbound_enabled';
+
+alter table sms_probe add column on_id uuid;
+update sms_probe set on_id =
+  app.queue_sms('+15125559701', 'responder.assigned',
+                jsonb_build_object('requester_phone', '+15125559702'),
+                'en', (select id from requests limit 1));
+
+select isnt(
+  (select on_id from sms_probe), null,
+  'turned back on, the outbox behaves exactly as it did before'
+);
+
+select is(
+  (select m.state::text from sms_messages m, sms_probe p where m.id = p.on_id),
+  'queued',
+  'the message is queued for the sender'
+);
+
+select is(
+  (select m.to_phone from sms_messages m, sms_probe p where m.id = p.on_id),
+  '+15125559701',
+  'with the real number'
+);
+
+select is(
+  (select m.params ->> 'requester_phone' from sms_messages m, sms_probe p where m.id = p.on_id),
+  '+15125559702',
+  'and the payload it needs to render'
+);
+
+update app_settings set value = 'false'::jsonb where key = 'sms.outbound_enabled';
+
 select * from finish();
 rollback;

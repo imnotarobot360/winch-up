@@ -323,11 +323,49 @@ select is(
   'and it is handed to the outbox'
 );
 
+-- The outbox row exists either way. Whether it carries a phone number depends on
+-- sms.outbound_enabled, which ships off (20260923002000) -- so this asserts the plumbing by
+-- template key, and the switch separately below.
 select ok(
-  exists (select 1 from sms_messages
-           where template_key = 'requester.on_site' and to_phone = '+15125559501'),
+  exists (select 1 from sms_messages where template_key = 'requester.on_site'),
   'which is the same outbox the dispatch path uses, not a second one'
 );
+
+select is(
+  (select state::text from sms_messages where template_key = 'requester.on_site'),
+  'suppressed',
+  'and with recovery SMS off it is recorded rather than sent'
+);
+
+select is(
+  (select to_phone from sms_messages where template_key = 'requester.on_site'),
+  '+10000000000',
+  'carrying no number, because a message nobody sends should not bank one'
+);
+
+-- Turned on, the same notification reaches the same outbox with the real number. This is the
+-- assertion that would catch the notification path growing a second sender of its own.
+reset role;
+update app_settings set value = 'true'::jsonb where key = 'sms.outbound_enabled';
+
+select ok(
+  app.notify('f1111111-0000-4000-8000-0000000000ff', 'recovery_status', 'notify.request.on_site',
+             jsonb_build_object('sms_template', 'requester.on_site', 'short_code', 'TX-CD34'),
+             null, array['sms']::notification_channel[], 'sms-switch-on') is not null,
+  'a second one queued with texting switched on'
+);
+
+select ok((public.drain_notifications(500) ->> 'ok')::boolean, 'drained');
+
+select ok(
+  exists (select 1 from sms_messages
+           where template_key = 'requester.on_site'
+             and state = 'queued'
+             and to_phone = '+15125559501'),
+  'reaches the outbox addressed to the real number, ready for the sender'
+);
+
+update app_settings set value = 'false'::jsonb where key = 'sms.outbound_enabled';
 
 -- ---------------------------------------------------------------------------
 -- 6. Retry and giving up

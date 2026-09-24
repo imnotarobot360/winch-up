@@ -69,6 +69,46 @@ values ('a0000000-3333-4333-8333-0000000000aa', 'a0000001-0000-4000-8000-0000000
 create temp table before_delete as
   select location as exact_pin from requests where id = 'a0000000-2222-4222-8222-0000000000aa';
 
+-- The outbox, which is where the two 2026-09-23 findings lived.
+--
+-- Row one is the message that carried the most: 'responder.assigned' params hold the requester's
+-- phone, their name and the exact pin to five decimals. to_phone and body were redacted and
+-- params were not, so the three things the delete promises to destroy survived in a jsonb column.
+--
+-- Row two belongs to a DIFFERENT recovery, filed by somebody who is not leaving. It is addressed
+-- to the departing volunteer, and nothing in scrub_responder used to look at this table -- so
+-- whether their number survived their own deletion depended on whether a stranger later deleted
+-- theirs.
+insert into requests (
+  id, requester_name, requester_phone, requester_user_id, location, vehicle_class, stuck_type,
+  land_type, status, emergency_ack_at, rules_accepted, waiver_id, waiver_accepted_at
+) values (
+  'a0000000-4444-4444-8444-0000000000aa',
+  'Staying Person', '+15125559602', 'a0000001-0000-4000-8000-0000000000aa',
+  extensions.st_setsrid(extensions.st_point(-97.7500, 30.2800), 4326)::extensions.geography,
+  'truck', 'sand', 'public', 'recovered', now(), true,
+  (select id from waivers where slug = 'requester_waiver' and is_current), now()
+);
+
+insert into sms_messages (
+  id, direction, state, to_phone, template_key, params, locale, body, request_id, responder_id
+) values (
+  'a0000000-5555-4555-8555-0000000000aa', 'outbound', 'sent', '+15125559601',
+  'responder.assigned',
+  jsonb_build_object(
+    'requester_phone', '+15125559601',
+    'requester_name',  'Leaving Person',
+    'lat', 30.27000, 'lng', -97.74000,
+    'location_note', 'past the second cattle guard'
+  ),
+  'en', 'rendered text', 'a0000000-2222-4222-8222-0000000000aa',
+  'a0000000-1111-4111-8111-0000000000aa'
+), (
+  'a0000000-6666-4666-8666-0000000000aa', 'outbound', 'sent', '+15125559601',
+  'responder.offer', jsonb_build_object('short_code', 'ABC123'), 'en', 'rendered text',
+  'a0000000-4444-4444-8444-0000000000aa', 'a0000000-1111-4111-8111-0000000000aa'
+);
+
 -- ---------------------------------------------------------------------------
 -- 1. Deletion deletes the person
 -- ---------------------------------------------------------------------------
@@ -130,6 +170,39 @@ select is(
 select ok(
   (select redacted_at is not null from responders where id = 'a0000000-1111-4111-8111-0000000000aa'),
   'and the row records that it has been through this, so it is not scrubbed twice'
+);
+
+-- The outbox. Both of these failed before 20260923002000 and both were found by reading what a
+-- suppressed message would be allowed to keep.
+select is(
+  (select to_phone from sms_messages where id = 'a0000000-5555-4555-8555-0000000000aa'),
+  '+10000000000',
+  'the outbox loses the number it texted'
+);
+
+select is(
+  (select params from sms_messages where id = 'a0000000-5555-4555-8555-0000000000aa'),
+  '{}'::jsonb,
+  'and the params it rendered from -- which held the phone, the name and the pin to five decimals'
+);
+
+select is(
+  (select body from sms_messages where id = 'a0000000-5555-4555-8555-0000000000aa'),
+  null,
+  'and the rendered text'
+);
+
+-- The one that did not depend on anybody else.
+select is(
+  (select to_phone from sms_messages where id = 'a0000000-6666-4666-8666-0000000000aa'),
+  '+10000000000',
+  'a departing volunteer takes their own number out of messages on OTHER people''s recoveries too'
+);
+
+select ok(
+  exists (select 1 from requests where id = 'a0000000-4444-4444-8444-0000000000aa'
+           and requester_phone <> '+10000000000'),
+  'without touching the recovery that message was about, which belongs to somebody who stayed'
 );
 
 -- ---------------------------------------------------------------------------

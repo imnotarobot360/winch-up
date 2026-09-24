@@ -6,6 +6,13 @@ import { useFormatter, useNow, useTranslations } from "next-intl";
 import { TeamPanel, type TeamMember } from "@/components/recovery/team-panel";
 import { Button, Callout, Card, TextArea } from "@/components/ui/primitives";
 import { supabaseBrowser } from "@/lib/supabase/client";
+import {
+  enqueue,
+  flush,
+  listQueued,
+  type QueuedMessage,
+  type SendResult,
+} from "@/lib/chat/outbox";
 
 type Message = {
   id: string;
@@ -15,11 +22,24 @@ type Message = {
   attachment_type: string | null;
   /** A first name. Null for a system line, which belongs to nobody. */
   sender_name: string | null;
+  /** This reader's own idempotency key, or null on somebody else's message. */
+  client_id: string | null;
   created_at: string;
   mine: boolean;
 };
 
+/**
+ * The floor. Fifteen seconds while the socket is down, a minute while it is up.
+ *
+ * The slow one is not an optimisation, it is the check that the socket is telling the truth: a
+ * websocket that silently stopped delivering looks exactly like a quiet conversation, and a
+ * minute is the longest this is willing to be wrong about that.
+ */
 const POLL_MS = 15_000;
+const POLL_MS_LIVE = 60_000;
+
+/** Errors that mean "do not retry this". Anything else is treated as no answer. */
+const TERMINAL = new Set(["not_found", "empty", "too_long", "closed", "bad_attachment_type"]);
 
 /**
  * The conversation for one recovery: the person who is stuck and everybody helping them.
@@ -34,9 +54,17 @@ const POLL_MS = 15_000;
  * same is true of a helper who withdrew: they keep their history, they stop seeing what is said
  * next.
  *
- * Polling rather than realtime. Fifteen seconds is well inside the rhythm of "I'm at the gate" /
- * "be there in twenty", and it costs one request instead of a websocket held open on a phone
- * with one bar of signal.
+ * DELIVERY
+ *
+ * Two channels, and the slow one is the one that is trusted. Supabase Realtime makes a message
+ * appear the moment it is written; a poll underneath it means a socket that dies on one bar of
+ * signal degrades to late messages rather than to no messages. The socket only ever triggers a
+ * reload -- nothing is rendered from its payload -- so a dropped or duplicated event cannot put
+ * the thread into a state the server does not agree with.
+ *
+ * Outbound goes through a local queue keyed by an id minted before the first attempt, so a retry
+ * over bad signal cannot post the same line twice. Nothing is drawn as delivered until the server
+ * says so: a queued message renders as waiting, visibly different from one that arrived.
  */
 export function RequestThread({ requestId, closed }: { requestId: string; closed?: boolean }) {
   const t = useTranslations("thread");
@@ -59,7 +87,14 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [queued, setQueued] = useState<QueuedMessage[]>([]);
+  const [live, setLive] = useState(false);
+  const [offline, setOffline] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  // A flush must not overlap itself: the poll, the socket and the online event can all fire at
+  // once, and three concurrent passes over the same queue is how you get the duplicate the key
+  // exists to prevent.
+  const flushing = useRef(false);
 
   const load = useCallback(async () => {
     const { data, error: rpcError } = await supabaseBrowser().rpc("request_thread", {
@@ -67,7 +102,8 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
     });
 
     if (rpcError) {
-      // Signed out, or the session expired. Not a participant either way.
+      // Signed out, the session expired, or the network is gone. Not a participant either way,
+      // and the queue is left alone: this says nothing about whether a send would work.
       setMessages(null);
       return;
     }
@@ -84,17 +120,116 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
     setReadOnly(Boolean(result.read_only));
   }, [requestId]);
 
+  const send = useCallback(async (item: QueuedMessage): Promise<SendResult> => {
+    const { data, error: rpcError } = await supabaseBrowser().rpc("send_request_message", {
+      p_payload: { request_id: item.requestId, body: item.body, client_id: item.clientId },
+    });
+
+    // No answer. Could be no signal, could be the reply that was lost -- and it does not matter,
+    // because the next attempt carries the same key.
+    if (rpcError) return { kind: "unreachable" };
+
+    const result = data as { ok: boolean; error?: string } | null;
+    if (result?.ok) return { kind: "sent" };
+
+    const reason = result?.error ?? "failed";
+    return TERMINAL.has(reason) ? { kind: "rejected", error: reason } : { kind: "unreachable" };
+  }, []);
+
+  const drain = useCallback(async () => {
+    if (flushing.current) return;
+    flushing.current = true;
+    try {
+      const outcome = await flush(requestId, send);
+      setQueued(listQueued(requestId));
+      if (outcome.rejected.length > 0) setError(outcome.rejected[0].error);
+      if (outcome.sent > 0) await load();
+    } finally {
+      flushing.current = false;
+    }
+  }, [requestId, send, load]);
+
+  // First paint: drain anything left over from a previous session before drawing, so a message
+  // that actually landed is not briefly shown as still waiting.
   useEffect(() => {
-    void load();
-    const timer = setInterval(() => void load(), POLL_MS);
+    setQueued(listQueued(requestId));
+    void (async () => {
+      await drain();
+      await load();
+    })();
+  }, [requestId, drain, load]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      void load();
+      void drain();
+    }, live ? POLL_MS_LIVE : POLL_MS);
     return () => clearInterval(timer);
-  }, [load]);
+  }, [load, drain, live]);
+
+  // Realtime, as a broadcast rather than postgres_changes.
+  //
+  // postgres_changes would authorise each subscriber by running RLS on request_messages, and that
+  // table has no policy and no grant to authenticated -- it is served only through the RPC. The
+  // subscription would connect, report SUBSCRIBED and deliver nothing, which is worse than not
+  // having it. Granting SELECT on the table to fix that would hand every participant the
+  // sender_user_id of everyone else, which is exactly what the RPC declines to return.
+  //
+  // So the database sends a nudge carrying nothing but the request id
+  // (20260923002200_realtime_broadcast.sql) and the content is re-read through the RPC. The
+  // socket never becomes a second, less careful way to read a conversation.
+  //
+  // Untestable against the local stack, which has no realtime server, so it is written to be
+  // harmless when it never connects: the only thing an event does is ask for a reload, and the
+  // poll above is doing that anyway.
+  useEffect(() => {
+    const client = supabaseBrowser();
+
+    // A private channel is authorised by a policy on realtime.messages, which needs the member's
+    // JWT on the socket rather than the anon key the client was constructed with. Without this
+    // the subscription is refused and the poll quietly carries the thread -- the failure is
+    // invisible, which is why it is worth the extra line.
+    void client.realtime.setAuth();
+
+    const channel = client
+      .channel(`recovery:${requestId}`, { config: { private: true } })
+      .on("broadcast", { event: "changed" }, () => void load())
+      .subscribe((status) => {
+        // Only SUBSCRIBED slows the poll down. Anything else -- closed, errored, timed out --
+        // puts it back to fifteen seconds, which is the whole reason the floor exists.
+        setLive(status === "SUBSCRIBED");
+      });
+
+    return () => {
+      setLive(false);
+      void client.removeChannel(channel);
+    };
+  }, [requestId, load]);
+
+  // Coming back from a tunnel. navigator.onLine is only ever trusted in the negative direction:
+  // it says nothing useful about whether the server is reachable, but "the OS thinks the radio
+  // just came back" is a good moment to try again.
+  useEffect(() => {
+    const update = () => setOffline(typeof navigator !== "undefined" && !navigator.onLine);
+    update();
+    const back = () => {
+      update();
+      void drain();
+      void load();
+    };
+    window.addEventListener("online", back);
+    window.addEventListener("offline", update);
+    return () => {
+      window.removeEventListener("online", back);
+      window.removeEventListener("offline", update);
+    };
+  }, [drain, load]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "nearest" });
-  }, [messages?.length]);
+  }, [messages?.length, queued.length]);
 
-  async function send(event: React.FormEvent) {
+  async function submit(event: React.FormEvent) {
     event.preventDefault();
     const text = body.trim();
     if (!text || busy) return;
@@ -102,25 +237,23 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
     setBusy(true);
     setError(null);
 
-    const { data, error: rpcError } = await supabaseBrowser().rpc("send_request_message", {
-      p_payload: { request_id: requestId, body: text },
-    });
-
-    setBusy(false);
-
-    const result = data as { ok: boolean; error?: string } | null;
-
-    if (rpcError || !result?.ok) {
-      setError(result?.error ?? "failed");
-      return;
-    }
-
+    // Queued first, then sent. The other order loses the message if the tab is closed during the
+    // request, and this is a product for people whose phone is about to die.
+    enqueue(requestId, text);
     setBody("");
-    await load();
+    setQueued(listQueued(requestId));
+
+    await drain();
+    setBusy(false);
   }
 
   // Not a participant, or signed out. Render nothing at all.
   if (messages === null) return null;
+
+  // A queued message the server already has. Happens after a reload while the queue is
+  // non-empty: the flush has not confirmed it yet, but the thread already shows it.
+  const landed = new Set(messages.map((m) => m.client_id).filter(Boolean) as string[]);
+  const pending = queued.filter((q) => !landed.has(q.clientId));
 
   return (
     <Card className="space-y-3">
@@ -130,6 +263,8 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
       </div>
 
       {error ? <Callout tone="danger">{t(`errors.${error}`)}</Callout> : null}
+
+      {offline ? <Callout tone="neutral">{t("offline")}</Callout> : null}
 
       {/* This member's own controls only -- the roster is rendered once, by the page above. The
           first version showed the full panel here too, which put the same list of helpers on
@@ -150,7 +285,7 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
         </div>
       ) : null}
 
-      {messages.length === 0 ? (
+      {messages.length === 0 && pending.length === 0 ? (
         <p className="text-base text-ink-soft">{t("empty")}</p>
       ) : (
         <ul className="space-y-2">
@@ -182,15 +317,36 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
               </p>
             </li>
           ))}
+
+          {/* Written by this member, not yet acknowledged by the server. Dashed and dimmed: it
+              must not be mistakable for a message the team can see, because acting on "I told
+              them" when nobody was told is the failure this whole queue exists to avoid. */}
+          {pending.map((item) => (
+            <li
+              key={item.clientId}
+              className="ml-auto max-w-[85%] rounded-field border-2 border-dashed border-line bg-surface-sunk p-3 opacity-70"
+            >
+              <p className="whitespace-pre-wrap text-base">{item.body}</p>
+              <p className="mt-1 text-xs text-ink-faint">
+                {item.attempts > 1 ? t("retrying", { attempts: item.attempts }) : t("waiting")}
+              </p>
+            </li>
+          ))}
         </ul>
       )}
+
+      {pending.length > 0 ? (
+        <p className="text-sm text-ink-faint">
+          {t("queuedCount", { count: pending.length })} — {t("waitingNote")}
+        </p>
+      ) : null}
 
       <div ref={endRef} />
 
       {closed || readOnly ? (
         <p className="text-sm text-ink-faint">{t("closedNote")}</p>
       ) : (
-        <form onSubmit={send} className="space-y-2">
+        <form onSubmit={submit} className="space-y-2">
           <TextArea
             aria-label={t("composeLabel")}
             placeholder={t("placeholder")}

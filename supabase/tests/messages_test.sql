@@ -210,6 +210,81 @@ select is(
   'and so is an attachment that is not an image'
 );
 
+-- ---------------------------------------------------------------------------
+-- The idempotency key (20260923002100)
+--
+-- The reconnect case: the phone sent it, the response never came back, and the retry cannot tell
+-- whether the first attempt landed. Every assertion here is about the team seeing the line once.
+-- ---------------------------------------------------------------------------
+
+select is(
+  public.send_request_message(jsonb_build_object(
+    'request_id', 'f0000000-1111-4111-8111-00000000000f',
+    'body', 'at the gate',
+    'client_id', 'c0000000-0000-4000-8000-00000000000f')) ->> 'ok',
+  'true',
+  'a message carrying an idempotency key is accepted'
+);
+
+select is(
+  public.send_request_message(jsonb_build_object(
+    'request_id', 'f0000000-1111-4111-8111-00000000000f',
+    'body', 'at the gate',
+    'client_id', 'c0000000-0000-4000-8000-00000000000f')) ->> 'duplicate',
+  'true',
+  'and the retry is told it already landed, rather than being refused'
+);
+
+select is(
+  (select count(*)::int
+     from jsonb_array_elements(
+            public.request_thread('f0000000-1111-4111-8111-00000000000f') -> 'messages') m
+    where m ->> 'body' = 'at the gate'),
+  1,
+  'the team sees it once -- which is the whole point of the key'
+);
+
+select is(
+  public.send_request_message(jsonb_build_object(
+    'request_id', 'f0000000-1111-4111-8111-00000000000f',
+    'body', 'at the gate',
+    'client_id', 'c0000000-0000-4000-8000-00000000000f')) ->> 'id',
+  (select m ->> 'id'
+     from jsonb_array_elements(
+            public.request_thread('f0000000-1111-4111-8111-00000000000f') -> 'messages') m
+    where m ->> 'body' = 'at the gate'),
+  'and the retry gets the id of the row that did land, not a new one'
+);
+
+-- The same words with a fresh key are a different message. Somebody saying "yes" twice means it
+-- twice, and an over-eager dedupe on body would swallow the second one.
+select is(
+  public.send_request_message(jsonb_build_object(
+    'request_id', 'f0000000-1111-4111-8111-00000000000f',
+    'body', 'at the gate',
+    'client_id', 'c0000000-0000-4000-8000-00000000001f')) ->> 'duplicate',
+  null,
+  'the same text sent deliberately again is a new message, because the key is new'
+);
+
+select is(
+  (select count(*)::int
+     from jsonb_array_elements(
+            public.request_thread('f0000000-1111-4111-8111-00000000000f') -> 'messages') m
+    where m ->> 'body' = 'at the gate'),
+  2,
+  'and it appears twice, because the member typed it twice'
+);
+
+-- A caller with no key gets exactly the old behaviour.
+select is(
+  public.send_request_message(jsonb_build_object(
+    'request_id', 'f0000000-1111-4111-8111-00000000000f',
+    'body', 'no key here')) ->> 'ok',
+  'true',
+  'a payload with no key still works: the column is nullable and unconstrained'
+);
+
 -- A thread that stays open forever is a channel between two strangers who met once. The incident
 -- report is the route if something needs saying after the job is done.
 reset role;
@@ -232,6 +307,19 @@ select is(
   public.request_thread('f0000000-1111-4111-8111-00000000000f') ->> 'ok',
   'true',
   'but both people can still read what was said'
+);
+
+-- The order of the checks inside send_request_message matters here. A message written while the
+-- recovery was live, whose retry arrives after it finished, DID happen and is already in the
+-- thread. Answering 'closed' would leave the phone holding it in the queue forever, retrying
+-- something that succeeded.
+select is(
+  public.send_request_message(jsonb_build_object(
+    'request_id', 'f0000000-1111-4111-8111-00000000000f',
+    'body', 'at the gate',
+    'client_id', 'c0000000-0000-4000-8000-00000000000f')) ->> 'duplicate',
+  'true',
+  'a retry of a message that already landed is confirmed even after the recovery closes'
 );
 
 reset role;
