@@ -204,6 +204,34 @@ register a subscription with a genuine P-256 key and an unreachable endpoint, dr
 delivery comes back `failed` with `getaddrinfo ENOTFOUND`, which means the payload encrypted and
 the VAPID JWT signed.
 
+## Signing up, and the metadata the shim used to throw away
+
+The shim implements `POST /auth/v1/signup` as of 2026-09-25. Before that it did not, so
+`supabase.auth.signUp()` got a 404 and the real arrival path could not be exercised locally at
+all -- every suite signed in as a seeded account.
+
+Two things about how it behaves, both deliberate:
+
+**It stores `data` as `raw_user_meta_data`.** The signup form puts the member's language there
+and a database trigger reads it much later, when the welcome email is queued. The shim used to
+hard-code `{}`, which meant no test could distinguish a form that sends the locale from one that
+does not.
+
+**It creates the account UNCONFIRMED**, like production with email confirmations on. Auto-confirming
+would be easier and would be wrong: the welcome email hangs off `email_confirmed_at` going null
+to a timestamp, so a shim that confirmed on creation would exercise the insert trigger and never
+the update trigger that fires for actual members.
+
+Confirming is `POST /auth/v1/verify` with `{ email, token: "123456", type: "signup" }` --
+real Supabase spells it `verifyOtp({ email, token, type: 'signup' })`. There is no link to
+click, so a test calls it directly.
+
+```bash
+curl -s -X POST http://127.0.0.1:54321/auth/v1/signup -H "content-type: application/json"   -d '{"email":"x@example.invalid","password":"recovery-demo-2026","data":{"locale":"es"}}'
+```
+
+Accounts created this way accumulate; `node scripts/local-stack/rebuild.mjs` is what clears them.
+
 ## The E2E rate limit, which is the app working
 
 `limits.max_requests_per_ip_per_hour` is 5 and everything local comes from `::1`.

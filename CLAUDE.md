@@ -347,6 +347,14 @@ docs/                     decisions + runbooks
   verified before the provider was bought still gets their welcome email on the first tick after
   it is configured. Marking it failed would burn the queue silently, which is the same mistake
   the push drain avoids by leaving rows alone when VAPID is unset.
+- **The local auth shim had no `/signup` route until 2026-09-25**, so the way every member
+  actually arrives 404'd locally and every suite signed in as a seeded account instead. It also
+  hard-coded `raw_user_meta_data` to `{}`, which meant nothing could tell "auth-form sends the
+  locale" apart from "auth-form does not" -- and that field is the only record of a member's
+  language, read by the welcome-email trigger long after the browser is gone. The shim now stores
+  what the form sends and creates the account UNCONFIRMED, like production: auto-confirming would
+  exercise the insert trigger and silently never test the update trigger that fires for real
+  members. `e2e/signup.spec.ts` drives it in Spanish.
 - **A migration is not in production because a session said it was.** CLAUDE.md claimed all 26
   were verified applied on 2026-09-24. On 2026-09-25 a run of `docs/verify-which-migrations.sql`
   found `20260923002700` missing and `20260924000100` never applied at all -- which meant
@@ -405,7 +413,7 @@ Four layers. Run all of them before claiming anything works.
 ```
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
 npm test            165 unit + component tests (vitest)
-npm run test:e2e    188 Playwright tests — android, iphone, tablet, desktop
+npm run test:e2e    192 Playwright tests — android, iphone, tablet, desktop
 supabase test db    795 pgTAP assertions across eighteen suites
 ```
 

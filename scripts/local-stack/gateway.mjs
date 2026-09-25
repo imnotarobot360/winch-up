@@ -124,13 +124,21 @@ function sessionFor(user) {
 }
 
 function userObject(user) {
+  const email = user.email ?? "";
   return {
     id: user.id,
     aud: "authenticated",
     role: "authenticated",
-    phone: user.phone.replace(/^\+/, ""),
-    app_metadata: { provider: "phone", providers: ["phone"] },
-    user_metadata: {},
+    email,
+    phone: (user.phone ?? "").replace(/^\+/, ""),
+    email_confirmed_at: user.email_confirmed_at ?? null,
+    app_metadata: email
+      ? { provider: "email", providers: ["email"] }
+      : { provider: "phone", providers: ["phone"] },
+    // Echoed back rather than hard-coded empty. The signup form puts the member's language in
+    // here and a database trigger reads it much later, when the welcome email is queued -- so a
+    // shim that dropped it would let that whole path look tested when it was not.
+    user_metadata: user.user_metadata ?? {},
     identities: [],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -157,10 +165,81 @@ async function handleAuth(req, res, url, body) {
     return json(200, { data: { user: null, session: null }, error: null });
   }
 
+  // Email + password signup.
+  //
+  // Until now this 404'd, which meant the signup form -- the way every member actually arrives --
+  // could not be exercised locally at all. Worse, it meant the `data` the form sends was never
+  // stored anywhere, so nothing could tell the difference between "auth-form puts the locale in
+  // user metadata" and "auth-form does not", and the welcome email's whole language path looked
+  // covered when it was not.
+  //
+  // Created UNCONFIRMED, like production with email confirmations on. That matters: the welcome
+  // email hangs off email_confirmed_at going null -> timestamp, and a shim that auto-confirmed
+  // would exercise the other trigger and quietly never test the one that fires for real members.
+  if (route === "/signup" && req.method === "POST") {
+    const email = String(parsed.email ?? "").trim().toLowerCase();
+    const password = String(parsed.password ?? "");
+
+    if (!email || !password) {
+      return json(400, { error: "validation_failed", error_description: "email and password required" });
+    }
+
+    const metadata = JSON.stringify(parsed.data ?? {});
+
+    const existing = await sql(`select id::text from auth.users where email = ${quote(email)}`);
+
+    if (existing.length) {
+      // Production does not say "that address is taken" -- it is an account-enumeration oracle,
+      // and auth-form.tsx relies on the answer being identical either way. So does this.
+      return json(200, { user: userObject({ id: existing[0][0], email, user_metadata: {} }), session: null });
+    }
+
+    const created = await sql(
+      `insert into auth.users (instance_id, id, aud, role, email, encrypted_password,
+                               email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+                               created_at, updated_at,
+                               confirmation_token, recovery_token, email_change, email_change_token_new)
+       values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated',
+               'authenticated', ${quote(email)},
+               extensions.crypt(${quote(password)}, extensions.gen_salt('bf')),
+               null,
+               '{"provider":"email","providers":["email"]}'::jsonb,
+               ${quote(metadata)}::jsonb, now(), now(), '', '', '', '')
+       returning id::text`,
+    );
+
+    console.log(`  [auth shim] signed up ${email}, unconfirmed, metadata ${metadata}`);
+
+    return json(200, {
+      user: userObject({ id: created[0][0], email, user_metadata: parsed.data ?? {} }),
+      session: null,
+    });
+  }
+
   if (route === "/verify" && req.method === "POST") {
     if (String(parsed.token) !== TEST_OTP) {
       return json(403, { error: "invalid_otp", error_description: "Token has expired or is invalid" });
     }
+
+    // Confirming an emailed signup link. Real Supabase exposes this as
+    // verifyOtp({ email, token, type: 'signup' }); there is no link to click here, so a test
+    // calls it directly. The point is that it writes email_confirmed_at the same way production
+    // does, which is what the welcome-email trigger watches.
+    if (parsed.type === "signup" || parsed.email) {
+      const email = String(parsed.email ?? "").trim().toLowerCase();
+      const rows = await sql(
+        `update auth.users set email_confirmed_at = coalesce(email_confirmed_at, now()),
+                               updated_at = now()
+          where email = ${quote(email)}
+        returning id::text, coalesce(phone, ''), raw_user_meta_data::text`,
+      );
+
+      if (!rows.length) return json(404, { message: "User not found" });
+
+      console.log(`  [auth shim] confirmed ${email}`);
+      return json(200, sessionFor({ id: rows[0][0], phone: rows[0][1], email }));
+    }
+
     const user = await findOrCreateUser(parsed.phone);
     return json(200, sessionFor(user));
   }
