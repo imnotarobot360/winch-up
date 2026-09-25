@@ -32,6 +32,80 @@ line("EMAIL_FROM", FROM);
 line("EMAIL_SUPPORT_ADDRESS", SUPPORT);
 line("EMAIL_REPLY_TO", process.env.EMAIL_REPLY_TO || "not set (replies bounce if help@ has no MX)");
 
+/* ------------------------------------------------------------------- SMTP */
+
+if (PROVIDER === "smtp") {
+  const host = process.env.SMTP_HOST ?? "smtp.gmail.com";
+  const port = Number(process.env.SMTP_PORT ?? 465);
+  const user = process.env.SMTP_USER ?? "";
+  const pass = process.env.SMTP_PASSWORD ?? "";
+
+  line("SMTP_HOST", host);
+  line("SMTP_PORT", `${port} (${port === 465 ? "implicit TLS" : "STARTTLS"})`);
+  line("SMTP_USER", user || "NOT SET");
+  line("SMTP_PASSWORD", pass ? `set (${pass.length} chars)` : "NOT SET");
+
+  if (!user || !pass) {
+    console.log("\n  SMTP_USER and SMTP_PASSWORD are both required.\n");
+    process.exit(1);
+  }
+
+  // Gmail rewrites a From it does not own, silently. Catching that here is the difference
+  // between finding out now and finding out from a member asking who "winchup.help" is.
+  const sender = FROM.match(/<([^>]+)>/)?.[1] ?? FROM;
+  if (host.includes("gmail") && sender.toLowerCase() !== user.toLowerCase()) {
+    console.log(`\n  WARNING: EMAIL_FROM sends as ${sender} but SMTP_USER is ${user}.`);
+    console.log("  Gmail will rewrite the From header unless that address is an alias this");
+    console.log("  mailbox owns. Mail will arrive from the wrong sender and nothing will error.\n");
+  }
+
+  const nodemailer = (await import("nodemailer")).default;
+  const transport = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: { user, pass },
+  });
+
+  try {
+    await transport.verify();
+    console.log("\n  The server accepted the credentials.\n");
+  } catch (cause) {
+    console.error(`\n  Connection or login failed: ${cause instanceof Error ? cause.message : cause}`);
+    console.error("  With Gmail this is almost always an app password: a normal account password");
+    console.error("  is refused, and generating one needs 2-step verification switched on.\n");
+    process.exit(1);
+  }
+
+  if (!to) {
+    console.log("Pass an address to send a real test message:  npm run email:check -- you@you.com\n");
+    process.exit(0);
+  }
+
+  const mail = renderEmail("auth.welcome", {
+    locale: "en",
+    siteUrl: SITE,
+    supportEmail: SUPPORT,
+    actionUrl: SITE,
+  });
+
+  const info = await transport.sendMail({
+    from: FROM,
+    to,
+    subject: `[test] ${mail.subject}`,
+    html: mail.html,
+    text: mail.text,
+    ...(process.env.EMAIL_REPLY_TO ? { replyTo: process.env.EMAIL_REPLY_TO } : {}),
+  });
+
+  console.log(`  Sent to ${to}. Message-ID ${info.messageId}.`);
+  console.log("  Check it arrived, check the spam folder, and check WHO it says it is from --");
+  console.log("  a rewritten From is the failure this cannot detect for you.\n");
+  process.exit(0);
+}
+
+/* ----------------------------------------------------------------- Resend */
+
 if (PROVIDER !== "resend" || !KEY) {
   console.log("\nNothing to check against yet. See docs/email-setup.md.\n");
   process.exit(0);

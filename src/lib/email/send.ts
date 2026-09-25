@@ -115,6 +115,62 @@ const DRIVERS: Record<string, Driver> = {
     const json = (await response.json()) as { id?: string };
     return { id: json.id ?? null };
   },
+
+  /**
+   * Any SMTP server, including Google Workspace.
+   *
+   * Generic rather than Gmail-specific on purpose: the same driver covers Workspace, a mailbox
+   * host's relay, or a transactional provider's SMTP endpoint, and switching between them is
+   * four environment variables rather than code.
+   *
+   * THINGS THAT BITE WITH GOOGLE WORKSPACE, all of them configuration rather than code:
+   *
+   *  - The password must be an app password, which needs 2-step verification on the account.
+   *    A normal account password fails, and Workspace policy can disable app passwords outright.
+   *  - The From address must be the authenticated mailbox or an alias it owns. Gmail silently
+   *    REWRITES a From it does not recognise, so mail arrives from the wrong address and looks
+   *    like a bug in this file. EMAIL_FROM has to match SMTP_USER.
+   *  - Sending is capped at roughly 2,000 recipients a day with per-minute throttling on top.
+   *    A signup spike hits that, and the failure is a temporary block rather than a clear error.
+   *  - There are no delivery webhooks, so a bounce is invisible here. `email_deliveries` records
+   *    that the server ACCEPTED the message, which is not the same as it arriving.
+   */
+  smtp: async (message) => {
+    const host = process.env.SMTP_HOST ?? "smtp.gmail.com";
+    const port = Number(process.env.SMTP_PORT ?? 465);
+    const user = process.env.SMTP_USER;
+    const pass = process.env.SMTP_PASSWORD;
+
+    if (!user || !pass) {
+      throw new Error("EMAIL_PROVIDER=smtp but SMTP_USER or SMTP_PASSWORD is not set");
+    }
+
+    // Imported here rather than at module scope so that a deployment using Resend, or none at
+    // all, never loads it. This module is pulled in by the drain on every tick.
+    const nodemailer = (await import("nodemailer")).default;
+
+    const transport = nodemailer.createTransport({
+      host,
+      port,
+      // 465 is implicit TLS; 587 starts plaintext and upgrades with STARTTLS. Deriving this from
+      // the port rather than asking for it separately removes a way to get it subtly wrong.
+      secure: port === 465,
+      auth: { user, pass },
+    });
+
+    const info = await transport.sendMail({
+      from: message.from,
+      to: message.to,
+      subject: message.subject,
+      html: message.html,
+      text: message.text,
+      ...(message.replyTo ? { replyTo: message.replyTo } : {}),
+    });
+
+    // SMTP has no provider-side id, so this is the Message-ID we generated. It is still the
+    // thing to grep for in the Workspace admin log, which is the only delivery trail there is.
+    return { id: info.messageId ?? null };
+  },
 };
 
 /**

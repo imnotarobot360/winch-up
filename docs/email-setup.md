@@ -82,6 +82,42 @@ itself what to do when SPF or DKIM fails, and you never find out. Start permissi
 `p=none` means "tell me, don't block". Moving to `p=quarantine` before reading a week of
 reports is how a launch loses its own verification emails.
 
+### 2b. Google Workspace SMTP, if that is the route
+
+`EMAIL_PROVIDER=smtp` uses any SMTP server, Workspace included:
+
+```
+EMAIL_PROVIDER=smtp
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465                       # 465 implicit TLS, or 587 STARTTLS
+SMTP_USER=help@winch-up.com
+SMTP_PASSWORD=<app password>
+EMAIL_FROM=Winch Up <help@winch-up.com>
+```
+
+The same four variables go in Supabase's SMTP Settings for the verification and reset emails.
+
+Three things go wrong here, and none of them can be fixed in code:
+
+**The password must be an app password.** Generating one needs 2-step verification on that
+account, and Workspace policy can forbid app passwords outright. A normal account password is
+refused. If they are blocked for your tenant, that is the case §2 of the brief anticipates —
+use Resend, which is already verified on this domain.
+
+**`EMAIL_FROM` must match `SMTP_USER`.** Gmail silently REWRITES a From address the
+authenticated mailbox does not own. The mail sends, nothing errors, and it arrives from the wrong
+sender. `npm run email:check` warns about this before you find out from a member.
+
+**Roughly 2,000 recipients a day, with per-minute throttling**, and no delivery webhooks. A
+signup spike hits the cap as a temporary block rather than a clear error, and a bounce is
+invisible to this app: `email_deliveries` records that the server ACCEPTED the message, which
+is not the same as it arriving.
+
+That last point is the honest argument for keeping Resend as the sender and Google Workspace as
+the mailbox. They do not conflict — Resend's MX lives on `send.winch-up.com` and Workspace's on
+the apex — so you can have a real `help@` inbox and a transactional sender that reports bounces.
+Switching between them is `EMAIL_PROVIDER` and a redeploy; nothing else in the app changes.
+
 ### 3. Point Supabase Auth at it
 
 Dashboard → Project Settings → Authentication → SMTP Settings. Enter the provider's SMTP host,
