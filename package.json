@@ -29,7 +29,8 @@
     "push:keys": "node scripts/gen-vapid-keys.mjs",
     "email:render": "vite-node -c vitest.config.ts scripts/render-email.mts",
     "email:check": "vite-node -c vitest.config.ts scripts/email-check.mts",
-    "sms:check": "vite-node -c vitest.config.ts scripts/sms-check.mts"
+    "sms:check": "vite-node -c vitest.config.ts scripts/sms-check.mts",
+    "a2p:samples": "vite-node -c vitest.config.ts scripts/a2p-samples.mts"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.75.2",
