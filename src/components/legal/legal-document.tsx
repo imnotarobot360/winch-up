@@ -20,10 +20,15 @@ export async function LegalDocument({
   slug,
   locale,
   title,
+  children,
 }: {
   slug: "requester_waiver" | "responder_waiver" | "rules";
   locale: string;
   title: string;
+  /** Rendered inside <main>, below the versioned text. For sections that are not part of the
+   *  accepted document -- carrier-required SMS disclosure, for one. Outside <main> they would be
+   *  skipped by anybody using a skip-to-content link. */
+  children?: React.ReactNode;
 }) {
   const t = await getTranslations("legal");
 
@@ -61,6 +66,8 @@ export async function LegalDocument({
       ) : (
         <p className="text-base text-ink-soft">{t("missing")}</p>
       )}
+
+      {children}
     </main>
   );
 }

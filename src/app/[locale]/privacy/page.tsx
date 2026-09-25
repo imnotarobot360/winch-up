@@ -31,9 +31,11 @@ export default async function PrivacyPage({
 
       <h1 className="text-3xl font-bold">{t("privacy")}</h1>
 
-      <Callout tone="danger">
-        <p className="font-bold">{t("reviewBanner")}</p>
-        <p className="mt-1 text-sm">{t("reviewExplainer")}</p>
+      {/* Not the PLACEHOLDER banner the other legal pages use: this text is real, and says what
+          the code does. It still does not claim anybody qualified has read it. */}
+      <Callout tone="neutral">
+        <p className="font-bold">{t("unreviewedBanner")}</p>
+        <p className="mt-1 text-sm">{t("unreviewedExplainer")}</p>
       </Callout>
 
       <article className="whitespace-pre-wrap text-base leading-relaxed">
