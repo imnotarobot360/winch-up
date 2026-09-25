@@ -91,7 +91,10 @@ with expected(kind, name, detail, migration, file) as (
     ('function', 'member_profile',                        '', '000100', '20260924000100_nearby_members.sql'),
     ('function', 'coarse_miles',                          '', '000100', '20260924000100_nearby_members.sql'),
     ('hasref',   'nearby_members',        'profile_public', '000100', '20260924000100_nearby_members.sql'),
-    ('hasref',   'nearby_members',      'available_to_help', '000100', '20260924000100_nearby_members.sql')
+    ('hasref',   'nearby_members',      'available_to_help', '000100', '20260924000100_nearby_members.sql'),
+    ('table',    'email_deliveries',                      '', '000200', '20260924000200_email_deliveries.sql'),
+    ('function', 'admin_email_deliveries',                '', '000200', '20260924000200_email_deliveries.sql'),
+    ('index',    'email_deliveries_idempotency_idx',      '', '000200', '20260924000200_email_deliveries.sql')
 ),
 checked as (
   select
@@ -114,6 +117,11 @@ checked as (
       when 'function' then exists (
         select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
          where n.nspname in ('public', 'app') and p.proname = e.name)
+      -- An index can BE the feature rather than decorate it: email_deliveries_idempotency_idx is
+      -- what makes "the welcome email goes once" true. Without this kind the verifier would call
+      -- the file done with the guarantee missing.
+      when 'index' then exists (
+        select 1 from pg_indexes where schemaname = 'public' and indexname = e.name)
       when 'type' then exists (select 1 from pg_type where typname = e.name)
       when 'enum' then exists (
         select 1 from pg_type t join pg_enum x on x.enumtypid = t.oid
