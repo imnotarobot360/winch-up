@@ -327,6 +327,21 @@ docs/                     decisions + runbooks
   TypeScript. The column list is pinned by a test for the same reason `ad_daily_stats`'s is.
   The FK is `on delete set null`, so deleting an account can never be blocked by a log row and
   can never erase the evidence that mail went out either.
+- **A migration is not in production because a session said it was.** CLAUDE.md claimed all 26
+  were verified applied on 2026-09-24. On 2026-09-25 a run of `docs/verify-which-migrations.sql`
+  found `20260923002700` missing and `20260924000100` never applied at all -- which meant
+  `/members` and `/members/[userId]` were live in production calling `nearby_members()` and
+  `member_profile()`, neither of which existed. The chat location card degraded quietly instead,
+  because `request-thread.tsx` reads it through `?? null`; the directory pages had no such
+  guard and errored. Run the verifier after every deploy that ships a migration, and read ALL of
+  its rows -- it sorts failures first, so the top of the output is the bad news and the rest is
+  the part that tells you whether anything else is wrong.
+- **PostgREST will say a function is missing when it is not.** `POST /rest/v1/rpc/<fn>` with the
+  publishable key is a genuine unauthenticated way to check production without the database
+  password: `42501` means it exists and the gate works, `PGRST202` means no such function. But
+  the signature has to match -- calling `member_profile` with `{}` when it takes `p_user_id`
+  returns PGRST202 and reads exactly like an unapplied migration. Anything in schema `app`
+  (`app.coarse_miles`) is invisible to PostgREST by design and can never be probed this way.
 - **`npm run build` runs the i18n check first** (`prebuild`). A missing Spanish key fails the
   build rather than silently falling back to English.
 
@@ -354,7 +369,7 @@ long done. Work since then has followed the owner's 16-phase spec:
 | 14 Security, privacy & safety | done — full review in `docs/security-review.md`; account deletion actually deletes now, retention exists, a claims check guards the copy |
 | 16 Deployment & production readiness | done — `/api/health`, CI on every push, env drift check, `docs/production-readiness.md`. What is left needs the owner's accounts, not code |
 | Universal membership | done — every member can ask for help and offer it; no separate volunteer account, no approval gate, the requester picks from offers |
-| Recovery teams & group chat | **done and live** (2026-09-24) — `recovery_participants`, one thread per recovery for the whole team, per-participant unread and mute, notification settings screen, recovery SMS switched off, an offline send queue, Realtime broadcast over a polling floor. All 26 migrations verified applied in production |
+| Recovery teams & group chat | **done and live** (2026-09-24) — `recovery_participants`, one thread per recovery for the whole team, per-participant unread and mute, notification settings screen, recovery SMS switched off, an offline send queue, Realtime broadcast over a polling floor. Migrations applied in production, but see the warning under Tests about what "verified" is worth |
 
 **Proven working in production**, not just built: a signed-in person files a request, the tick
 escalates it through all three rings, it reaches `unmatched` with nobody available, and the public
