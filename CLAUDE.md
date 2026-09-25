@@ -316,6 +316,11 @@ docs/                     decisions + runbooks
   template in the Supabase dashboard, NOT code. `src/lib/email/send.ts` deliberately sends only
   the emails Supabase has no opinion about -- welcome, and the account-security notices -- because
   hand-rolling verification tokens in application code would mean minting credentials here.
+- **Emails carry exactly one image and nothing depends on it.** Mail clients block images by
+  default, so the logo's `alt` is the styled wordmark -- a blocked logo degrades to the text
+  header rather than a broken-image icon, and the plain-text part carries the whole message
+  regardless. A test pins this at one image per template. The `src` is built from the siteUrl the
+  email was rendered for, so a staging render does not point at production.
 - **`help@winch-up.com` does not exist.** As of 2026-09-24 the domain has no MX, no SPF and no
   DMARC: nothing can receive there and nothing is authorised to send as it. So `EMAIL_PROVIDER`
   is unset, the driver is `none`, and a send renders the message, records it as `skipped` with a
@@ -412,7 +417,7 @@ Four layers. Run all of them before claiming anything works.
 
 ```
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
-npm test            165 unit + component tests (vitest)
+npm test            166 unit + component tests (vitest)
 npm run test:e2e    192 Playwright tests — android, iphone, tablet, desktop
 supabase test db    795 pgTAP assertions across eighteen suites
 ```

@@ -16,8 +16,10 @@ import { APP_NAME } from "@/config/app";
  *  - The motto is `app.motto` from the message catalogues, which already has both languages.
  *  - Every email is sent as HTML AND plain text. Some people read mail in a terminal, and a
  *    text/plain part is also what keeps a message out of the spam folder.
- *  - No remote images. Mail clients block them by default, so an email that needs one to make
- *    sense is an email that arrives broken. The wordmark is text.
+ *  - Exactly ONE remote image: the logo. Mail clients block images by default, so nothing may
+ *    depend on it loading -- its `alt` is the wordmark, styled, so a blocked logo degrades to the
+ *    same text that used to be there rather than to a broken-image icon. No other image is
+ *    allowed, and no part of the message may live inside one.
  *  - No secrets, no tokens beyond the single-use link, no coordinates, no phone numbers. An
  *    inbox is not a place to put where somebody is stuck.
  */
@@ -87,7 +89,13 @@ function shell(locale: string, bodyHtml: string, siteUrl: string, supportEmail: 
 <tr><td align="center">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:${CARD};border:1px solid ${LINE};border-radius:16px;">
     <tr><td style="padding:28px 28px 8px 28px;font-family:Arial,Helvetica,sans-serif;">
-      <div style="font-size:24px;font-weight:bold;letter-spacing:2px;color:${INK};">${esc(name.split(" ").join("-"))}</div>
+      <!-- The alt text IS the fallback wordmark, styled: Gmail and Outlook both render alt text
+           in the element's own font and colour when images are off, which is the default. So a
+           blocked logo looks like the text header this used to have, not like a broken image. -->
+      <img src="${esc(siteUrl)}/brand/logo-lockup.png"
+           alt="${esc(name.split(" ").join("-"))}"
+           width="180"
+           style="display:block;border:0;outline:none;text-decoration:none;width:180px;max-width:60%;height:auto;font-family:Arial,Helvetica,sans-serif;font-size:24px;font-weight:bold;letter-spacing:2px;color:${INK};">
     </td></tr>
     <tr><td style="padding:8px 28px 28px 28px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:${INK};">
 ${bodyHtml}

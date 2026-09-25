@@ -55,6 +55,19 @@ test("a Spanish signup records the language, and confirming it signs you in", as
   // reason this is the success condition rather than anything about the account.
   await expect(page.getByText(/revise su correo/i)).toBeVisible({ timeout: 15_000 });
 
+  // A verification email that never arrives is a dead end -- the address can neither sign in nor
+  // sign up again, because the account exists. The way out is on this screen.
+  const resend = page.getByRole("button", { name: /enviar de nuevo/i });
+  await expect(resend, "the resend control is offered").toBeVisible();
+
+  await resend.click();
+
+  // Replaced by a countdown, so the button is not a way to have us mail somebody repeatedly --
+  // and whoever is clicking need not own the address.
+  await expect(page.getByText(/enviado de nuevo/i)).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/puede enviar otro en \d+ s/i)).toBeVisible();
+  await expect(resend, "and the button is gone while the cooldown runs").toBeHidden();
+
   // Stand in for clicking the emailed link. Real Supabase exposes this as
   // verifyOtp({ email, token, type: 'signup' }), and the shim writes email_confirmed_at exactly
   // the way production does -- which is the transition the welcome-email trigger watches.

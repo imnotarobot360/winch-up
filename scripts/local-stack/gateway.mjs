@@ -216,6 +216,17 @@ async function handleAuth(req, res, url, body) {
     });
   }
 
+  // Asking for the verification email again.
+  //
+  // The shim sends nothing, so this only has to answer the way GoTrue answers: 200 and an empty
+  // body, whether or not the address exists. Returning anything else would make the resend button
+  // an account-enumeration oracle, which is the one thing the signup form above is careful not to
+  // be -- and a 404 here also logs a console error, which fails the E2E console check.
+  if (route === "/resend" && req.method === "POST") {
+    console.log(`  [auth shim] resend ${parsed.type ?? "signup"} for ${parsed.email}: no-op`);
+    return json(200, {});
+  }
+
   if (route === "/verify" && req.method === "POST") {
     if (String(parsed.token) !== TEST_OTP) {
       return json(403, { error: "invalid_otp", error_description: "Token has expired or is invalid" });

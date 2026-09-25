@@ -56,7 +56,11 @@
     "mfaPrompt": "One more step — open your authenticator app.",
     "mfaLabel": "The six digits",
     "mfaHint": "It changes every 30 seconds.",
-    "mfaSubmit": "Sign in"
+    "mfaSubmit": "Sign in",
+    "resendCta": "Send it again",
+    "resendWait": "You can send another in {seconds}s",
+    "resendDone": "Sent again. It can take a minute to arrive.",
+    "resendHint": "No email? Check your spam folder first."
   },
   "account": {
     "title": "Your account",

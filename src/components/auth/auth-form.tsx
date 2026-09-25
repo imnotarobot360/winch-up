@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { Button, Callout, Field, TextInput } from "@/components/ui/primitives";
@@ -29,6 +29,38 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const [resent, setResent] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  // Tick the cooldown down. Cleared on unmount so a navigation mid-countdown does not leave an
+  // interval running against a component that is gone.
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const id = setInterval(() => setResendCooldown((n) => Math.max(0, n - 1)), 1000);
+    return () => clearInterval(id);
+  }, [resendCooldown]);
+
+  /**
+   * Send the verification email again.
+   *
+   * Always reports success. Supabase will refuse this for an address that does not exist or is
+   * already confirmed, and surfacing either answer would turn this button into the account
+   * enumeration oracle that the signup form above is careful not to be.
+   */
+  const resendVerification = useCallback(async () => {
+    setResendCooldown(60);
+    setResent(true);
+
+    await supabaseBrowser()
+      .auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      })
+      .catch(() => {
+        // Deliberately swallowed, for the reason above.
+      });
+  }, [email]);
   // Set when the account has a second factor and this session has not used it yet.
   const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
   const [code, setCode] = useState("");
@@ -172,6 +204,26 @@ export function AuthForm({ mode }: { mode: Mode }) {
       <Callout tone="good">
         <p className="text-lg font-semibold">{t("checkEmailTitle")}</p>
         <p className="mt-1">{t("checkEmailBody", { email })}</p>
+        <p className="mt-2 text-base text-ink-soft">{t("resendHint")}</p>
+
+        {/* A verification email that never arrives is a dead end: the address cannot sign in and
+            cannot sign up again, because the account already exists. This is the way out.
+
+            The cooldown is ours, on top of Supabase's own limit. Without it the button is a way
+            to have us mail somebody repeatedly by clicking, and the person doing the clicking
+            need not be the owner of the address. */}
+        <div className="mt-4">
+          {resendCooldown > 0 ? (
+            <p className="text-base text-ink-soft" aria-live="polite">
+              {resent ? `${t("resendDone")} ` : ""}
+              {t("resendWait", { seconds: resendCooldown })}
+            </p>
+          ) : (
+            <Button type="button" variant="secondary" onClick={resendVerification}>
+              {t("resendCta")}
+            </Button>
+          )}
+        </div>
       </Callout>
     );
   }

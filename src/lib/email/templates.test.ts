@@ -116,10 +116,28 @@ describe("branding", () => {
     expect(mail.html).toContain("#1a1a1a");
   });
 
-  it("has no remote images to be blocked", () => {
+  it("has exactly one image, the logo, and nothing depends on it loading", () => {
+    // Mail clients block images by default. One logo is worth it; a second image, or any part of
+    // the message living inside one, is not -- that email arrives blank for most readers.
     for (const key of EMAIL_TEMPLATE_KEYS) {
       const mail = renderEmail(key, { ...BASE });
-      expect(mail.html).not.toMatch(/<img\b/i);
+      const imgs = mail.html.match(/<img\b[^>]*>/gi) ?? [];
+
+      expect(imgs, `${key} should have exactly one image`).toHaveLength(1);
+      expect(imgs[0]).toContain("/brand/logo-lockup.png");
+
+      // The alt text is the fallback wordmark. Without it a blocked logo is a broken-image icon
+      // where the brand should be.
+      expect(imgs[0]).toMatch(/alt="WINCH-UP"/);
+
+      // The text part carries the whole message on its own, logo or no logo.
+      expect(mail.text).not.toMatch(/<img|\.png/i);
     }
+  });
+
+  it("points the logo at the site it was rendered for, not a hard-coded host", () => {
+    const staging = renderEmail("auth.verify", { ...BASE, siteUrl: "https://staging.example.com" });
+    expect(staging.html).toContain("https://staging.example.com/brand/logo-lockup.png");
+    expect(staging.html).not.toContain("www.winch-up.com/brand");
   });
 });

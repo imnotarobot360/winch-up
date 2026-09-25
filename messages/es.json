@@ -56,7 +56,11 @@
     "mfaPrompt": "Un paso más: abra su aplicación de autenticación.",
     "mfaLabel": "Los seis dígitos",
     "mfaHint": "Cambia cada 30 segundos.",
-    "mfaSubmit": "Iniciar sesión"
+    "mfaSubmit": "Iniciar sesión",
+    "resendCta": "Enviar de nuevo",
+    "resendWait": "Puede enviar otro en {seconds} s",
+    "resendDone": "Enviado de nuevo. Puede tardar un minuto en llegar.",
+    "resendHint": "¿No llegó? Revise primero su carpeta de spam."
   },
   "account": {
     "title": "Su cuenta",
