@@ -201,5 +201,165 @@ select throws_ok(
 
 reset role;
 
+-- ---------------------------------------------------------------------------
+-- The welcome trigger
+--
+-- The event being tested is the transition, not the value: email_confirmed_at going from null to
+-- a timestamp is the one thing that happens exactly once per verified account and cannot be
+-- skipped by a browser that never came back from the redirect.
+-- ---------------------------------------------------------------------------
+
+-- Unconfirmed at creation, with a language recorded by the signup form.
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, recovery_token, email_change, email_change_token_new
+) values (
+  '00000000-0000-0000-0000-000000000000', 'e3000000-0000-4000-8000-00000000000e',
+  'authenticated', 'authenticated', 'mail-verifies@example.invalid', 'x', null,
+  '{}'::jsonb, '{"locale":"es"}'::jsonb, now(), now(), '', '', '', ''
+);
+
+select is(
+  (select count(*)::int from public.email_deliveries
+    where user_id = 'e3000000-0000-4000-8000-00000000000e' and template_key = 'auth.welcome'),
+  0,
+  'signing up does not send a welcome email -- an unverified address has not been shown to belong to anybody'
+);
+
+update auth.users set email_confirmed_at = now()
+ where id = 'e3000000-0000-4000-8000-00000000000e';
+
+select is(
+  (select count(*)::int from public.email_deliveries
+    where user_id = 'e3000000-0000-4000-8000-00000000000e' and template_key = 'auth.welcome'),
+  1,
+  'confirming the address queues exactly one welcome email'
+);
+
+select is(
+  (select locale from public.email_deliveries
+    where user_id = 'e3000000-0000-4000-8000-00000000000e' and template_key = 'auth.welcome'),
+  'es',
+  'in the language the signup form recorded, because nothing else remembers it'
+);
+
+-- Supabase can touch this row again -- a password change, a metadata edit, an admin action.
+-- None of those is a second verification.
+update auth.users set email_confirmed_at = now() + interval '1 minute'
+ where id = 'e3000000-0000-4000-8000-00000000000e';
+
+update auth.users set raw_user_meta_data = '{"locale":"en"}'::jsonb
+ where id = 'e3000000-0000-4000-8000-00000000000e';
+
+select is(
+  (select count(*)::int from public.email_deliveries
+    where user_id = 'e3000000-0000-4000-8000-00000000000e' and template_key = 'auth.welcome'),
+  1,
+  'and touching the row again never produces a second one'
+);
+
+-- Confirmed at creation: confirmations switched off, an admin-created account, a seed. Without
+-- the insert trigger these are silently never welcomed, and that is the configuration the local
+-- stack runs in -- so the gap would only ever show up in the other environment.
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, recovery_token, email_change, email_change_token_new
+) values (
+  '00000000-0000-0000-0000-000000000000', 'e4000000-0000-4000-8000-00000000000e',
+  'authenticated', 'authenticated', 'mail-preconfirmed@example.invalid', 'x', now(),
+  '{}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', ''
+);
+
+select is(
+  (select count(*)::int from public.email_deliveries
+    where user_id = 'e4000000-0000-4000-8000-00000000000e' and template_key = 'auth.welcome'),
+  1,
+  'an account created already-confirmed is welcomed too'
+);
+
+select is(
+  (select locale from public.email_deliveries
+    where user_id = 'e4000000-0000-4000-8000-00000000000e' and template_key = 'auth.welcome'),
+  'en',
+  'and falls back to English when the form recorded no language'
+);
+
+-- Phone OTP is a different signup path entirely and has no address to send to.
+insert into auth.users (
+  instance_id, id, aud, role, email, phone, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, recovery_token, email_change, email_change_token_new
+) values (
+  '00000000-0000-0000-0000-000000000000', 'e5000000-0000-4000-8000-00000000000e',
+  'authenticated', 'authenticated', null, '+15125550000', 'x', now(),
+  '{}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', ''
+);
+
+select is(
+  (select count(*)::int from public.email_deliveries
+    where user_id = 'e5000000-0000-4000-8000-00000000000e'),
+  0,
+  'a phone-only account queues nothing rather than a row that can never be sent'
+);
+
+-- ---------------------------------------------------------------------------
+-- Claiming
+-- ---------------------------------------------------------------------------
+
+select is(
+  (select to_email from public.claim_email_deliveries(10)
+    where user_id = 'e3000000-0000-4000-8000-00000000000e'),
+  'mail-verifies@example.invalid',
+  'the claim joins the address at send time rather than the table storing it'
+);
+
+select is(
+  (select status from public.email_deliveries
+    where user_id = 'e3000000-0000-4000-8000-00000000000e' and template_key = 'auth.welcome'),
+  'sending',
+  'and marks what it handed out, so a second drain cannot take the same row'
+);
+
+select is(
+  (select count(*)::int from public.claim_email_deliveries(10)),
+  0,
+  'a second claim finds nothing left to send'
+);
+
+-- ---------------------------------------------------------------------------
+-- Recording the outcome
+--
+-- Putting a row back to queued is what happens when no provider is configured. It must not look
+-- like a completed send, or the retry would read as a duplicate.
+-- ---------------------------------------------------------------------------
+
+select public.record_email_result(
+  (select id from public.email_deliveries
+    where user_id = 'e4000000-0000-4000-8000-00000000000e' and template_key = 'auth.welcome'),
+  'queued', null, null, 'no email provider configured'
+);
+
+select is(
+  (select completed_at from public.email_deliveries
+    where user_id = 'e4000000-0000-4000-8000-00000000000e' and template_key = 'auth.welcome'),
+  null,
+  'a requeued row has no completion time, so a later send is not read as a second one'
+);
+
+select is(
+  (select status from public.email_deliveries
+    where user_id = 'e4000000-0000-4000-8000-00000000000e' and template_key = 'auth.welcome'),
+  'queued',
+  'and it goes back in the queue rather than being burned when email is unconfigured'
+);
+
+select throws_ok(
+  $$select public.record_email_result(gen_random_uuid(), 'posted')$$,
+  null, null,
+  'an invented status is refused rather than written'
+);
+
 select * from finish();
 rollback;

@@ -327,6 +327,26 @@ docs/                     decisions + runbooks
   TypeScript. The column list is pinned by a test for the same reason `ad_daily_stats`'s is.
   The FK is `on delete set null`, so deleting an account can never be blocked by a log row and
   can never erase the evidence that mail went out either.
+- **The welcome email is fired by a trigger on `auth.users.email_confirmed_at`, not by the
+  callback route.** Supabase owns verification and emits no server-side event this app can
+  subscribe to, and both obvious workarounds lose people: sending from `/auth/callback` misses
+  anyone whose redirect dies on one bar of signal, and sending on first authenticated page load
+  never fires for somebody who verifies and walks away. The null-to-timestamp transition is
+  written by Supabase inside the verifying transaction and cannot be skipped. There are TWO
+  triggers -- one on that update, one on insert for accounts created already-confirmed, which is
+  how the local stack and seeds behave, so a single trigger would work in one environment and
+  not the other.
+- **Anything the drain calls over supabase-js must live in `public`.** PostgREST is configured
+  `db-schemas = "public"`, so an `app.*` function is invisible to it: the call 404s forever
+  and the queue fills up silently while every test passes, because pgTAP calls it directly and
+  never goes through PostgREST. `claim_email_deliveries` and `record_email_result` are in
+  `public`, revoked from anon and authenticated and granted only to `service_role`, exactly
+  like `claim_push_deliveries`. Only `app.queue_welcome_email` stays in `app`, because a
+  trigger is called by Postgres and by nothing else.
+- **A queued email with no provider goes back to `queued`, never `failed`.** Somebody who
+  verified before the provider was bought still gets their welcome email on the first tick after
+  it is configured. Marking it failed would burn the queue silently, which is the same mistake
+  the push drain avoids by leaving rows alone when VAPID is unset.
 - **A migration is not in production because a session said it was.** CLAUDE.md claimed all 26
   were verified applied on 2026-09-24. On 2026-09-25 a run of `docs/verify-which-migrations.sql`
   found `20260923002700` missing and `20260924000100` never applied at all -- which meant
@@ -386,7 +406,7 @@ Four layers. Run all of them before claiming anything works.
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
 npm test            165 unit + component tests (vitest)
 npm run test:e2e    188 Playwright tests — android, iphone, tablet, desktop
-supabase test db    782 pgTAP assertions across eighteen suites
+supabase test db    795 pgTAP assertions across eighteen suites
 ```
 
 `prebuild` runs four guards -- the i18n check, the contact-info parity check, the claims check

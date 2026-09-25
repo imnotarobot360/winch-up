@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Button, Callout, Field, TextInput } from "@/components/ui/primitives";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -21,6 +21,7 @@ type Mode = "signin" | "signup";
  */
 export function AuthForm({ mode }: { mode: Mode }) {
   const t = useTranslations("auth");
+  const locale = useLocale();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -47,7 +48,14 @@ export function AuthForm({ mode }: { mode: Mode }) {
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          // The only place the member ever tells us their language. There is no locale column on
+          // profiles -- it is a URL segment -- and the welcome email is queued by a database
+          // trigger on email confirmation, long after this tab is gone. Without this the trigger
+          // has nothing to read and every welcome email is English. See 20260924000300.
+          data: { locale },
+        },
       });
 
       setBusy(false);

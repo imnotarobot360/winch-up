@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { drainEmail } from "@/lib/email/drain";
 import { drainPush } from "@/lib/push/send";
 import { drainSmsOutbox } from "@/lib/sms/drain";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -66,5 +67,16 @@ export async function POST(request: Request) {
     retention = { ok: false, error: "threw" };
   }
 
-  return NextResponse.json({ ...sms, notifications, push, retention });
+  // Account email. Queued by a trigger the moment Supabase confirms an address, so the welcome
+  // email goes out on the next tick rather than waiting for the member to come back to the site.
+  // A no-op with no provider configured, and it leaves the rows queued rather than burning them.
+  let email: unknown = { ok: false, error: "not_run" };
+  try {
+    email = await drainEmail(50);
+  } catch (error) {
+    console.error("[sms/drain] email drain failed", error);
+    email = { ok: false, error: "threw" };
+  }
+
+  return NextResponse.json({ ...sms, notifications, push, retention, email });
 }

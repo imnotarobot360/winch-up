@@ -144,12 +144,26 @@ is a real secret: it belongs in Vercel's environment, never in a committed file 
 - **Send-once** — a partial unique index on `idempotency_key`. §5 says the welcome email goes
   once per verified account; two tabs or a double webhook cannot produce two.
 
+- **The welcome email fires** -- `20260924000300`. A trigger on `auth.users` catches
+  `email_confirmed_at` going from null to a timestamp, which Supabase writes inside the
+  transaction that verifies the link, so it happens whether or not the browser survived the
+  redirect. A second trigger covers accounts created already-confirmed. The row is queued and
+  sent by the drain at `/api/sms/drain`, on the same sixty-second clock as the other four
+  queues. 13 more pgTAP assertions.
+- **Language** -- `auth-form.tsx` now records the signup locale in user metadata, because there
+  is nowhere else it is kept: profiles has no locale column and a new member has no responders
+  row. Without it every welcome email would be English.
+
 ## What is not built
 
-The welcome email has nowhere to fire from yet. Supabase does not emit a server-side event on
-email confirmation that this app can subscribe to, so the trigger has to be either an Auth Hook
-or a check on first authenticated page load. That decision is still open and is the next piece
-of work, not an oversight.
-
 Nothing here has been tested against a real provider, because there is no account to test
-against. Until one exists, "the emails work" means the rendering and the logging work.
+against. Until one exists, "the emails work" means the rendering, the queueing and the logging
+work -- all three are covered by tests, and none of them is delivery.
+
+The queue is safe to leave in this state: with no provider the drain puts rows BACK to `queued`
+rather than failing them, so anybody who verifies between now and the provider being bought still
+gets their welcome email on the first tick afterwards.
+
+Retries have no backoff. A provider that refuses a message marks it `failed` and it is not tried
+again. That is deliberate for now -- a tight retry loop against an unhappy provider is worse than
+a missed welcome email -- but it is the obvious next thing if delivery ever proves flaky.

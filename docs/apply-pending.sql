@@ -111,6 +111,7 @@ echo ''
 echo '=== A directory of members who chose to be in one ==='
 i supabase/migrations/20260924000100_nearby_members.sql
 i supabase/migrations/20260924000200_email_deliveries.sql
+i supabase/migrations/20260924000300_welcome_email.sql
 
 -- PostgREST caches the schema at startup and does not notice new functions or columns. Without
 -- this the app calls request_thread() and gets "function not found" against a database that

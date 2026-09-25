@@ -94,7 +94,12 @@ with expected(kind, name, detail, migration, file) as (
     ('hasref',   'nearby_members',      'available_to_help', '000100', '20260924000100_nearby_members.sql'),
     ('table',    'email_deliveries',                      '', '000200', '20260924000200_email_deliveries.sql'),
     ('function', 'admin_email_deliveries',                '', '000200', '20260924000200_email_deliveries.sql'),
-    ('index',    'email_deliveries_idempotency_idx',      '', '000200', '20260924000200_email_deliveries.sql')
+    ('index',    'email_deliveries_idempotency_idx',      '', '000200', '20260924000200_email_deliveries.sql'),
+    ('function', 'queue_welcome_email',                   '', '000300', '20260924000300_welcome_email.sql'),
+    ('function', 'claim_email_deliveries',                '', '000300', '20260924000300_welcome_email.sql'),
+    ('function', 'record_email_result',                   '', '000300', '20260924000300_welcome_email.sql'),
+    ('trigger',  'on_email_confirmed',                    '', '000300', '20260924000300_welcome_email.sql'),
+    ('trigger',  'on_user_created_confirmed',             '', '000300', '20260924000300_welcome_email.sql')
 ),
 checked as (
   select
@@ -120,6 +125,11 @@ checked as (
       -- An index can BE the feature rather than decorate it: email_deliveries_idempotency_idx is
       -- what makes "the welcome email goes once" true. Without this kind the verifier would call
       -- the file done with the guarantee missing.
+      -- Triggers, because 20260924000300 IS a trigger: its functions can all exist while nothing
+      -- is wired to fire them, which looks identical to a working feature until nobody gets a
+      -- welcome email. tgisinternal excludes the ones Postgres makes for foreign keys.
+      when 'trigger' then exists (
+        select 1 from pg_trigger where tgname = e.name and not tgisinternal)
       when 'index' then exists (
         select 1 from pg_indexes where schemaname = 'public' and indexname = e.name)
       when 'type' then exists (select 1 from pg_type where typname = e.name)

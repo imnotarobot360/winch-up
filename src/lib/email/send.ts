@@ -117,6 +117,43 @@ const DRIVERS: Record<string, Driver> = {
   },
 };
 
+/**
+ * Hands one already-rendered message to the configured provider.
+ *
+ * Shared by the direct path below and by the queue drain, so there is one place that knows how
+ * to talk to a provider and one place to change when the provider changes.
+ *
+ * Returns `null` for the id when no provider is configured, and throws only on a real provider
+ * failure -- the caller decides whether an absent provider is a skip or an error, because for a
+ * queued row it means "leave it queued" and for a direct send it means "say so and carry on".
+ */
+export async function deliverRendered(
+  to: string,
+  rendered: { subject: string; html: string; text: string },
+): Promise<{ id: string | null; configured: boolean }> {
+  const { provider, from, replyTo } = config();
+  const driver = DRIVERS[provider];
+
+  if (!driver) return { id: null, configured: false };
+
+  const { id } = await driver({
+    from,
+    to,
+    subject: rendered.subject,
+    html: rendered.html,
+    text: rendered.text,
+    replyTo,
+  });
+
+  return { id, configured: true };
+}
+
+/** The rendering context the drain needs, so it does not re-derive site URL and support address. */
+export function emailContext() {
+  const { siteUrl, supportEmail, provider } = config();
+  return { siteUrl, supportEmail, provider };
+}
+
 /* -------------------------------------------------------------------- send */
 
 /**
