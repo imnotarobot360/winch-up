@@ -51,29 +51,36 @@ function in `DRIVERS` — nothing else is provider-specific.
 
 ### 2. Verify the domain — the DNS work
 
-The provider issues the exact records. They will be roughly:
+**Verify the apex domain `winch-up.com`, not a subdomain.** Resend's own advice is to send
+from a subdomain to isolate reputation, and that advice is good in general — but the brief
+requires the sender to be `help@winch-up.com`, and a verified subdomain only lets you send as
+`something@send.winch-up.com`. Verify the apex and you get the address the brief asks for.
 
-| Type | Name | Purpose |
-|---|---|---|
-| `TXT` | `resend._domainkey` | DKIM — signs each message so the recipient can prove it is really from this domain |
-| `TXT` | `send` (or apex) | SPF — lists who may send as this domain |
-| `MX` | `send` | Bounce handling on the sending subdomain |
-| `TXT` | `_dmarc` | What a recipient should do when the first two fail |
+That costs nothing, because Resend's records do not live on the apex anyway. Verifying
+`winch-up.com` gives you three records, and only one of them is at the root:
+
+| Type | Name | Value | Purpose |
+|---|---|---|---|
+| `TXT` | `resend._domainkey` | issued per account | DKIM — signs each message, so a recipient can prove it really came from this domain |
+| `TXT` | `send` | `v=spf1 include:amazonses.com ~all` | SPF, on the bounce subdomain |
+| `MX` | `send` | `feedback-smtp.<region>.amazonses.com`, priority 10 | Where bounces go |
+
+The MX is on **`send.winch-up.com`**, not the apex. That is the bounce path, not the From
+address, so it does not conflict with an inbox: you can still add apex MX records later to make
+`help@` receive mail, and neither touches the other. Copy the values from Resend's dashboard
+and **omit the domain from the name** — Vercel wants `send`, not `send.winch-up.com`.
 
 DNS is on Vercel (`ns1.vercel-dns.com`), so these go in the Vercel dashboard under the domain.
 
-Start DMARC permissive and tighten it once you can see reports:
+DMARC is not one of Resend's required records, but add it — without one, a receiver decides for
+itself what to do when SPF or DKIM fails, and you never find out. Start permissive:
 
-```
-v=DMARC1; p=none; rua=mailto:<an address you read>
-```
+| Type | Name | Value |
+|---|---|---|
+| `TXT` | `_dmarc` | `v=DMARC1; p=none; rua=mailto:<an address you read>` |
 
-`p=none` means "tell me, don't block". Moving to `p=quarantine` before you have read a week of
+`p=none` means "tell me, don't block". Moving to `p=quarantine` before reading a week of
 reports is how a launch loses its own verification emails.
-
-**Use a subdomain for sending** (`send.winch-up.com` or `mail.winch-up.com`) rather than the
-apex. It keeps the reputation of transactional mail separate from anything the domain does
-later, and it means the apex MX stays free for a real inbox.
 
 ### 3. Point Supabase Auth at it
 
@@ -88,10 +95,16 @@ Then Authentication → Email Templates. The rendered copy to paste in comes fro
 the app uses, so the two halves cannot drift apart in tone:
 
 ```bash
-node -e "require('tsx/cjs'); const {renderEmail}=require('./src/lib/email/templates.ts'); \
-  console.log(renderEmail('auth.verify',{locale:'en',actionUrl:'{{ .ConfirmationURL }}', \
-  siteUrl:'https://www.winch-up.com',supportEmail:'help@winch-up.com'}).html)"
+npm run email:render
 ```
+
+That writes every template, both languages, HTML and text, to `.tmp/email/`. Paste
+`auth.verify.en.html` into **Confirm signup** and `auth.reset.en.html` into **Reset password**.
+
+It renders against the production URL even when your `.env.local` points at localhost, and says
+so when it overrides. The first version of this doc gave a one-line `node -e` instead, which did
+not run at all -- and had it run, it would have baked `http://127.0.0.1:3100` into the footer of
+every production email.
 
 `{{ .ConfirmationURL }}` is Supabase's own placeholder and must be passed through untouched —
 that is the single-use link, and substituting anything else produces an email that looks correct

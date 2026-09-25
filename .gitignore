@@ -36,3 +36,6 @@ npm-debug.log*
 
 .vercel
 .env*
+
+# Rendered email templates (npm run email:render) — generated, paste-only, never committed
+.tmp/
