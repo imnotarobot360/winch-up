@@ -258,7 +258,17 @@ docs/                     decisions + runbooks
 - **Admin RPCs are granted to `authenticated`, not `service_role`.** The gate is `auth.uid()` via
   `app.require_admin()`, so there is no shared key that grants admin. Every mutating admin RPC
   writes an audit row; keep that true for new ones.
-- **Recovery SMS is off at `app.queue_sms`, which is the only writer to the outbox.**
+- **Recovery SMS sends only the dispatch call-out, and it takes TWO settings to send anything.**
+  `app.queue_sms` is still the only writer to the outbox, and it now needs
+  `sms.outbound_enabled` true AND the template named in `sms.enabled_templates` -- an
+  ALLOWLIST, shipping `["responder.offer", "responder.already_covered"]`. A template nobody has
+  thought about is silent, which is the right default for a list whose entries mean "text a real
+  person and charge for it"; a blocklist would have new notification types texting everybody the
+  day they ship. Everything else -- requester status, admin pages, chat -- is push and in-app,
+  because paying per message to say something already on the screen is waste. The call-out is
+  different: a volunteer is not looking at the app, and on iPhone has no push at all without the
+  PWA installed. Turning the master switch on alone changes nothing.
+- **The old rule, unchanged, about what a suppressed row keeps.**
   `sms.outbound_enabled` ships `false`; push and in-app carry recoveries now. A suppressed
   message still gets a row — "why did nobody get told" needs an answer — but with the phone
   redacted, the params dropped and a terminal state the drain cannot see, so turning the switch
@@ -432,7 +442,7 @@ Four layers. Run all of them before claiming anything works.
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
 npm test            166 unit + component tests (vitest)
 npm run test:e2e    192 Playwright tests — android, iphone, tablet, desktop
-supabase test db    795 pgTAP assertions across eighteen suites
+supabase test db    800 pgTAP assertions across eighteen suites
 ```
 
 `prebuild` runs four guards -- the i18n check, the contact-info parity check, the claims check

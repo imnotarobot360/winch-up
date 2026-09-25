@@ -99,7 +99,8 @@ with expected(kind, name, detail, migration, file) as (
     ('function', 'claim_email_deliveries',                '', '000300', '20260924000300_welcome_email.sql'),
     ('function', 'record_email_result',                   '', '000300', '20260924000300_welcome_email.sql'),
     ('trigger',  'on_email_confirmed',                    '', '000300', '20260924000300_welcome_email.sql'),
-    ('trigger',  'on_user_created_confirmed',             '', '000300', '20260924000300_welcome_email.sql')
+    ('trigger',  'on_user_created_confirmed',             '', '000300', '20260924000300_welcome_email.sql'),
+    ('setting',  'sms.enabled_templates',                 '', '000100', '20260925000100_dispatch_sms_on.sql')
 ),
 checked as (
   select

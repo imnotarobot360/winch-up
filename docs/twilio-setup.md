@@ -23,7 +23,13 @@ If people cannot sign in with a phone, that is the Supabase dashboard, not this 
 
 A message has to pass all four. Each one fails quietly on its own, and only the first is obvious.
 
-**1. `sms.outbound_enabled` in `app_settings`.** Ships `false`. With it off, `app.queue_sms` —
+**1. `sms.outbound_enabled` AND `sms.enabled_templates`.** As of 2026-09-25 the master is
+`true` and the allowlist is `["responder.offer", "responder.already_covered"]` — the dispatch
+call-out and its closing reply, and nothing else. Both gates have to pass, so adding a template to
+the allowlist is the deliberate act that makes a new message cost money. Everything not listed is
+suppressed and carried by push and in-app.
+
+The old text, still true of anything outside the list: With it off, `app.queue_sms` —
 the only writer to the outbox — records the message as `suppressed`, with the phone redacted and
 the params dropped, and never calls Twilio. This is deliberate: push and in-app carry recoveries
 now. Turning Twilio on does not flip this, and it should stay off until gate 3 is done.

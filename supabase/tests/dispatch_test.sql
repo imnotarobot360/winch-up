@@ -1028,10 +1028,26 @@ reset role;
 -- arbitrary one. That cost three failures that looked like the switch not working.
 -- ---------------------------------------------------------------------------
 
+-- Recovery SMS came back on for the call-out on 2026-09-25, so the master switch is true.
+-- The protection the old assertion described did not go away, it moved: what stops a new
+-- template texting real people is now the ALLOWLIST, and that is what is worth pinning.
 select is(
   (select value from app_settings where key = 'sms.outbound_enabled'),
-  'false'::jsonb,
-  'recovery SMS ships off -- a setting that arrives on gets one deploy where it texts real people'
+  'true'::jsonb,
+  'recovery SMS is on'
+);
+
+select is(
+  (select value from app_settings where key = 'sms.enabled_templates'),
+  '["responder.offer", "responder.already_covered"]'::jsonb,
+  'but only for the dispatch call-out and its closing reply -- everything else is push and in-app'
+);
+
+-- An allowlist, so a template nobody has thought about is silent. A blocklist here would mean a
+-- new notification type starts texting everybody the day it ships.
+select ok(
+  not ((select value from app_settings where key = 'sms.enabled_templates') ? 'responder.assigned'),
+  'responder.assigned is NOT sendable: its params carry the requester phone, name and exact pin'
 );
 
 create temp table sms_probe as
@@ -1080,8 +1096,10 @@ select is(
 update app_settings set value = 'true'::jsonb where key = 'sms.outbound_enabled';
 
 alter table sms_probe add column on_id uuid;
+-- responder.offer, not responder.assigned: the master switch alone is no longer enough, and
+-- the call-out is the template this whole change exists for.
 update sms_probe set on_id =
-  app.queue_sms('+15125559701', 'responder.assigned',
+  app.queue_sms('+15125559701', 'responder.offer',
                 jsonb_build_object('requester_phone', '+15125559702'),
                 'en', (select id from requests limit 1));
 
@@ -1106,6 +1124,31 @@ select is(
   (select m.params ->> 'requester_phone' from sms_messages m, sms_probe p where m.id = p.on_id),
   '+15125559702',
   'and the payload it needs to render'
+);
+
+-- The master being on is necessary and not sufficient. This is the assertion that would have
+-- caught "turned SMS back on" quietly restoring every message the app ever sent.
+alter table sms_probe add column offlist_id uuid;
+update sms_probe set offlist_id =
+  app.queue_sms('+15125559701', 'requester.unmatched',
+                jsonb_build_object('short_code', 'ZZ99'), 'en');
+
+select is(
+  (select m.state::text from sms_messages m, sms_probe p where m.id = p.offlist_id),
+  'suppressed',
+  'a template outside the allowlist stays suppressed even with the master switch on'
+);
+
+select is(
+  (select m.to_phone from sms_messages m, sms_probe p where m.id = p.offlist_id),
+  app.redacted_phone(),
+  'and it is redacted the same way, because not-sent is not-sent whatever the reason'
+);
+
+select matches(
+  (select m.error_message from sms_messages m, sms_probe p where m.id = p.offlist_id),
+  'enabled_templates',
+  'with a reason that says which of the two gates stopped it'
 );
 
 update app_settings set value = 'false'::jsonb where key = 'sms.outbound_enabled';

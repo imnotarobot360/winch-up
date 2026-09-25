@@ -346,7 +346,14 @@ select is(
 -- Turned on, the same notification reaches the same outbox with the real number. This is the
 -- assertion that would catch the notification path growing a second sender of its own.
 reset role;
+
+-- BOTH gates, on purpose. Since 2026-09-25 app.queue_sms needs the master switch AND the
+-- template named in sms.enabled_templates, and requester.on_site is deliberately not in the
+-- shipped list -- the status page and push carry that one. This test is about the notification
+-- path reaching the outbox at all, not about which templates are allowed to, so it opens the
+-- allowlist for the template it uses and puts it back afterwards.
 update app_settings set value = 'true'::jsonb where key = 'sms.outbound_enabled';
+update app_settings set value = '["requester.on_site"]'::jsonb where key = 'sms.enabled_templates';
 
 select ok(
   app.notify('f1111111-0000-4000-8000-0000000000ff', 'recovery_status', 'notify.request.on_site',
@@ -366,6 +373,8 @@ select ok(
 );
 
 update app_settings set value = 'false'::jsonb where key = 'sms.outbound_enabled';
+update app_settings set value = '["responder.offer", "responder.already_covered"]'::jsonb
+ where key = 'sms.enabled_templates';
 
 -- ---------------------------------------------------------------------------
 -- 6. Retry and giving up
