@@ -19,9 +19,20 @@ necessarily the person who built it.
 
 ## Nobody is getting texts
 
-1. **Check the dry run.** In Vercel, `SMS_DRY_RUN=1` means every message is logged and none are
+1. **Check the switch in the database first.** Since 2026-09-23 this stops messages before
+   anything else does, and it ships off. Recovery SMS is carried by push and in-app instead.
+
+```sql
+select value from app_settings where key = 'sms.outbound_enabled';
+```
+
+   `false` means `app.queue_sms` recorded the message as `suppressed` and never called Twilio.
+   That is the intended state today, so "nobody is getting texts" is usually not a fault. Look for
+   `state = 'suppressed'` in the outbox to confirm that is what happened.
+
+2. **Check the dry run.** In Vercel, `SMS_DRY_RUN=1` means every message is logged and none are
    sent. This is the correct setting until A2P 10DLC is approved. Unset it to go live.
-2. **Check the outbox.** In Supabase SQL:
+3. **Check the outbox.** In Supabase SQL:
 
 ```sql
 select state, count(*), max(created_at) from sms_messages
@@ -31,7 +42,7 @@ select state, count(*), max(created_at) from sms_messages
    - Rows stuck in `queued` with `attempts = 0` → the drain is not running. See below.
    - Rows in `failed` → read `error_message`. A Twilio 21610 is a recipient who texted STOP;
      that is working as intended, not a bug.
-3. **Check the drain.** It runs two ways: inline after a request is created, and from the
+4. **Check the drain.** It runs two ways: inline after a request is created, and from the
    dispatch tick. Fire it by hand:
 
 ```bash

@@ -264,6 +264,19 @@ docs/                     decisions + runbooks
   redacted, the params dropped and a terminal state the drain cannot see, so turning the switch
   back on does not release a backlog of texts about recoveries that finished weeks ago. Phone OTP
   is a different path entirely and is unaffected. Do not add a second outbox writer.
+- **Four separate things stop an SMS, and only the first is obvious.** `sms.outbound_enabled`
+  (ships false, suppresses at `app.queue_sms`), `SMS_DRY_RUN` in Vercel, A2P 10DLC registration,
+  and Twilio trial-account limits. Gate three is the cruel one: without an approved campaign US
+  carriers DROP the message after Twilio accepts it, so the API returns success, the outbox row
+  says `sent`, and nothing arrives. `npm run sms:check` reads the campaign status from Twilio's
+  API because that is the only gate a successful send cannot tell you about. docs/twilio-setup.md.
+- **Phone OTP and recovery SMS are two different Twilio integrations.** OTP is Supabase Auth
+  sending its own SMS with credentials held in the SUPABASE dashboard; it does not read
+  `TWILIO_ACCOUNT_SID` and was never affected by switching recovery SMS off. If nobody can sign
+  in by phone, that is the Supabase dashboard, not this repo.
+- **`TWILIO_WEBHOOK_URL` is load-bearing.** The inbound route recomputes Twilio's HMAC over the
+  exact URL Twilio signed, so http vs https, a trailing slash or a preview domain makes every
+  reply 403 with nothing else wrong.
 - **The scrub reaches `sms_messages.params`, and `scrub_responder` reaches the outbox at all.**
   Both were missing until 2026-09-23. `responder.assigned` params hold the requester's phone,
   their name and the pin to five decimals, so redacting `to_phone` and leaving `params` meant
