@@ -9,6 +9,19 @@ export const APP_NAME = "Winch Up";
 /** Short form used in SMS, where every character costs money. */
 export const APP_SHORT_NAME = "Winch Up";
 
+/**
+ * The legal entity, which is not the product name.
+ *
+ * Kept separate on purpose: APP_NAME is what the app calls itself and can be renamed freely,
+ * while this is a registered company and changing it is a filing, not a decision. It belongs in
+ * exactly two kinds of place -- the legal pages, and anything checked against public records.
+ *
+ * A2P 10DLC brand verification compares the name on the campaign against the name on the privacy
+ * policy and terms, so if the registered brand ever changes, this is the one line to change and
+ * the legal pages follow.
+ */
+export const LEGAL_ENTITY = "Winch Up LLC";
+
 export const SUPPORTED_LOCALES = ["en", "es"] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = "en";

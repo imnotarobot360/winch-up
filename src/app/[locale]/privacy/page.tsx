@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { LEGAL_ENTITY } from "@/config/app";
 import { Callout } from "@/components/ui/primitives";
 import { Link } from "@/i18n/navigation";
 
@@ -39,7 +40,7 @@ export default async function PrivacyPage({
       </Callout>
 
       <article className="whitespace-pre-wrap text-base leading-relaxed">
-        {t("privacyBody")}
+        {t("privacyBody", { entity: LEGAL_ENTITY })}
       </article>
     </main>
   );

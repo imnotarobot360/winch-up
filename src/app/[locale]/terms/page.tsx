@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { LEGAL_ENTITY } from "@/config/app";
 import { LegalDocument } from "@/components/legal/legal-document";
 
 // The waiver text is versioned in the database. An admin who publishes a new version needs it
@@ -43,7 +44,7 @@ export default async function TermsPage({
           {t("smsTermsTitle")}
         </h2>
         <article className="whitespace-pre-wrap text-base leading-relaxed">
-          {t("smsTermsBody")}
+          {t("smsTermsBody", { entity: LEGAL_ENTITY })}
         </article>
       </section>
     </LegalDocument>
