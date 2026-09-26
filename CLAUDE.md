@@ -440,7 +440,7 @@ Four layers. Run all of them before claiming anything works.
 
 ```
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
-npm test            166 unit + component tests (vitest)
+npm test            171 unit + component tests (vitest)
 npm run test:e2e    192 Playwright tests — android, iphone, tablet, desktop
 supabase test db    800 pgTAP assertions across eighteen suites
 ```

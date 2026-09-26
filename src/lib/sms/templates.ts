@@ -223,11 +223,14 @@ const TEMPLATES: Record<SmsTemplateKey, { en: Renderer; es: Renderer }> = {
       `${APP_SHORT_NAME}: está de vuelta en la lista de llamadas. Responda STOP cuando quiera para salir.`,
   },
 
+  // The HELP reply is not just a command list: carriers require it to carry the program name, a
+  // way to reach a human, the rates disclosure and the opt-out. It used to have the first and
+  // last only, which reads fine to a volunteer and fails an A2P review.
   "responder.help": {
     en: () =>
-      `${APP_SHORT_NAME}: reply 1 to take a job, 2 to pass, HERE when you arrive, DONE when they are out, STOP to opt out.`,
+      `${APP_SHORT_NAME}: reply 1 to take a job, 2 to pass, HERE when you arrive, DONE when they are out. Help: help@winch-up.com. Msg&data rates may apply. STOP to opt out.`,
     es: () =>
-      `${APP_SHORT_NAME}: responda 1 para tomar un trabajo, 2 para pasar, HERE al llegar, DONE cuando salgan, STOP para no recibir más.`,
+      `${APP_SHORT_NAME}: responda 1 para tomar trabajo, 2 para pasar, HERE al llegar, DONE cuando salgan. Ayuda: help@winch-up.com. Pueden aplicar tarifas de msj y datos. STOP o BAJA para salir.`,
   },
 
   "unknown.no_account": {

@@ -216,3 +216,45 @@ describe("renderLooksBroken", () => {
     }
   });
 });
+
+/**
+ * Carrier compliance, which is not the same as the message reading well.
+ *
+ * The HELP reply used to be a command list: correct for a volunteer, and missing three of the
+ * four things an A2P reviewer checks for. It read fine, the 54 tests above passed, and the gap
+ * was only found by looking at the generated campaign samples by eye. These assertions are so
+ * that does not have to happen twice.
+ */
+describe("carrier compliance", () => {
+  for (const locale of ["en", "es"] as const) {
+    it(`the HELP reply carries brand, contact, rates and opt-out in ${locale}`, () => {
+      const body = renderSms("responder.help", {}, locale);
+      expect(body).toBeTruthy();
+
+      expect(body, "program name").toContain("Winch Up");
+      expect(body, "a way to reach a human").toContain("help@winch-up.com");
+      expect(body, "rates disclosure").toMatch(/rates|tarifas/i);
+      expect(body, "opt-out keyword").toMatch(/STOP/);
+    });
+  }
+
+  // Every message that asks somebody to do something has to say how to stop. The call-out is the
+  // only one that reaches a volunteer unprompted, so it is the one that matters most.
+  for (const locale of ["en", "es"] as const) {
+    it(`the dispatch call-out says how to stop, in ${locale}`, () => {
+      const body = renderSms(
+        "responder.offer",
+        { short_code: "TX-0001", vehicle_class: "truck", miles: 9, stuck_type: "mud" },
+        locale,
+      );
+      expect(body).toMatch(/STOP/);
+    });
+  }
+
+  it("the English HELP reply still fits one GSM-7 segment", () => {
+    // 160 characters. Two segments is double the cost for a message nobody reads twice, and the
+    // compliance additions took it to 157 -- close enough that the next edit should know.
+    const body = renderSms("responder.help", {}, "en")!;
+    expect(body.length).toBeLessThanOrEqual(160);
+  });
+});
