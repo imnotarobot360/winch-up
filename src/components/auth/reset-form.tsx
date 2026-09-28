@@ -44,13 +44,28 @@ export function ResetForm() {
     setBusy(true);
     setError(null);
 
-    await supabaseBrowser().auth.resetPasswordForEmail(email, {
+    const { error: requestError } = await supabaseBrowser().auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset`,
     });
 
     setBusy(false);
-    // Always the same answer, sent or not: whether an address has an account here is not
-    // something an unauthenticated form should reveal.
+
+    // The error used to be discarded entirely. That kept the enumeration answer identical, which
+    // was the point, but it also swallowed every real failure -- a rate limit, an SMTP
+    // misconfiguration, a redirect URL missing from the project's allowlist. The screen said
+    // "check your email" and nothing arrived, with nothing anywhere to say why.
+    //
+    // Capturing it leaks nothing: Supabase answers successfully for an address it does not know,
+    // deliberately, so an error here is never "no such account" -- it is always something wrong
+    // on our side. So it is safe to say so, and dishonest not to.
+    if (requestError) {
+      console.error("[reset] Supabase refused the reset request", requestError.message);
+      setError(requestError.status === 429 ? "rate_limited" : "reset_failed");
+      return;
+    }
+
+    // Unchanged for the ordinary case: the same answer whether or not the address has an
+    // account, because that is not something an unauthenticated form should reveal.
     setSent(true);
   }
 

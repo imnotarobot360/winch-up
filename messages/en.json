@@ -45,12 +45,13 @@
       "signin_failed": "We couldn't sign you in. Try again.",
       "signup_failed": "We couldn't create that account. Try again.",
       "weak_password": "Pick a longer password — at least 8 characters.",
-      "reset_failed": "We couldn't save that password. The link may have expired.",
+      "reset_failed": "We could not send the link just now. This is a problem on our side, not with your address — try again shortly.",
       "link_expired": "That link has expired. Ask for a new one.",
       "missing_code": "That link was incomplete. Ask for a new one.",
       "bad_code": "That code didn't work. Try the current one.",
       "challenge_failed": "We couldn't start the check. Try again.",
-      "mfa_unavailable": "This account needs a code but we can't find its authenticator. Contact an admin."
+      "mfa_unavailable": "This account needs a code but we can't find its authenticator. Contact an admin.",
+      "rate_limited": "Too many attempts. Wait a few minutes and try again."
     },
     "checking": "Checking…",
     "mfaPrompt": "One more step — open your authenticator app.",

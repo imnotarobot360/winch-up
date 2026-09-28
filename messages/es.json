@@ -45,12 +45,13 @@
       "signin_failed": "No pudimos iniciar su sesión. Intente de nuevo.",
       "signup_failed": "No pudimos crear esa cuenta. Intente de nuevo.",
       "weak_password": "Elija una contraseña más larga: al menos 8 caracteres.",
-      "reset_failed": "No pudimos guardar esa contraseña. Puede que el enlace haya vencido.",
+      "reset_failed": "No pudimos enviar el enlace ahora. Es un problema nuestro, no de su dirección; inténtelo en un momento.",
       "link_expired": "Ese enlace ha vencido. Pida uno nuevo.",
       "missing_code": "Ese enlace estaba incompleto. Pida uno nuevo.",
       "bad_code": "Ese código no funcionó. Pruebe con el actual.",
       "challenge_failed": "No pudimos iniciar la verificación. Intente de nuevo.",
-      "mfa_unavailable": "Esta cuenta necesita un código pero no encontramos su autenticador. Contacte a un administrador."
+      "mfa_unavailable": "Esta cuenta necesita un código pero no encontramos su autenticador. Contacte a un administrador.",
+      "rate_limited": "Demasiados intentos. Espere unos minutos e inténtelo de nuevo."
     },
     "checking": "Comprobando…",
     "mfaPrompt": "Un paso más: abra su aplicación de autenticación.",
