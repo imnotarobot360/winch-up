@@ -168,8 +168,13 @@ select bag_eq(
       from pg_proc p join pg_namespace n on n.oid = p.pronamespace
      where n.nspname = 'public' and p.prosecdef
        and has_function_privilege('anon', p.oid, 'EXECUTE')$$,
-  $$values ('ads_for'), ('board_requests'), ('get_public_settings'), ('get_request_by_token')$$,
-  'anon can execute exactly four security definer functions, and these are they'
+  $$values ('ads_for'), ('board_requests'), ('get_public_settings'), ('get_request_by_token'),
+           ('membership_agreement')$$,
+  -- membership_agreement returns the current membership agreement text and nothing about any
+  -- person. It is anon-reachable because registration has to show the full document before an
+  -- account exists, and a signed-out visitor is entitled to read what they would be agreeing
+  -- to. Signing is a separate function and is service_role only.
+  'anon can execute exactly five security definer functions, and these are they'
 );
 
 -- ---------------------------------------------------------------------------
