@@ -10,7 +10,9 @@ import { expect, test } from "@playwright/test";
  */
 
 const PAGES = [
-  { path: "/", heading: /Winch Up/i, title: /Winch Up/ },
+  // A fresh browser context has no wu_seen_welcome cookie, so "/" IS the onboarding screen.
+  // The landing page behind it is covered by its own test below.
+  { path: "/", heading: /off-roaders helping off-roaders/i, title: /Winch Up/ },
   { path: "/board", heading: /Open board/i, title: /board/i },
   { path: "/terms", heading: /.+/, title: /.+/ },
   { path: "/waiver", heading: /.+/, title: /.+/ },
@@ -148,5 +150,50 @@ test.describe("PWA", () => {
       const response = await request.get(icon.src);
       expect(response.status(), `${icon.src} is referenced by the manifest`).toBe(200);
     }
+  });
+});
+
+/**
+ * The front door.
+ *
+ * Screens 1 and 2 of the design reference are a splash and an onboarding screen. /welcome was
+ * built and deployed and then nothing linked to it for two days, so every new visitor landed on
+ * the marketing page instead and the reference was quietly not followed. Nothing caught that:
+ * every page rendered, every link resolved, and the screen that was missing was one nobody
+ * navigated to.
+ *
+ * Both halves are asserted because either alone is wrong. Onboarding every time is an obstacle;
+ * onboarding never is the bug that was there.
+ */
+test.describe("the first visit", () => {
+  test("a new visitor gets the onboarding screen, not the landing page", async ({ page }) => {
+    await page.context().clearCookies();
+    await page.goto("/");
+
+    await expect(page).toHaveURL(/\/welcome$/);
+    await expect(page.getByRole("heading", { name: /off-roaders helping off-roaders/i }))
+      .toBeVisible();
+    await expect(page.getByRole("link", { name: /get started/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /sign in/i })).toBeVisible();
+  });
+
+  test("and the second visit goes straight to the landing page", async ({ page }) => {
+    await page.context().clearCookies();
+    await page.goto("/");
+    await expect(page).toHaveURL(/\/welcome$/);
+
+    // The cookie is set by the middleware on the response that served /welcome.
+    await page.goto("/");
+    await expect(page).not.toHaveURL(/\/welcome$/);
+    await expect(page.getByRole("link", { name: /I'm stuck/i })).toBeVisible();
+  });
+
+  test("somebody who is stuck can skip onboarding entirely", async ({ page }) => {
+    // The whole product is for people who need help now. Making them read a pitch first would
+    // be the worst possible place to put a funnel.
+    await page.context().clearCookies();
+    await page.goto("/");
+    await page.getByRole("link", { name: /ask for help first/i }).click();
+    await expect(page).toHaveURL(/\/(request|signin)/);
   });
 });

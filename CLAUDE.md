@@ -375,6 +375,18 @@ docs/                     decisions + runbooks
   verified before the provider was bought still gets their welcome email on the first tick after
   it is configured. Marking it failed would burn the queue silently, which is the same mistake
   the push drain avoids by leaving rows alone when VAPID is unset.
+- **A screen that nothing links to is a screen nobody sees.** /welcome -- screen 2 of the design
+  reference -- was built, tested, deployed and then left unreachable for two days, so every new
+  visitor landed on the marketing page and the reference was quietly not followed. Nothing caught
+  it: every page rendered, every link resolved, and the missing screen was one no test navigated
+  to. The home page now sends a first-time signed-out visitor there, with `wu_seen_welcome` set
+  by the MIDDLEWARE on the response that serves /welcome -- a server component cannot set a
+  cookie, and a client effect would pin anybody with JavaScript off to onboarding forever.
+  Onboarding once is the reference; onboarding every visit is an obstacle, so both halves are
+  asserted in public-pages.spec.
+- **A redirect from a page under a `loading.tsx` boundary is not an HTTP 302.** Next streams a
+  200 and the navigation arrives in the RSC payload, so `curl -w %{http_code}` reports 200 and
+  no redirect_url and the redirect looks broken when it is working. Check it in a browser.
 - **The local auth shim had no `/signup` route until 2026-09-25**, so the way every member
   actually arrives 404'd locally and every suite signed in as a seeded account instead. It also
   hard-coded `raw_user_meta_data` to `{}`, which meant nothing could tell "auth-form sends the
@@ -441,7 +453,7 @@ Four layers. Run all of them before claiming anything works.
 ```
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
 npm test            171 unit + component tests (vitest)
-npm run test:e2e    192 Playwright tests — android, iphone, tablet, desktop
+npm run test:e2e    204 Playwright tests — android, iphone, tablet, desktop
 supabase test db    800 pgTAP assertions across eighteen suites
 ```
 

@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
@@ -7,6 +8,8 @@ import { Callout, Card } from "@/components/ui/primitives";
 import { APP_NAME } from "@/config/app";
 import { Link } from "@/i18n/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
+import { redirect } from "@/i18n/navigation";
+import { SEEN_WELCOME } from "@/middleware";
 
 /**
  * Two different home pages, decided by whether anybody is signed in.
@@ -15,9 +18,15 @@ import { supabaseServer } from "@/lib/supabase/server";
  * is the right home for somebody who already belongs here -- they do not need to be told what the
  * app is every time they open it.
  *
- * Signed out, it stays the landing page. It is the page search engines index and the page a
- * stranger reaches from a link in a Facebook group, and replacing it with a map they cannot use
- * would trade the product's whole front door for a closer match to a mockup.
+ * Signed out and arriving for the FIRST time, it is screen 2 of the reference: the onboarding
+ * screen at /welcome. That screen was built and deployed and then nothing ever linked to it, so
+ * the first thing a new visitor actually saw was the landing page below -- which is not in the
+ * reference at all.
+ *
+ * Signed out and returning, it stays the landing page. It is the page search engines index and
+ * the page a stranger reaches from a link in a Facebook group, and making every visit start at a
+ * full-bleed splash would trade the product's front door for a closer match to a mockup. Once is
+ * onboarding; twice is an obstacle.
  *
  * The map is not rendered for signed-out visitors at all, rather than rendered empty: it costs a
  * Mapbox tile load and a 400KB library to show a stranger a map of nothing.
@@ -34,6 +43,14 @@ export default async function HomePage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  if (!user) {
+    // First visit only. The cookie is set by the middleware on the response that serves
+    // /welcome, so it lands whether they were redirected there or typed the URL, and works with
+    // JavaScript off.
+    const seenWelcome = (await cookies()).has(SEEN_WELCOME);
+    if (!seenWelcome) redirect({ href: "/welcome", locale });
+  }
 
   if (user) {
     // The same blurred rows the public board serves. A member's own home map is not a reason to

@@ -37,8 +37,32 @@ export async function middleware(request: NextRequest) {
     await supabase.auth.getUser();
   }
 
+  // Remember that the onboarding screen has been shown.
+  //
+  // Screens 1 and 2 of the design reference are a splash and an onboarding screen, and /welcome
+  // is the second of those. It was built and deployed and then nothing ever linked to it, so the
+  // first thing a new visitor actually saw was the marketing landing page, which is not in the
+  // reference at all. The home page now sends a first-time signed-out visitor here; this is what
+  // stops it happening on every subsequent visit.
+  //
+  // Set in the middleware rather than from the page, because a server component cannot set a
+  // cookie and a client effect would leave anybody with JavaScript off pinned to onboarding
+  // forever. Written on the response that actually carries /welcome, so it lands whether the
+  // visitor arrived by redirect or typed the URL.
+  if (/^\/(en\/|es\/)?welcome\/?$/.test(request.nextUrl.pathname)) {
+    response.cookies.set(SEEN_WELCOME, "1", {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+      httpOnly: false,
+    });
+  }
+
   return response;
 }
+
+/** Cookie recording that onboarding has been seen. Read by the home page. */
+export const SEEN_WELCOME = "wu_seen_welcome";
 
 export const config = {
   // Everything except API routes, the generated icons, Next internals, and files with an
