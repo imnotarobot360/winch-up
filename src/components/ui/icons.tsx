@@ -99,6 +99,16 @@ export const IconRing = (p: IconProps) => (
   <Svg {...p}><circle cx="12" cy="12" r="3" /><path d="M6.5 6.5a8 8 0 0 0 0 11M17.5 17.5a8 8 0 0 0 0-11" /></Svg>
 );
 
+// A bell, for the header's way into /notifications. Not IconRing, which is a broadcast glyph and
+// means "how we reach you" on the settings screen -- the same shape for the inbox and for its
+// preferences would say the two are the same thing.
+export const IconBell = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M18 9a6 6 0 0 0-12 0c0 4.5-2 6-2 6h16s-2-1.5-2-6" />
+    <path d="M10.2 18a2.2 2.2 0 0 0 3.6 0" />
+  </Svg>
+);
+
 export const IconCheck = (p: IconProps) => (
   <Svg {...p}><circle cx="12" cy="12" r="9" /><path d="m8 12.5 2.5 2.5L16 9.5" /></Svg>
 );

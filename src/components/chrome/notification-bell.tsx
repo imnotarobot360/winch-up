@@ -3,24 +3,35 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { IconBell } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
 const POLL_MS = 60_000;
 
 /**
- * The unread count in the header.
+ * The way into /notifications, and the unread count on it.
  *
- * Renders nothing at all when there is nothing unread, and nothing at all when signed out. A
- * permanently visible bell with a zero on it is a small piece of noise on every screen in the
- * app, including the one somebody reads while their truck is in a creek.
+ * THIS USED TO RENDER NOTHING WHENEVER THE COUNT WAS ZERO, AND THAT MADE THE PAGE UNREACHABLE.
  *
- * Polls once a minute. Notifications here are things that have already happened and are already
- * recorded; a websocket held open on a phone with one bar would cost more than it buys.
+ * The reasoning was sound as far as it went -- a bell with a permanent "0" on it is noise on
+ * every screen in the app, including the one somebody reads while their truck is in a creek --
+ * but this link is the ONLY route to /notifications anywhere in the product. The bottom nav has
+ * five tabs and none of them is this one. So the entry point appeared when something arrived
+ * and vanished the moment it was read, and notification history could not be reached at all.
+ *
+ * The fix keeps the original objection intact: the BADGE still only exists when there is
+ * something unread. What is always there, for a signed-in member, is the bell itself -- an
+ * affordance rather than a count, the same as every other navigation icon in the app.
+ *
+ * Signed out it still renders nothing, because /notifications needs an account.
  */
 export function NotificationBell() {
   const t = useTranslations("notifications");
   const [unread, setUnread] = useState(0);
+  // null means "not asked yet". Rendering the bell before the session is known would flash it
+  // onto every public page for a moment, which is the thing the header is careful about.
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
 
   const load = useCallback(async () => {
     const supabase = supabaseBrowser();
@@ -35,12 +46,17 @@ export function NotificationBell() {
     } = await supabase.auth.getSession();
 
     if (!session) {
+      setSignedIn(false);
       setUnread(0);
       return;
     }
 
+    setSignedIn(true);
+
     const { data, error } = await supabase.rpc("my_notifications", { p_limit: 1 });
     if (error) {
+      // The count is unknown, not zero. The bell stays -- losing the only way to reach the page
+      // because one poll failed would be the original bug in a smaller form.
       setUnread(0);
       return;
     }
@@ -54,17 +70,27 @@ export function NotificationBell() {
     return () => clearInterval(timer);
   }, [load]);
 
-  if (unread === 0) return null;
+  if (!signedIn) return null;
 
   return (
     <Link
       href="/notifications"
-      aria-label={t("unreadLabel", { count: unread })}
-      className="flex min-h-12 items-center gap-2 rounded-field px-3 text-sm font-bold text-ink"
+      // The count when there is one, the plain name when there is not. A screen reader should
+      // not have to hear "0 unread notifications" to find the inbox.
+      aria-label={unread > 0 ? t("unreadLabel", { count: unread }) : t("title")}
+      className="relative flex min-h-12 min-w-12 items-center justify-center rounded-field text-ink"
     >
-      <span className="flex size-7 items-center justify-center rounded-full bg-brand text-on-brand">
-        {unread > 9 ? "9+" : unread}
-      </span>
+      <IconBell size={24} />
+
+      {unread > 0 ? (
+        <span
+          // Overlapping the bell rather than sitting beside it, so the tap target stays the
+          // same size and the header does not reflow when the first notification arrives.
+          className="absolute right-1 top-1 flex min-w-5 items-center justify-center rounded-full bg-brand px-1 text-xs font-bold text-on-brand"
+        >
+          {unread > 9 ? "9+" : unread}
+        </span>
+      ) : null}
     </Link>
   );
 }

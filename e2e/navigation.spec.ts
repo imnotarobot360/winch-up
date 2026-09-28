@@ -101,3 +101,52 @@ test.describe("navigation", () => {
     }
   });
 });
+
+/**
+ * /notifications is reachable when there is nothing unread.
+ *
+ * The crawl above cannot see this one. It runs signed out, and everything under MEMBERS_ONLY is
+ * allowed to bounce to /signin -- so a members-only page with no route into it at all still
+ * passes, which is exactly what happened.
+ *
+ * The header bell was the ONLY link to /notifications anywhere in the app, and it rendered null
+ * whenever the unread count was zero. So the way in appeared when something arrived and vanished
+ * the moment it was read, and notification history could not be opened again by any means.
+ *
+ * IT HAS TO OBSERVE THE ZERO-UNREAD CASE, and that is the whole difficulty.
+ *
+ * The first version of this test signed in as rosa and looked for the link. It passed with the
+ * bug deliberately put back, because rosa has 248 unread notifications from the other suites, so
+ * the bell rendered for the wrong reason entirely. A test of this that does not reach zero is
+ * testing the badge.
+ *
+ * Marking everything read through the UI did not work either. So it uses the one account the
+ * other suites do not generate notifications for, and ASSERTS THE BADGE IS ABSENT before
+ * asserting the link is present. That ordering is the point: if this account ever starts
+ * receiving notifications, the badge assertion fails and says so, rather than the test quietly
+ * going green for the same wrong reason a second time.
+ */
+test.describe("the notifications entry point", () => {
+  test("the header reaches /notifications with nothing unread", async ({ page }) => {
+    await page.goto("/signin");
+    // pressSequentially, not fill: on WebKit fill() on one field clears its sibling.
+    await page.getByLabel(/email|correo/i).pressSequentially("admin@winchup.test");
+    await page.getByLabel(/password|contraseña/i).pressSequentially("recovery-demo-2026");
+    await page.getByRole("button", { name: /^sign in$|^entrar$/i }).click();
+    await page.waitForURL((url) => !url.pathname.endsWith("/signin"), { timeout: 20_000 });
+
+    await page.goto("/");
+
+    const bell = page.locator('a[href$="/notifications"]');
+    await expect(bell).toBeVisible({ timeout: 20_000 });
+
+    // The precondition, checked rather than assumed. The bell's accessible name carries the
+    // count when there is one, so this is what "nothing unread" looks like from outside.
+    await expect(bell).toHaveAccessibleName(/^(notifications|notificaciones)$/i);
+
+    await bell.click();
+    await expect(page).toHaveURL(/\/notifications$/);
+    await expect(page.getByRole("heading", { name: /notifications|notificaciones/i }))
+      .toBeVisible();
+  });
+});
