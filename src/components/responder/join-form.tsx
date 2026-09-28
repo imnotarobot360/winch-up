@@ -106,6 +106,21 @@ export function JoinForm() {
     setBusy(false);
 
     if (otpError) {
+      // The provider's own reason, which used to be dropped on the floor.
+      //
+      // Phone verification goes out through Supabase Auth's Twilio settings, NOT the TWILIO_*
+      // variables this app uses for dispatch -- two separate configurations that fail in
+      // indistinguishable ways from this screen. When the Supabase side is misconfigured the
+      // useful detail is all in here: Twilio 21212 (invalid From -- usually a phone number
+      // pasted where the Messaging Service SID goes), 21608 (trial account, number not
+      // verified), 21610 (recipient replied STOP).
+      //
+      // The member still sees the plain message below. This is for whoever is debugging it,
+      // and its absence cost several rounds of guessing.
+      console.error(
+        "[join] signInWithOtp failed",
+        { status: otpError.status, code: otpError.code, message: otpError.message },
+      );
       setError("otp_send_failed");
       return;
     }
