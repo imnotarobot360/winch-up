@@ -169,6 +169,23 @@
       "primary_failed": "No pudimos cambiar su vehículo principal. Intente de nuevo.",
       "contact_in_notes": "Las notas no pueden contener un teléfono ni un enlace.",
       "too_many": "Ese es el máximo de vehículos. Quite uno primero."
+    },
+    "photo": {
+      "label": "Foto de su vehículo",
+      "hint": "Los miembros la ven en su perfil. Lo ideal es al aire libre y con el vehículo completo.",
+      "alt": "Su vehículo",
+      "empty": "Todavía no hay foto",
+      "add": "Agregar una foto",
+      "replace": "Cambiar la foto",
+      "remove": "Quitar",
+      "uploading": "Subiendo…",
+      "failed": "Esa foto no se pudo subir. Pruebe con otra."
+    },
+    "prompt": {
+      "addPhoto": "Agregue una foto de su vehículo para que otros miembros vean qué conduce.",
+      "addPhotoCta": "Agregar foto",
+      "addRig": "Agregue su vehículo, para que los miembros vean qué conduce y qué puede aportar.",
+      "addRigCta": "Agregar vehículo"
     }
   },
   "home": {
@@ -1938,7 +1955,8 @@
     "equipment": "Lo que lleva",
     "recoveries": "Rescates a los que salió",
     "milesAway": "A unas {miles} mi",
-    "howToReach": "Aquí no hay mensajes directos. Si se ofrece en su rescate, o usted en el suyo, la conversación se abre con él."
+    "howToReach": "Aquí no hay mensajes directos. Si se ofrece en su rescate, o usted en el suyo, la conversación se abre con él.",
+    "rigPhotoAlt": "El vehículo de {name}"
   },
   "membership": {
     "title": "Acuerdo de Membresía",

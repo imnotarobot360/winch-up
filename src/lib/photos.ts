@@ -113,3 +113,43 @@ export async function uploadPhoto(
     previewUrl: photo.previewUrl,
   };
 }
+
+/**
+ * Upload one rig photo and hand back its storage path.
+ *
+ * Shares preparePhoto with recovery photos, which is the part that matters: the shrink keeps
+ * the upload sendable on bad signal, and re-encoding through a canvas drops every EXIF block.
+ * That second one counts for MORE here than it does on a recovery photo -- a picture of your
+ * truck is usually taken at home, so its GPS tag is your address, and this is a photo other
+ * members can see.
+ *
+ * No draft id and no index: the server derives the path from the session, so the browser has
+ * no say in whose folder this lands in. See the route for why.
+ */
+export async function uploadVehiclePhoto(photo: PreparedPhoto): Promise<string> {
+  const signResponse = await fetch("/api/photos/vehicle/sign-upload", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ contentType: photo.contentType }),
+  });
+
+  if (!signResponse.ok) {
+    const payload = await signResponse.json().catch(() => null);
+    throw new Error(payload?.error ?? "sign_failed");
+  }
+
+  const { path, signedUrl } = (await signResponse.json()) as {
+    path: string;
+    signedUrl: string;
+  };
+
+  const uploadResponse = await fetch(signedUrl, {
+    method: "PUT",
+    headers: { "content-type": photo.contentType, "x-upsert": "true" },
+    body: photo.blob,
+  });
+
+  if (!uploadResponse.ok) throw new Error("upload_failed");
+
+  return path;
+}

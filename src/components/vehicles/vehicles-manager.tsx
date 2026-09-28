@@ -11,7 +11,7 @@ import { VehicleForm, type Vehicle } from "./vehicle-form";
 
 const COLUMNS =
   "id, make, model, year, vehicle_class, drivetrain, tire_size, recovery_points, " +
-  "has_winch, winch_capacity_lb, equipment, notes, is_primary";
+  "has_winch, winch_capacity_lb, equipment, notes, photo_path, is_primary";
 
 /**
  * A member's rigs.

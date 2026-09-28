@@ -16,6 +16,8 @@ import {
 import { ENUMS } from "@/config/app";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
+import { RigPhotoField } from "./rig-photo-field";
+
 export type Vehicle = {
   id: string;
   make: string | null;
@@ -29,6 +31,7 @@ export type Vehicle = {
   winch_capacity_lb: number | null;
   equipment: string[];
   notes: string | null;
+  photo_path: string | null;
   is_primary: boolean;
 };
 
@@ -46,6 +49,7 @@ const BLANK: Draft = {
   winch_capacity_lb: null,
   equipment: [],
   notes: "",
+  photo_path: null,
 };
 
 const selectClasses =
@@ -110,6 +114,7 @@ export function VehicleForm({
       winch_capacity_lb: draft.has_winch ? draft.winch_capacity_lb || null : null,
       equipment: draft.equipment,
       notes: draft.notes?.trim() || null,
+      photo_path: draft.photo_path,
     };
 
     const supabase = supabaseBrowser();
@@ -138,6 +143,13 @@ export function VehicleForm({
     <Card>
       <form onSubmit={save} className="space-y-4">
         {error ? <Callout tone="danger">{t("errors." + error)}</Callout> : null}
+
+        {/* First, not last. The design reference makes the rig photo the profile banner, and a
+            member who scrolls past a wall of tyre sizes to find it will not add one. */}
+        <RigPhotoField
+          value={draft.photo_path}
+          onChange={(path) => set("photo_path", path)}
+        />
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t("make")}>

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { supabaseServer } from "@/lib/supabase/server";
+import { signVehiclePhoto } from "@/lib/vehicle-photos";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("memberProfile");
@@ -21,6 +22,8 @@ type Member = {
   recoveries: number | null;
   member_since: string | null;
   miles: number | null;
+  /** Their primary rig. A path into a private bucket -- signed below, never rendered raw. */
+  rig_photo_path: string | null;
 };
 
 /**
@@ -56,13 +59,28 @@ export default async function MemberProfilePage({
   if (!result?.ok || !result.member) notFound();
   const m = result.member;
 
+  // Signed here rather than in the RPC: the bucket is private and the URL expires, so minting
+  // it any earlier would hand out a link that is already stale.
+  const rigPhoto = await signVehiclePhoto(m.rig_photo_path);
+
   return (
     <main className="mx-auto w-full max-w-xl px-4 py-6">
-      {/* The reference opens with a wide vehicle photograph. There is no member photography in
-          this product -- avatar_path points into a private bucket and most members have none --
-          so this is the brand field instead. A grey placeholder pretending to be a truck would
-          be worse than a surface that does not pretend. */}
-      <div className="-mx-4 -mt-6 mb-4 h-28 bg-trail" />
+      {/* The reference opens with a wide vehicle photograph, and as of 20260928000900 there
+          is one: members put a photo on their primary rig. When they have not, this falls back
+          to the brand field rather than a grey rectangle pretending to be a truck -- a surface
+          that does not pretend beats a placeholder that does. */}
+      {rigPhoto ? (
+        // Not next/image: the src is a signed URL that expires in ten minutes, so the
+        // optimiser would cache a link that outlives its own validity.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={rigPhoto}
+          alt={t("rigPhotoAlt", { name: m.display_name ?? t("someone") })}
+          className="-mx-4 -mt-6 mb-4 h-44 w-[calc(100%+2rem)] max-w-none object-cover"
+        />
+      ) : (
+        <div className="-mx-4 -mt-6 mb-4 h-28 bg-trail" />
+      )}
 
       <header className="space-y-2">
         <div className="flex items-baseline justify-between gap-3">

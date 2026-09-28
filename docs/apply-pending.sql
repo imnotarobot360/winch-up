@@ -152,6 +152,12 @@
 -- it compares the text rather than the version number.
 \i supabase/migrations/20260928000700_rules_v2.sql
 
+\echo ''
+\echo '=== Phone required to join again, and a photo of your rig ==='
+\i supabase/migrations/20260928000800_phone_required_again.sql
+\i supabase/migrations/20260928000900_vehicle_photos.sql
+\i supabase/migrations/20260928001000_member_rig_photo.sql
+
 -- PostgREST caches the schema at startup and does not notice new functions or columns. Without
 -- this the app calls request_thread() and gets "function not found" against a database that
 -- plainly has it -- which reads as the migration not having applied.

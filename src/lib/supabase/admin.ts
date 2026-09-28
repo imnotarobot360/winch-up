@@ -33,6 +33,18 @@ export function supabaseAdmin(): SupabaseClient {
 export const PHOTO_BUCKET = "request-photos";
 
 /**
+ * Rig photos, kept apart from recovery photos deliberately.
+ *
+ * Different lifetime and different audience: a recovery photo is evidence of one job and is
+ * swept when the request is scrubbed, a rig photo is part of a profile and lives as long as the
+ * vehicle. One bucket would mean the retention job has to know not to touch half its contents.
+ *
+ * Re-exported from its own module because the garage screen is a client component and cannot
+ * import this file, which is server-only.
+ */
+export { VEHICLE_PHOTO_BUCKET } from "@/lib/vehicle-photo-bucket";
+
+/**
  * The client's IP, as far as we can tell behind Vercel's proxy.
  *
  * Used for rate limiting and stored with the waiver acceptance. It is spoofable by anyone who

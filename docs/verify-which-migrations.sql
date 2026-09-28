@@ -142,7 +142,18 @@ with expected(kind, name, detail, migration, file) as (
     -- present proves the migration ran, the placeholder absent proves nothing has put it back.
     ('waivertext', 'rules',   'WINCH UP - TERMS OF USE', '000700', '20260928000700_rules_v2.sql'),
     ('waivernot',  'rules',              'PLACEHOLDER', '000700', '20260928000700_rules_v2.sql'),
-    ('waivernot',  'rules',       'TEXTO PROVISIONAL',  '000700', '20260928000700_rules_v2.sql')
+    ('waivernot',  'rules',       'TEXTO PROVISIONAL',  '000700', '20260928000700_rules_v2.sql'),
+
+    -- A phone is required to JOIN again. Checked by the error the insert path returns, not by
+    -- existence: the function has existed all along, and both versions of it look identical
+    -- from outside.
+    ('hasref', 'upsert_responder_profile', 'phone_required', '000800', '20260928000800_phone_required_again.sql'),
+
+    -- Rig photos.
+    ('function', 'my_rig_photo_status', '', '000900', '20260928000900_vehicle_photos.sql'),
+    ('privatebucket', 'vehicle-photos', '', '000900', '20260928000900_vehicle_photos.sql'),
+    ('storagepolicy', 'vehicle_photos_owner_read', '', '000900', '20260928000900_vehicle_photos.sql'),
+    ('hasref',   'member_profile', 'rig_photo_path', '001000', '20260928001000_member_rig_photo.sql')
 ),
 checked as (
   select
@@ -248,6 +259,15 @@ checked as (
       -- ...and does NOT contain this. The A2P campaign links to /terms and a reviewer opens it;
       -- "PLACEHOLDER - REVIEW WITH LAWYER" being absent is the actual thing being verified, and
       -- it is the sort of property that quietly comes back when somebody republishes a slug.
+      -- A private storage bucket. Existence is not the property worth checking -- PUBLIC is.
+      -- A bucket flipped public would put every member's truck on the open internet and no
+      -- function signature anywhere would change.
+      when 'privatebucket' then exists (
+        select 1 from storage.buckets where id = e.name and not public)
+      -- A policy on storage.objects. The generic 'policyref' kind filters to schemaname
+      -- 'public', so it cannot see these.
+      when 'storagepolicy' then exists (
+        select 1 from pg_policies where tablename = 'objects' and policyname = e.name)
       when 'waivernot' then not exists (
         select 1 from public.waivers
          where slug = e.name and is_current

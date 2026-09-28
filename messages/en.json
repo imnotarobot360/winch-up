@@ -169,6 +169,23 @@
       "primary_failed": "We couldn't change your main rig. Try again.",
       "contact_in_notes": "Notes can't contain a phone number or a link.",
       "too_many": "That's the maximum number of rigs. Remove one first."
+    },
+    "photo": {
+      "label": "Photo of your rig",
+      "hint": "Members see this on your profile. Taken outside, whole vehicle in frame, is ideal.",
+      "alt": "Your rig",
+      "empty": "No photo yet",
+      "add": "Add a photo",
+      "replace": "Replace photo",
+      "remove": "Remove",
+      "uploading": "Uploading…",
+      "failed": "That photo would not upload. Try another one."
+    },
+    "prompt": {
+      "addPhoto": "Add a photo of your rig so other members can see what you drive.",
+      "addPhotoCta": "Add photo",
+      "addRig": "Add your rig, so members can see what you drive and what you can bring.",
+      "addRigCta": "Add your rig"
     }
   },
   "home": {
@@ -1938,7 +1955,8 @@
     "equipment": "What they carry",
     "recoveries": "Recoveries they came out to",
     "milesAway": "About {miles} mi away",
-    "howToReach": "There is no direct messaging here. If they offer on your recovery, or you offer on theirs, the conversation opens with it."
+    "howToReach": "There is no direct messaging here. If they offer on your recovery, or you offer on theirs, the conversation opens with it.",
+    "rigPhotoAlt": "{name}'s rig"
   },
   "membership": {
     "title": "Membership Agreement",

@@ -6,6 +6,7 @@ import type { BoardRow } from "@/components/board/board-list";
 import { HomeMap } from "@/components/home/home-map";
 import { getMembershipAgreement } from "@/app/actions/membership";
 import { MembershipBanner } from "@/components/membership/membership-banner";
+import { RigPhotoBanner } from "@/components/vehicles/rig-photo-banner";
 import { Callout, Card } from "@/components/ui/primitives";
 import { APP_NAME } from "@/config/app";
 import { Link } from "@/i18n/navigation";
@@ -59,16 +60,32 @@ export default async function HomePage({
     // widen what a recovery's location looks like to somebody who is not on it.
     const { data } = await supabase.rpc("board_requests", { p_limit: 100 });
 
-    // Requirement 10. Decided here rather than inside the banner so that a member with nothing
-    // to sign causes no element to exist at all -- see the note on MembershipBanner.
-    const membership = await getMembershipAgreement();
+    // Decided here rather than inside the banners so that a member who needs neither causes
+    // no element to exist at all -- see the note on MembershipBanner.
+    const [membership, rig] = await Promise.all([
+      getMembershipAgreement(),
+      supabase.rpc("my_rig_photo_status"),
+    ]);
 
-    return (
-      <HomeMap
-        rows={(data as BoardRow[] | null) ?? []}
-        banner={membership?.state?.needs_signature ? <MembershipBanner /> : undefined}
-      />
-    );
+    const rigStatus = rig.data as
+      | { ok: boolean; vehicle_count: number; needs_photo: boolean }
+      | null;
+
+    /**
+     * ONE banner at a time, most important first.
+     *
+     * Both of these are "your account is not finished" nags sitting over the map somebody
+     * opens when their truck is in a ditch. Stacked, they would push the SOS card down and
+     * read as a checklist; shown one at a time, each gets dealt with and the next appears.
+     * The agreement outranks the photo because it is the one with legal weight.
+     */
+    const banner = membership?.state?.needs_signature ? (
+      <MembershipBanner />
+    ) : rigStatus?.ok && rigStatus.needs_photo ? (
+      <RigPhotoBanner hasVehicle={rigStatus.vehicle_count > 0} />
+    ) : undefined;
+
+    return <HomeMap rows={(data as BoardRow[] | null) ?? []} banner={banner} />;
   }
 
   return <LandingPage />;
