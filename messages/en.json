@@ -124,7 +124,9 @@
     "menuResources": "Recovery guides",
     "menuResourcesHint": "Gear, safety, etiquette, what to do first",
     "loading": "Loading your account…",
-    "loadFailed": "We could not load your details. What you see below may not be what is saved — reload before changing anything."
+    "loadFailed": "We could not load your details. What you see below may not be what is saved — reload before changing anything.",
+    "noName": "No name set yet",
+    "noRegion": "No home area set"
   },
   "vehicles": {
     "title": "Your rigs",

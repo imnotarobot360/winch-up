@@ -124,7 +124,9 @@
     "menuResources": "Guías de rescate",
     "menuResourcesHint": "Equipo, seguridad, etiqueta, qué hacer primero",
     "loading": "Cargando su cuenta…",
-    "loadFailed": "No pudimos cargar sus datos. Lo que ve abajo puede no ser lo guardado; recargue antes de cambiar algo."
+    "loadFailed": "No pudimos cargar sus datos. Lo que ve abajo puede no ser lo guardado; recargue antes de cambiar algo.",
+    "noName": "Todavía sin nombre",
+    "noRegion": "Sin zona de origen"
   },
   "vehicles": {
     "title": "Sus vehículos",

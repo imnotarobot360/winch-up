@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { Avatar } from "@/components/ui/avatar";
 import { Link } from "@/i18n/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
@@ -180,29 +181,5 @@ function FilterChip({
     >
       {children}
     </button>
-  );
-}
-
-/**
- * Initials, not a photograph.
- *
- * profiles.avatar_path exists and points into a PRIVATE storage bucket, so rendering one needs a
- * signed URL per member per page load. That is a real feature with a real cost and it is not this
- * change; initials on the brand green read fine and never 404 into a broken-image icon.
- */
-function Avatar({ name }: { name: string | null }) {
-  const initials = (name ?? "?")
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? "")
-    .join("");
-
-  return (
-    <span
-      aria-hidden
-      className="flex size-12 shrink-0 items-center justify-center rounded-full border-2 border-line bg-trail text-base font-bold text-ink"
-    >
-      {initials}
-    </span>
   );
 }

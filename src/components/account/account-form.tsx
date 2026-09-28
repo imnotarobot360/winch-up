@@ -12,6 +12,7 @@ import {
   IconTruck,
   IconWinch,
 } from "@/components/ui/icons";
+import { Avatar } from "@/components/ui/avatar";
 import { MenuList } from "@/components/ui/menu-list";
 import { Button, Callout, Card, Field, TextInput, Toggle } from "@/components/ui/primitives";
 import { useRouter } from "@/i18n/navigation";
@@ -144,6 +145,27 @@ export function AccountForm({ email }: { email: string }) {
 
   return (
     <div className="space-y-6">
+      {/* Screen 12's header: who this is, above the settings rather than buried in a form field.
+          Two things the reference has that this does not, both deliberate.
+
+          No photograph. profiles.avatar_path points into a PRIVATE bucket and would need a signed
+          URL per page load; initials read fine and never 404 into a broken-image icon.
+
+          No @handle. There is no handle in this schema and inventing one on the screen would be a
+          label for something a member cannot set, change or be found by. */}
+      <div className="flex items-center gap-4">
+        <Avatar name={profile.display_name} size="lg" />
+        <div className="min-w-0">
+          <p className="truncate text-xl font-bold text-ink">
+            {profile.display_name?.trim() || t("noName")}
+          </p>
+          <p className="truncate text-base text-ink-soft">
+            {profile.home_region?.trim() || t("noRegion")}
+          </p>
+          <p className="truncate text-sm text-ink-faint">{email}</p>
+        </div>
+      </div>
+
       {loadFailed ? <Callout tone="danger">{t("loadFailed")}</Callout> : null}
 
       <form onSubmit={save} className="space-y-4">
