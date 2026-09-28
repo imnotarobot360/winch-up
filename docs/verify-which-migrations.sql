@@ -105,7 +105,38 @@ with expected(kind, name, detail, migration, file) as (
     ('column',   'community_posts.topic',                 '', '000200', '20260927000200_post_topics.sql'),
     ('hasref',   'community_feed',                 'p_topic', '000200', '20260927000200_post_topics.sql'),
     ('hasref',   'handle_new_user',              'full_name', '000100', '20260927000100_signup_name.sql'),
-    ('hasref',   'upsert_responder_profile',     'has_phone', '000100', '20260928000100_phone_optional.sql')
+    ('hasref',   'upsert_responder_profile',     'has_phone', '000100', '20260928000100_phone_optional.sql'),
+
+    -- The membership agreement. The gate SHIPS OFF, so `membership.required` being present is
+    -- what is checked, never its value -- a verifier that insisted on `true` would report a
+    -- correctly-configured production as broken.
+    ('table',    'membership_agreements',                 '', '000200', '20260928000200_membership_agreement.sql'),
+    ('table',    'membership_signatures',                 '', '000200', '20260928000200_membership_agreement.sql'),
+    ('function', 'membership_agreement_is_immutable',     '', '000200', '20260928000200_membership_agreement.sql'),
+    -- The trigger, separately from the function behind it. Requirement 7's "immutable copy" is
+    -- the trigger being WIRED; the function existing unattached looks identical and guarantees
+    -- nothing, which is the same trap 20260924000300 set.
+    ('trigger',  'membership_agreements_immutable',       '', '000200', '20260928000200_membership_agreement.sql'),
+    ('index',    'membership_agreements_one_current_idx', '', '000200', '20260928000200_membership_agreement.sql'),
+    ('index',    'membership_signatures_user_version_idx','', '000200', '20260928000200_membership_agreement.sql'),
+    ('setting',  'membership.required',                   '', '000200', '20260928000200_membership_agreement.sql'),
+    ('function', 'membership_agreement',                  '', '000300', '20260928000300_membership_rpc.sql'),
+    ('function', 'sign_membership_agreement',             '', '000300', '20260928000300_membership_rpc.sql'),
+    ('function', 'membership_gate_blocks',                '', '000300', '20260928000300_membership_rpc.sql'),
+    -- signed_document was added to the RPC after the file was first written. Existence alone
+    -- would pass against the earlier version and the agreement page would render nothing for
+    -- anyone who had signed.
+    ('hasref',   'membership_agreement',   'signed_document', '000300', '20260928000300_membership_rpc.sql'),
+    ('function', 'admin_publish_membership_agreement',    '', '000400', '20260928000400_membership_admin.sql'),
+    ('function', 'admin_membership_agreements',           '', '000400', '20260928000400_membership_admin.sql'),
+    ('function', 'admin_membership_signatures',           '', '000400', '20260928000400_membership_admin.sql'),
+    ('trigger',  'membership_signed_email',               '', '000500', '20260928000500_membership_signed_email.sql'),
+    ('function', 'queue_membership_signed_email',         '', '000500', '20260928000500_membership_signed_email.sql'),
+    -- Both halves of requirement 9. create_request is the one that matters most: its file
+    -- replaces the whole function body, so if this row is missing the gate is not merely off,
+    -- the replace never happened.
+    ('hasref',   'create_request',  'membership_gate_blocks', '000600', '20260928000600_membership_gate.sql'),
+    ('hasref',   'offer_assistance','membership_gate_blocks', '000600', '20260928000600_membership_gate.sql')
 ),
 checked as (
   select

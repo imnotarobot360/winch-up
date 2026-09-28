@@ -1,6 +1,6 @@
 -- Winch Up :: apply every migration this phase added, in order, stopping at the first error
 --
--- Sixteen files reach production by hand. Nine of them went across the Supabase SQL editor last
+-- Thirty files reach production by hand. Nine of them went across the Supabase SQL editor last
 -- time and most silently did not land: the editor shows only the LAST result set, and a large
 -- paste appears to truncate. That cost a session, took app.candidates() down, and was only
 -- noticed because a verification query was rewritten to put its verdict first.
@@ -103,19 +103,48 @@
 \i supabase/migrations/20260923002400_offers_after_accept.sql
 \i supabase/migrations/20260923002500_second_helper_dashboard.sql
 
-echo ''
-echo '=== The team can see where they are driving to ==='
-i supabase/migrations/20260923002700_thread_location.sql
+-- ---------------------------------------------------------------------------------------------
+-- THE EIGHT LINES BELOW HAD LOST THEIR BACKSLASHES, AND THAT IS WHY THIS KEPT HALF-WORKING
+--
+-- `\echo` had become `echo` and `\i` had become `i`, from here to the end of the file. Those
+-- are not psql meta-commands, they are bare SQL, and `echo ''` is a syntax error -- so with
+-- ON_ERROR_STOP=1 every run stopped dead at this line and NOTHING from 20260923002700 onward
+-- was ever applied by this driver.
+--
+-- It fails in the most expensive possible way: the files above it apply perfectly, psql prints
+-- one error among a lot of successful output, and the database is left part-way. That is
+-- exactly the history in the notes -- "20260923002700 was missing and 20260924000100 had never
+-- been applied, so /members was live in production calling functions that did not exist" -- and
+-- those are precisely the first two files below this line. Confirmed again on 2026-09-28:
+-- community_feed's p_topic overload from 20260927000200 is still absent from production.
+--
+-- If you are adding files here: they are `\i`, with a backslash. Check the run's output ends
+-- with the "Applied." banner, which only prints if psql reached the bottom of this file.
+-- ---------------------------------------------------------------------------------------------
 
-echo ''
-echo '=== A directory of members who chose to be in one ==='
-i supabase/migrations/20260924000100_nearby_members.sql
-i supabase/migrations/20260924000200_email_deliveries.sql
-i supabase/migrations/20260924000300_welcome_email.sql
-i supabase/migrations/20260925000100_dispatch_sms_on.sql
-i supabase/migrations/20260927000100_signup_name.sql
-i supabase/migrations/20260927000200_post_topics.sql
-i supabase/migrations/20260928000100_phone_optional.sql
+\echo ''
+\echo '=== The team can see where they are driving to ==='
+\i supabase/migrations/20260923002700_thread_location.sql
+
+\echo ''
+\echo '=== A directory of members who chose to be in one ==='
+\i supabase/migrations/20260924000100_nearby_members.sql
+\i supabase/migrations/20260924000200_email_deliveries.sql
+\i supabase/migrations/20260924000300_welcome_email.sql
+\i supabase/migrations/20260925000100_dispatch_sms_on.sql
+\i supabase/migrations/20260927000100_signup_name.sql
+\i supabase/migrations/20260927000200_post_topics.sql
+\i supabase/migrations/20260928000100_phone_optional.sql
+
+\echo ''
+\echo '=== The membership agreement: versions, signatures, and the gate (shipped OFF) ==='
+-- 000600 opens with a guard that refuses to run if create_request is not the version the gate
+-- was spliced into. If it raises, stop and re-splice rather than editing the file to pass.
+\i supabase/migrations/20260928000200_membership_agreement.sql
+\i supabase/migrations/20260928000300_membership_rpc.sql
+\i supabase/migrations/20260928000400_membership_admin.sql
+\i supabase/migrations/20260928000500_membership_signed_email.sql
+\i supabase/migrations/20260928000600_membership_gate.sql
 
 -- PostgREST caches the schema at startup and does not notice new functions or columns. Without
 -- this the app calls request_thread() and gets "function not found" against a database that
@@ -124,7 +153,15 @@ i supabase/migrations/20260928000100_phone_optional.sql
 \echo '=== Telling PostgREST the schema changed ==='
 notify pgrst, 'reload schema';
 
+-- This banner is the proof the run finished. With ON_ERROR_STOP=1 psql cannot reach it unless
+-- every file above applied -- so if you do not see it, the run stopped somewhere and the last
+-- error printed is where. Do not judge a run by the absence of red.
 \echo ''
-\echo 'Applied. Now run the same psql command with -f docs/verify-which-migrations.sql'
+\echo '================================================================'
+\echo ' REACHED THE END. Every file above applied.'
+\echo ' If you cannot see this line, the run halted -- scroll up.'
+\echo '================================================================'
+\echo ''
+\echo 'Now run the same psql command with -f docs/verify-which-migrations.sql'
 \echo 'Every row should say done.'
 \echo ''
