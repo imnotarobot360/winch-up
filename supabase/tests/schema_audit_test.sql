@@ -117,6 +117,34 @@ select is(
 );
 
 -- ---------------------------------------------------------------------------
+-- 4b. No read-only function writes
+--
+-- PostgREST runs STABLE and IMMUTABLE functions inside a READ-ONLY transaction. A function
+-- declared stable that inserts, updates or deletes therefore works everywhere except over
+-- HTTP, where it fails with 25006 -- and psql, pgTAP and `supabase test db` are all not
+-- read-only, so every test passes while the screen is broken.
+--
+-- admin_membership_signatures shipped exactly this way: stable, with an audit INSERT. It was
+-- caught by clicking the button, which is not a reliable way to catch things.
+--
+-- Matched on the source text rather than by executing anything, so a function that only writes
+-- on some branch is still caught.
+-- ---------------------------------------------------------------------------
+
+select is(
+  (select coalesce(string_agg(n.nspname || '.' || p.proname, ', ' order by p.proname), 'none')
+     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname in ('public', 'app')
+      and p.prokind = 'f'
+      -- provolatile: 'v' volatile, 's' stable, 'i' immutable
+      and p.provolatile in ('s', 'i')
+      and p.prosrc ~* '\m(insert\s+into|update\s+\w|delete\s+from|perform\s+app\.audit)\M'),
+  'none',
+  'no stable or immutable function writes -- PostgREST would run it read-only and it would '
+  'fail over HTTP while passing every test here'
+);
+
+-- ---------------------------------------------------------------------------
 -- 5. Every reference to auth.users says what happens when the account goes
 --
 -- This was a real outage-shaped bug in Phase 3: seven constraints defaulted to NO ACTION and

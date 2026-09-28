@@ -333,17 +333,26 @@ const TEMPLATES: Record<EmailTemplateKey, { en: Renderer; es: Renderer }> = {
   // date, the name they signed, and the first characters of the document hash -- and the button
   // goes to the page that renders the exact version they signed, with a download. One copy,
   // one source, and the email is short enough to actually read.
+  // A LINE WITH NOTHING IN IT IS NOT PRINTED.
+  //
+  // Every other template here is pure copy; this one is the first that interpolates facts, and
+  // the obvious shape -- `Document reference: ${p.hashPrefix ?? ""}` -- renders "Document
+  // reference:" followed by nothing when a param is missing, and "Signed by you on today". The
+  // render script passes no params at all, which is how both were caught. Missing facts drop
+  // their line instead of printing a stub of one.
   "membership.signed": {
     en: (p) => ({
       subject: `Your ${APP_NAME} membership agreement — signed`,
       blocks: [
         "Thank you. Your membership agreement is on file.",
-        `Signed by ${p.legalName ?? "you"} on ${p.signedOn ?? "today"}, version ${p.version ?? "1"}.`,
+        p.legalName && p.signedOn
+          ? `Signed by ${p.legalName} on ${p.signedOn}, version ${p.version ?? "1"}.`
+          : `Version ${p.version ?? "1"} is on file against your account.`,
         "You can read or download the exact version you signed at any time using the button below. Keep this email for your records.",
       ],
       cta: "View the agreement I signed",
       after: [
-        `Document reference: ${p.hashPrefix ?? ""}`,
+        ...(p.hashPrefix ? [`Document reference: ${p.hashPrefix}`] : []),
         "This agreement covers your membership, including the risks of off-road recovery. It does not change how we contact you — text messages, email and push notifications are each controlled separately in your notification settings, and you can change them whenever you like.",
         `If you did not sign this, contact us at once at ${p.supportEmail ?? "help@winch-up.com"}.`,
       ],
@@ -353,12 +362,14 @@ const TEMPLATES: Record<EmailTemplateKey, { en: Renderer; es: Renderer }> = {
       subject: `Su acuerdo de membresía de ${APP_NAME} — firmado`,
       blocks: [
         "Gracias. Su acuerdo de membresía quedó registrado.",
-        `Firmado por ${p.legalName ?? "usted"} el ${p.signedOn ?? "hoy"}, versión ${p.version ?? "1"}.`,
+        p.legalName && p.signedOn
+          ? `Firmado por ${p.legalName} el ${p.signedOn}, versión ${p.version ?? "1"}.`
+          : `La versión ${p.version ?? "1"} quedó registrada en su cuenta.`,
         "Puede leer o descargar la versión exacta que firmó cuando quiera con el botón de abajo. Guarde este correo para sus registros.",
       ],
       cta: "Ver el acuerdo que firmé",
       after: [
-        `Referencia del documento: ${p.hashPrefix ?? ""}`,
+        ...(p.hashPrefix ? [`Referencia del documento: ${p.hashPrefix}`] : []),
         "Este acuerdo cubre su membresía, incluidos los riesgos del rescate todoterreno. No cambia la forma en que nos comunicamos con usted: los mensajes de texto, el correo y las notificaciones push se controlan por separado en sus preferencias y puede cambiarlos cuando quiera.",
         `Si usted no firmó esto, comuníquese de inmediato a ${p.supportEmail ?? "help@winch-up.com"}.`,
       ],

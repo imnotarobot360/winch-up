@@ -141,7 +141,16 @@ create or replace function public.admin_membership_signatures(
 )
 returns jsonb
 language plpgsql
-stable
+-- VOLATILE, not stable, and this is not a formality.
+--
+-- PostgREST runs a stable or immutable function inside a READ-ONLY transaction. This one writes
+-- an audit row, so declared stable it fails at runtime with 25006 "cannot execute INSERT in a
+-- read-only transaction" -- but only over HTTP. Called directly in psql or from pgTAP it works
+-- fine, because those are not read-only, so the test suite passes and the screen is broken.
+--
+-- If the audit write is ever removed, this can go back to stable. While it writes, it is
+-- volatile.
+volatile
 security definer
 set search_path = public, extensions, pg_temp
 as $fn$
