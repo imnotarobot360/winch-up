@@ -146,6 +146,12 @@
 \i supabase/migrations/20260928000500_membership_signed_email.sql
 \i supabase/migrations/20260928000600_membership_gate.sql
 
+\echo ''
+\echo '=== /terms stops saying PLACEHOLDER at A2P reviewers ==='
+-- Prints a NOTICE saying whether it published or found the text already current. Safe to re-run:
+-- it compares the text rather than the version number.
+\i supabase/migrations/20260928000700_rules_v2.sql
+
 -- PostgREST caches the schema at startup and does not notice new functions or columns. Without
 -- this the app calls request_thread() and gets "function not found" against a database that
 -- plainly has it -- which reads as the migration not having applied.

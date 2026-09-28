@@ -1211,7 +1211,8 @@
     "smsTermsTitle": "Términos de SMS",
     "smsTermsBody": "{entity}, que opera como Winch Up, envía mensajes de texto a los voluntarios que se registraron y confirmaron un número de celular.\n\nQUÉ ENVIAMOS. Un código de una sola vez para confirmar su número, y avisos cuando alguien necesita ayuda de rescate cerca de usted. La frecuencia varía según cuántos rescates ocurran en su zona.\n\nCOSTO. Pueden aplicar tarifas de mensajes y datos. Winch Up no cobra por estos mensajes; su compañía de telefonía puede hacerlo.\n\nCÓMO DETENERLOS. Responda BAJA a cualquier mensaje para dejar de recibirlos. Recibirá una confirmación y nada después. Responda START para volver a empezar.\n\nAYUDA. Responda AYUDA, o escriba a help@winch-up.com.\n\nCOMPAÑÍAS. Las compañías de telefonía no son responsables por mensajes demorados o no entregados.\n\nTambién puede responder STOP para darse de baja y HELP para ayuda.",
     "unreviewedBanner": "No revisado por un abogado",
-    "unreviewedExplainer": "Esto describe cómo Winch Up maneja su información hoy. Es fiel al funcionamiento del sistema, pero no ha sido revisado por un abogado."
+    "unreviewedExplainer": "Esto describe cómo Winch Up maneja su información hoy. Es fiel al funcionamiento del sistema, pero no ha sido revisado por un abogado.",
+    "unreviewedDocExplainer": "Estas son las reglas con las que Winch Up funciona realmente, y la descripción corresponde a cómo opera la aplicación. No ha sido revisada por un abogado."
   },
   "privacyNote": {
     "phone": "Su número de teléfono nunca se muestra públicamente. Solo llega al voluntario que toma su solicitud.",

@@ -28,7 +28,18 @@ export default async function TermsPage({
   const t = await getTranslations("legal");
 
   return (
-    <LegalDocument slug="rules" locale={locale} title={t("terms")}>
+    // `unreviewed` rather than the red placeholder banner: as of 20260928000700 the ground rules
+    // and the description of the service above them are finished and accurate. They still have
+    // not been through an attorney, and the banner still says so.
+    //
+    // This page is also what an A2P 10DLC reviewer opens, because the campaign links to it. It
+    // previously rendered "PLACEHOLDER TEXT - REVIEW WITH LAWYER" over a body that began
+    // "PLACEHOLDER - REVIEW WITH LAWYER." and ended ">>> REVIEW WITH LAWYER <<<", which
+    // docs/a2p-registration.md had already flagged as grounds for rejection.
+    //
+    // LegalDocument overrides this back to the red banner if the stored text still says
+    // placeholder, so this cannot start lying if somebody republishes scaffolding.
+    <LegalDocument slug="rules" locale={locale} title={t("terms")} review="unreviewed">
       {/*
         The SMS terms are rendered here rather than folded into the `rules` waiver, and that is
         deliberate. A waiver row is immutable and every acceptance points at a version: adding a

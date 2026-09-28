@@ -136,7 +136,13 @@ with expected(kind, name, detail, migration, file) as (
     -- replaces the whole function body, so if this row is missing the gate is not merely off,
     -- the replace never happened.
     ('hasref',   'create_request',  'membership_gate_blocks', '000600', '20260928000600_membership_gate.sql'),
-    ('hasref',   'offer_assistance','membership_gate_blocks', '000600', '20260928000600_membership_gate.sql')
+    ('hasref',   'offer_assistance','membership_gate_blocks', '000600', '20260928000600_membership_gate.sql'),
+
+    -- /terms. Both directions, because either alone can pass on a wrong database: the new text
+    -- present proves the migration ran, the placeholder absent proves nothing has put it back.
+    ('waivertext', 'rules',   'WINCH UP - TERMS OF USE', '000700', '20260928000700_rules_v2.sql'),
+    ('waivernot',  'rules',              'PLACEHOLDER', '000700', '20260928000700_rules_v2.sql'),
+    ('waivernot',  'rules',       'TEXTO PROVISIONAL',  '000700', '20260928000700_rules_v2.sql')
 ),
 checked as (
   select
@@ -233,6 +239,19 @@ checked as (
       -- absence would never show up as a behaviour change, only as a switch the owner cannot find.
       when 'setting' then exists (
         select 1 from public.app_settings where key = e.name)
+      -- The CURRENT waiver body for a slug contains this text. Existence of a row proves
+      -- nothing for a waiver: 20260928000700 republishes an existing slug, so the only evidence
+      -- it landed is what the words now say.
+      when 'waivertext' then exists (
+        select 1 from public.waivers
+         where slug = e.name and is_current and body_en like '%' || e.detail || '%')
+      -- ...and does NOT contain this. The A2P campaign links to /terms and a reviewer opens it;
+      -- "PLACEHOLDER - REVIEW WITH LAWYER" being absent is the actual thing being verified, and
+      -- it is the sort of property that quietly comes back when somebody republishes a slug.
+      when 'waivernot' then not exists (
+        select 1 from public.waivers
+         where slug = e.name and is_current
+           and (body_en ilike '%' || e.detail || '%' or body_es ilike '%' || e.detail || '%'))
     end as found
   from expected e
 )
