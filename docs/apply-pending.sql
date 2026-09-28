@@ -113,6 +113,8 @@ i supabase/migrations/20260924000100_nearby_members.sql
 i supabase/migrations/20260924000200_email_deliveries.sql
 i supabase/migrations/20260924000300_welcome_email.sql
 i supabase/migrations/20260925000100_dispatch_sms_on.sql
+i supabase/migrations/20260927000100_signup_name.sql
+i supabase/migrations/20260927000200_post_topics.sql
 
 -- PostgREST caches the schema at startup and does not notice new functions or columns. Without
 -- this the app calls request_thread() and gets "function not found" against a database that

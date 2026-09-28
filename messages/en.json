@@ -1256,6 +1256,15 @@
       "bad_target": "That didn't work. Try again.",
       "bad_reason": "Pick a reason first.",
       "failed": "That didn't work. Try again."
+    },
+    "topicsLabel": "Filter the feed",
+    "emptyTopic": "Nothing under this one yet. Try another tab, or post the first.",
+    "topics": {
+      "all": "Recent",
+      "general": "General",
+      "trail_conditions": "Trail conditions",
+      "gear": "Gear",
+      "recoveries": "Recoveries"
     }
   },
   "moderation": {

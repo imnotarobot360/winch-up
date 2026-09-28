@@ -82,11 +82,11 @@ select ok(not has_table_privilege('authenticated', 'user_blocks', 'SELECT'),
 select ok(not has_table_privilege('authenticated', 'content_reports', 'SELECT'),
   'nor content_reports, so a reporter cannot be identified by the person they reported');
 
-select ok(not has_function_privilege('anon', 'public.community_feed(timestamptz, integer)', 'EXECUTE'),
+select ok(not has_function_privilege('anon', 'public.community_feed(timestamptz, integer, text)', 'EXECUTE'),
   'the feed is not public: anon cannot call community_feed');
-select ok(not has_function_privilege('anon', 'public.community_post(text, text)', 'EXECUTE'),
+select ok(not has_function_privilege('anon', 'public.community_post(text, text, text)', 'EXECUTE'),
   'nor post to it');
-select ok(has_function_privilege('authenticated', 'public.community_feed(timestamptz, integer)', 'EXECUTE'),
+select ok(has_function_privilege('authenticated', 'public.community_feed(timestamptz, integer, text)', 'EXECUTE'),
   'a signed-in member can call community_feed');
 
 -- ---------------------------------------------------------------------------
@@ -486,6 +486,86 @@ select is(
 );
 
 reset role;
+
+-- ---------------------------------------------------------------------------
+-- Topics, and the tabs they feed
+--
+-- The design reference's tabs are Recent / Trails / Events / Tips. Events and Tips are not
+-- features here, so the topics are the ones this feed is actually for. What matters in a test is
+-- less the filtering than the two ways it can go wrong quietly: a value the enum does not know
+-- must not error, and it must not silently drop the post either.
+-- ---------------------------------------------------------------------------
+
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, recovery_token, email_change, email_change_token_new
+) values (
+  '00000000-0000-0000-0000-000000000000', 'c9000000-0000-4000-8000-00000000000c',
+  'authenticated', 'authenticated', 'topics@example.invalid', 'x', now(),
+  '{}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', ''
+) on conflict (id) do nothing;
+
+-- Clear what earlier sections of this suite posted, so the counts below are about topics and
+-- not about how many fixtures happen to precede them. Inside the transaction, so the rollback
+-- puts them back. Same reasoning as the clear at the top of this file.
+delete from community_posts;
+
+insert into community_posts (author_user_id, body, topic, status) values
+  ('c9000000-0000-4000-8000-00000000000c', 'Gate on the north track is locked', 'trail_conditions', 'visible'),
+  ('c9000000-0000-4000-8000-00000000000c', 'Kinetic rope sizing for a half ton', 'gear', 'visible'),
+  ('c9000000-0000-4000-8000-00000000000c', 'Nothing in particular', 'general', 'visible');
+
+set local role authenticated;
+set local request.jwt.claim.sub = 'c9000000-0000-4000-8000-00000000000c';
+
+select is(
+  jsonb_array_length(public.community_feed(null, 50, 'trail_conditions') -> 'posts'),
+  1,
+  'a topic returns only its own posts'
+);
+
+select is(
+  jsonb_array_length(public.community_feed(null, 50, null) -> 'posts'),
+  3,
+  'and no topic returns all of them'
+);
+
+-- An older client, or one deployed ahead of this migration, sends two arguments.
+select is(
+  jsonb_array_length(public.community_feed(null, 50) -> 'posts'),
+  3,
+  'a two-argument call still works, because p_topic defaults'
+);
+
+-- A stale bookmark or a client ahead of the schema must not produce an error on the page
+-- somebody opened to read about a gate closure.
+select is(
+  jsonb_array_length(public.community_feed(null, 50, 'events') -> 'posts'),
+  3,
+  'an unknown topic falls back to the whole feed rather than erroring'
+);
+
+reset role;
+
+-- Posting with a topic this schema does not know must keep the post, not lose it. Somebody
+-- typed that out.
+set local role authenticated;
+set local request.jwt.claim.sub = 'c9000000-0000-4000-8000-00000000000c';
+
+select is(
+  public.community_post('Filed under something invented', null, 'tips') ->> 'ok',
+  'true',
+  'posting with an unknown topic succeeds'
+);
+
+reset role;
+
+select is(
+  (select topic::text from community_posts where body = 'Filed under something invented'),
+  'general',
+  'and the post lands under general rather than being thrown away'
+);
 
 select * from finish();
 rollback;

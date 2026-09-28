@@ -1256,6 +1256,15 @@
       "bad_target": "No funcionó. Inténtalo otra vez.",
       "bad_reason": "Elige un motivo primero.",
       "failed": "No funcionó. Inténtalo otra vez."
+    },
+    "topicsLabel": "Filtrar el muro",
+    "emptyTopic": "Todavía no hay nada aquí. Pruebe otra pestaña, o sea el primero en publicar.",
+    "topics": {
+      "all": "Reciente",
+      "general": "General",
+      "trail_conditions": "Estado de rutas",
+      "gear": "Equipo",
+      "recoveries": "Rescates"
     }
   },
   "moderation": {

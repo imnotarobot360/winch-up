@@ -100,7 +100,11 @@ with expected(kind, name, detail, migration, file) as (
     ('function', 'record_email_result',                   '', '000300', '20260924000300_welcome_email.sql'),
     ('trigger',  'on_email_confirmed',                    '', '000300', '20260924000300_welcome_email.sql'),
     ('trigger',  'on_user_created_confirmed',             '', '000300', '20260924000300_welcome_email.sql'),
-    ('setting',  'sms.enabled_templates',                 '', '000100', '20260925000100_dispatch_sms_on.sql')
+    ('setting',  'sms.enabled_templates',                 '', '000100', '20260925000100_dispatch_sms_on.sql'),
+    ('type',     'post_topic',                            '', '000200', '20260927000200_post_topics.sql'),
+    ('column',   'community_posts.topic',                 '', '000200', '20260927000200_post_topics.sql'),
+    ('hasref',   'community_feed',                 'p_topic', '000200', '20260927000200_post_topics.sql'),
+    ('hasref',   'handle_new_user',              'full_name', '000100', '20260927000100_signup_name.sql')
 ),
 checked as (
   select

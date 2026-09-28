@@ -9,11 +9,28 @@ import { IconCheck } from "@/components/ui/icons";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
+/**
+ * The feed's tabs.
+ *
+ * NOT the design reference's Recent / Trails / Events / Tips. Events and Tips are not features
+ * of this product -- groups and events were deferred, and there is no such thing as a tip -- and
+ * a tab that opens an empty list reads as a broken feature rather than an absent one. These are
+ * the things CLAUDE.md already says the feed is for: trail conditions, gate closures, gear.
+ */
+const TOPICS = ["all", "trail_conditions", "gear", "recoveries"] as const;
+type Topic = (typeof TOPICS)[number];
+
+/** What the composer can file a post under. "all" is a filter, not a topic. */
+const POST_TOPICS = ["general", "trail_conditions", "gear", "recoveries"] as const;
+
 type Post = {
   id: string;
   body: string;
   comment_count: number;
   reaction_count: number;
+  // Optional: the app deploys on a push and migrations go across by hand, so there is a window
+  // where this RPC has not started returning it yet.
+  topic?: string;
   created_at: string;
   mine: boolean;
   author_user_id: string;
@@ -74,11 +91,15 @@ export function CommunityFeed() {
 
   const [body, setBody] = useState("");
   const [posting, setPosting] = useState(false);
+  const [topic, setTopic] = useState<Topic>("all");
+  const [postTopic, setPostTopic] = useState<string>("general");
 
-  const load = useCallback(async (before?: string) => {
+  const load = useCallback(async (before?: string, forTopic?: Topic) => {
+    const active = forTopic ?? topic;
     const { data, error: rpcError } = await supabaseBrowser().rpc("community_feed", {
       p_before: before ?? null,
       p_limit: PAGE,
+      p_topic: active === "all" ? null : active,
     });
 
     if (rpcError) {
@@ -97,7 +118,7 @@ export function CommunityFeed() {
     setError(null);
     setMore(page.length === PAGE);
     setPosts((prev) => (before ? [...(prev ?? []), ...page] : page));
-  }, []);
+  }, [topic]);
 
   useEffect(() => {
     void load();
@@ -109,7 +130,11 @@ export function CommunityFeed() {
     if (!text || posting) return;
 
     setPosting(true);
-    const result = await call("community_post", { p_body: text, p_photo_path: null });
+    const result = await call("community_post", {
+      p_body: text,
+      p_photo_path: null,
+      p_topic: postTopic,
+    });
     setPosting(false);
 
     if (!result.ok) {
@@ -141,6 +166,26 @@ export function CommunityFeed() {
             maxLength={2000}
             rows={3}
           />
+          {/* What it is about. Defaults to general, so posting is still one field and a button
+              for anybody who does not care. */}
+          <div className="flex flex-wrap gap-2">
+            {POST_TOPICS.map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={postTopic === value}
+                onClick={() => setPostTopic(value)}
+                className={`tap-target rounded-full border-2 px-4 text-sm font-semibold ${
+                  postTopic === value
+                    ? "border-brand bg-brand text-on-brand"
+                    : "border-line text-ink-soft"
+                }`}
+              >
+                {t(`topics.${value}`)}
+              </button>
+            ))}
+          </div>
+
           {/* Said before they press, not after it is refused. The rule is the group's own. */}
           <p className="text-sm text-ink-faint">{t("noContactNote")}</p>
           <Button type="submit" disabled={posting || body.trim().length === 0}>
@@ -149,11 +194,39 @@ export function CommunityFeed() {
         </form>
       </Card>
 
+      {/* Screen 9's tabs. A tablist rather than a row of buttons, so a screen reader announces
+          it as one control with a selected item and arrow keys move between them. */}
+      <div role="tablist" aria-label={t("topicsLabel")} className="flex gap-2 overflow-x-auto pb-1">
+        {TOPICS.map((value) => (
+          <button
+            key={value}
+            role="tab"
+            type="button"
+            aria-selected={topic === value}
+            onClick={() => {
+              if (value === topic) return;
+              setTopic(value);
+              setPosts(null);
+              void load(undefined, value);
+            }}
+            className={`tap-target shrink-0 rounded-full border-2 px-4 text-sm font-semibold ${
+              topic === value
+                ? "border-brand bg-brand text-on-brand"
+                : "border-line text-ink-soft"
+            }`}
+          >
+            {t(`topics.${value}`)}
+          </button>
+        ))}
+      </div>
+
       {posts === null ? (
         <p className="text-base text-ink-soft">{t("loading")}</p>
       ) : posts.length === 0 ? (
         <Card>
-          <p className="text-base text-ink-soft">{t("empty")}</p>
+          <p className="text-base text-ink-soft">
+            {topic === "all" ? t("empty") : t("emptyTopic")}
+          </p>
         </Card>
       ) : (
         <ul className="space-y-4">

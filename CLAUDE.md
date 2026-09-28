@@ -388,6 +388,19 @@ docs/                     decisions + runbooks
   phone field would start Supabase's own SMS confirmation on top of the email one, and an
   unverified number is worse than none here -- the requester's phone is handed to whoever takes
   their recovery, so a number nobody proved they own is a volunteer calling a stranger.
+- **Adding a defaulted parameter OVERLOADS a function, it does not replace it.** Both signatures
+  then exist and PostgREST cannot choose between them for a call that matches the shorter one --
+  the feed starts failing with an ambiguity error that says nothing about the change. Drop the old
+  signature in the same migration, FIRST. Same family as the return-type trap, and just as quiet.
+  And after any drop-and-recreate, `notify pgrst, 'reload schema'` or every call 404s until
+  something restarts PostgREST.
+- **The community feed tabs are not the design reference's tabs, on purpose.** The reference has
+  Recent / Trails / Events / Tips; events were deferred in phase 8 and tips have never existed, so
+  two of the four would open an empty list -- which reads as a broken feature rather than an
+  absent one. The topics are what CLAUDE.md already says the feed is for: trail conditions, gear,
+  recoveries, general. An unknown topic falls back to the whole feed and an unknown topic on a
+  POST lands under general, because the frontend deploys ahead of the schema and the cost of
+  being strict is somebody's gate-closure warning vanishing on submit.
 - **A screen that nothing links to is a screen nobody sees.** /welcome -- screen 2 of the design
   reference -- was built, tested, deployed and then left unreachable for two days, so every new
   visitor landed on the marketing page and the reference was quietly not followed. Nothing caught
@@ -467,7 +480,7 @@ Four layers. Run all of them before claiming anything works.
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
 npm test            171 unit + component tests (vitest)
 npm run test:e2e    204 Playwright tests — android, iphone, tablet, desktop
-supabase test db    800 pgTAP assertions across eighteen suites
+supabase test db    806 pgTAP assertions across eighteen suites
 ```
 
 `prebuild` runs four guards -- the i18n check, the contact-info parity check, the claims check
