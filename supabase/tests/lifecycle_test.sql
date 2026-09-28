@@ -502,15 +502,17 @@ select is(
 );
 
 -- ---------------------------------------------------------------------------
--- Signing up as a volunteer with no phone
+-- Signing up as a volunteer with no phone: REFUSED again
 --
--- Allowed since 2026-09-28, because SMS is not configured and requiring a verified number meant
--- nobody could become a volunteer at all. The rule that a phone must come from the verified JWT
--- claim is unchanged -- what is allowed is having none.
+-- Optional for one day (20260928000100), because SMS was not configured and requiring a
+-- verified number meant nobody could become a volunteer at all. Required again the same day
+-- (20260928000800), once the A2P campaign was approved and a code was delivered to a real
+-- handset. The reason for the exception is gone; the cost it carried -- public.blocklist is
+-- keyed by phone, so a member without one cannot be blocklisted -- is not worth paying.
 --
 -- All three paths are asserted together, because the dangerous mistake is not "no phone is
--- refused", it is "any phone is accepted". A version that dropped the claim check entirely would
--- pass the first of these and fail the third.
+-- refused", it is "any phone is accepted". A version that dropped the claim check entirely
+-- would pass the first of these and fail the third.
 -- ---------------------------------------------------------------------------
 
 insert into auth.users (
@@ -529,17 +531,16 @@ set local request.jwt.claims = '{"sub":"f1000000-0000-4000-8000-00000000000f","r
 select is(
   public.upsert_responder_profile(
     '{"first_name":"Nophone","lat":29.76,"lng":-95.37,"equipment":["winch"]}'::jsonb
-  ) ->> 'ok',
-  'true',
-  'a volunteer can sign up with no phone at all, because SMS is not switched on'
+  ) ->> 'error',
+  'phone_required',
+  'a NEW volunteer cannot sign up without a verified number'
 );
 
 select is(
-  public.upsert_responder_profile(
-    '{"first_name":"Nophone","lat":29.76,"lng":-95.37,"equipment":["winch"]}'::jsonb
-  ) ->> 'has_phone',
-  'false',
-  'and is told they have no number, so the UI need not imply a text is coming'
+  (select count(*)::integer from public.responders
+    where user_id = 'f1000000-0000-4000-8000-00000000000f'),
+  0,
+  'and no half-made responder row is left behind by the refusal'
 );
 
 -- The protection this looks like it removes, still in place.
@@ -575,6 +576,63 @@ select is(
   ) ->> 'has_phone',
   'true',
   'editing without a claim keeps the number rather than blanking it'
+);
+
+-- ---------------------------------------------------------------------------
+-- A phone number is required to JOIN, and only to join
+--
+-- 20260928000100 made it optional because SMS was not configured and nobody could become a
+-- volunteer at all; 20260928000800 put it back once verification was delivering to real
+-- handsets. The half worth testing is the asymmetry: required where the row is CREATED, not on
+-- every save, so a member who joined during that window is prompted rather than locked out of
+-- an account they already have.
+-- ---------------------------------------------------------------------------
+
+reset role;
+
+insert into auth.users (instance_id, id, aud, role, email, encrypted_password,
+                        email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+                        created_at, updated_at, confirmation_token, recovery_token,
+                        email_change, email_change_token_new)
+values ('00000000-0000-0000-0000-000000000000',
+        'bbbb1111-0000-4000-8000-00000000000b', 'authenticated', 'authenticated',
+        'phone-required@example.invalid', 'x', now(), '{}'::jsonb, '{}'::jsonb, now(), now(),
+        '', '', '', '')
+on conflict (id) do nothing;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"bbbb1111-0000-4000-8000-00000000000b","role":"authenticated"}';
+
+select is(
+  public.upsert_responder_profile(
+    '{"first_name":"New","lat":29.76,"lng":-95.36}'::jsonb) ->> 'error',
+  'phone_required',
+  'a NEW member with no verified number cannot create a responder row'
+);
+
+reset role;
+
+-- Somebody who joined while it was optional.
+update public.responders set phone = null
+ where id = (select id from public.responders order by created_at limit 1);
+
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', user_id, 'role', 'authenticated')::text
+     from public.responders where phone is null limit 1), true) as _;
+set local role authenticated;
+
+select is(
+  public.upsert_responder_profile(
+    '{"first_name":"Edited","lat":29.76,"lng":-95.36}'::jsonb) ->> 'ok',
+  'true',
+  'but an EXISTING phone-less member can still save their profile -- prompted, not locked out'
+);
+
+select is(
+  public.upsert_responder_profile(
+    '{"first_name":"Edited","lat":29.76,"lng":-95.36}'::jsonb) ->> 'has_phone',
+  'false',
+  'and has_phone says so honestly, so the UI cannot imply a text is coming'
 );
 
 reset role;

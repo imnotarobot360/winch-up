@@ -245,11 +245,10 @@
       "blocked": "Este número no puede registrarse. Comuníquese con los administradores del grupo.",
       "no_verified_phone": "Perdimos el rastro de su número confirmado. Empiece de nuevo.",
       "invalid_location": "No pudimos usar esa ubicación. Intente buscar otra vez.",
-      "not_signed_in": "Su sesión venció. Confirme su número otra vez."
+      "not_signed_in": "Su sesión venció. Confirme su número otra vez.",
+      "phone_required": "Verifique un número de móvil para terminar de registrarse. A los voluntarios se les avisa por mensaje de texto cuando alguien cerca necesita ayuda."
     },
-    "smsConsent": "Al darnos su número acepta recibir mensajes de texto de Winch Up: un código para confirmar este número y avisos cuando alguien necesite ayuda de rescate cerca de usted. La frecuencia de los mensajes varía. Pueden aplicar tarifas de mensajes y datos. Responda BAJA para darse de baja, AYUDA para ayuda. Consulte nuestros Términos y Política de Privacidad.",
-    "skipPhoneNote": "Los mensajes de texto todavía no están activos. Puede registrarse sin número y le avisamos en la aplicación; agregue un número después si quiere avisos por mensaje.",
-    "skipPhoneCta": "Continuar sin número"
+    "smsConsent": "Al darnos su número acepta recibir mensajes de texto de Winch Up: un código para confirmar este número y avisos cuando alguien necesite ayuda de rescate cerca de usted. La frecuencia de los mensajes varía. Pueden aplicar tarifas de mensajes y datos. Responda BAJA para darse de baja, AYUDA para ayuda. Consulte nuestros Términos y Política de Privacidad."
   },
   "me": {
     "pageTitle": "Mi panel",
