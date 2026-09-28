@@ -104,7 +104,8 @@ with expected(kind, name, detail, migration, file) as (
     ('type',     'post_topic',                            '', '000200', '20260927000200_post_topics.sql'),
     ('column',   'community_posts.topic',                 '', '000200', '20260927000200_post_topics.sql'),
     ('hasref',   'community_feed',                 'p_topic', '000200', '20260927000200_post_topics.sql'),
-    ('hasref',   'handle_new_user',              'full_name', '000100', '20260927000100_signup_name.sql')
+    ('hasref',   'handle_new_user',              'full_name', '000100', '20260927000100_signup_name.sql'),
+    ('hasref',   'upsert_responder_profile',     'has_phone', '000100', '20260928000100_phone_optional.sql')
 ),
 checked as (
   select

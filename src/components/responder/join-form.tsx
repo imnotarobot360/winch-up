@@ -255,6 +255,33 @@ export function JoinForm() {
           <Button type="button" disabled={busy || !e164} onClick={sendCode}>
             {busy ? t("sending") : t("sendCode")}
           </Button>
+
+          {/*
+            * Carrying on without a number.
+            *
+            * SMS is not switched on yet, so requiring a code here means nobody can become a
+            * volunteer at all -- and "there are no volunteers" is the launch blocker this screen
+            * exists to solve. The phone stays the better answer and is still offered first.
+            *
+            * This does NOT weaken the rule it looks like it weakens. A phone still only ever
+            * comes from the verified OTP claim; upsert_responder_profile refuses one that does
+            * not. What is allowed now is having none, which is a state the rest of the system
+            * already handles: candidates() never looks at the phone, and queue_sms writes no row
+            * for a null number. Somebody who skips is reachable by push and in-app, and is told
+            * so rather than left to assume a text is coming.
+            */}
+          <div className="border-t border-line pt-4">
+            <p className="text-sm text-ink-soft">{t("skipPhoneNote")}</p>
+            <Button
+              type="button"
+              variant="secondary"
+              className="mt-3 w-full"
+              disabled={busy}
+              onClick={() => setPhase("profile")}
+            >
+              {t("skipPhoneCta")}
+            </Button>
+          </div>
         </Card>
       ) : null}
 

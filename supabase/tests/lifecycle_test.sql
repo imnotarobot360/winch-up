@@ -501,5 +501,83 @@ select is(
   'and matches nobody, rather than texting somebody four hundred miles away'
 );
 
+-- ---------------------------------------------------------------------------
+-- Signing up as a volunteer with no phone
+--
+-- Allowed since 2026-09-28, because SMS is not configured and requiring a verified number meant
+-- nobody could become a volunteer at all. The rule that a phone must come from the verified JWT
+-- claim is unchanged -- what is allowed is having none.
+--
+-- All three paths are asserted together, because the dangerous mistake is not "no phone is
+-- refused", it is "any phone is accepted". A version that dropped the claim check entirely would
+-- pass the first of these and fail the third.
+-- ---------------------------------------------------------------------------
+
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, recovery_token, email_change, email_change_token_new
+) values (
+  '00000000-0000-0000-0000-000000000000', 'f1000000-0000-4000-8000-00000000000f',
+  'authenticated', 'authenticated', 'nophone-lifecycle@example.invalid', 'x', now(),
+  '{}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', ''
+) on conflict (id) do nothing;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"f1000000-0000-4000-8000-00000000000f","role":"authenticated"}';
+
+select is(
+  public.upsert_responder_profile(
+    '{"first_name":"Nophone","lat":29.76,"lng":-95.37,"equipment":["winch"]}'::jsonb
+  ) ->> 'ok',
+  'true',
+  'a volunteer can sign up with no phone at all, because SMS is not switched on'
+);
+
+select is(
+  public.upsert_responder_profile(
+    '{"first_name":"Nophone","lat":29.76,"lng":-95.37,"equipment":["winch"]}'::jsonb
+  ) ->> 'has_phone',
+  'false',
+  'and is told they have no number, so the UI need not imply a text is coming'
+);
+
+-- The protection this looks like it removes, still in place.
+set local request.jwt.claims = '{"sub":"f1000000-0000-4000-8000-00000000000f","role":"authenticated","phone":"not-a-number"}';
+
+select is(
+  public.upsert_responder_profile(
+    '{"first_name":"Nophone","lat":29.76,"lng":-95.37}'::jsonb
+  ) ->> 'error',
+  'no_verified_phone',
+  'a phone that is present but not a verified E.164 claim is still refused'
+);
+
+set local request.jwt.claims = '{"sub":"f1000000-0000-4000-8000-00000000000f","role":"authenticated","phone":"18324923210"}';
+
+select is(
+  public.upsert_responder_profile(
+    '{"first_name":"Nophone","lat":29.76,"lng":-95.37}'::jsonb
+  ) ->> 'has_phone',
+  'true',
+  'and verifying a number later attaches it to the same volunteer'
+);
+
+reset role;
+
+-- A number once verified is not lost by editing the profile from a session without the claim.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"f1000000-0000-4000-8000-00000000000f","role":"authenticated"}';
+
+select is(
+  public.upsert_responder_profile(
+    '{"first_name":"Nophone","lat":29.76,"lng":-95.37}'::jsonb
+  ) ->> 'has_phone',
+  'true',
+  'editing without a claim keeps the number rather than blanking it'
+);
+
+reset role;
+
 select * from finish();
 rollback;

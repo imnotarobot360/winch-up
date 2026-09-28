@@ -246,7 +246,9 @@
       "invalid_location": "No pudimos usar esa ubicación. Intente buscar otra vez.",
       "not_signed_in": "Su sesión venció. Confirme su número otra vez."
     },
-    "smsConsent": "Al darnos su número acepta recibir mensajes de texto de Winch Up: un código para confirmar este número y avisos cuando alguien necesite ayuda de rescate cerca de usted. La frecuencia de los mensajes varía. Pueden aplicar tarifas de mensajes y datos. Responda BAJA para darse de baja, AYUDA para ayuda. Consulte nuestros Términos y Política de Privacidad."
+    "smsConsent": "Al darnos su número acepta recibir mensajes de texto de Winch Up: un código para confirmar este número y avisos cuando alguien necesite ayuda de rescate cerca de usted. La frecuencia de los mensajes varía. Pueden aplicar tarifas de mensajes y datos. Responda BAJA para darse de baja, AYUDA para ayuda. Consulte nuestros Términos y Política de Privacidad.",
+    "skipPhoneNote": "Los mensajes de texto todavía no están activos. Puede registrarse sin número y le avisamos en la aplicación; agregue un número después si quiere avisos por mensaje.",
+    "skipPhoneCta": "Continuar sin número"
   },
   "me": {
     "pageTitle": "Mi panel",

@@ -401,6 +401,14 @@ docs/                     decisions + runbooks
   recoveries, general. An unknown topic falls back to the whole feed and an unknown topic on a
   POST lands under general, because the frontend deploys ahead of the schema and the cost of
   being strict is somebody's gate-closure warning vanishing on submit.
+- **A volunteer may have no phone, and that is a state the whole system already handled.**
+  `upsert_responder_profile` used to refuse any signup without a verified OTP claim, which
+  meant that with SMS unconfigured nobody could become a volunteer at all -- while "there are no
+  volunteers" was the launch blocker. A phone is now optional; a phone that IS present still has
+  to come from the verified claim, so nobody can register somebody else's number. Editing the
+  profile from a session with no claim COALESCEs rather than blanking, or a member would lose a
+  verified number by changing their radius. The cost, named: `blocklist` is keyed by phone, so
+  a phoneless volunteer is banned with `approval = 'banned'` instead.
 - **A screen that nothing links to is a screen nobody sees.** /welcome -- screen 2 of the design
   reference -- was built, tested, deployed and then left unreachable for two days, so every new
   visitor landed on the marketing page and the reference was quietly not followed. Nothing caught
@@ -480,7 +488,7 @@ Four layers. Run all of them before claiming anything works.
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
 npm test            171 unit + component tests (vitest)
 npm run test:e2e    204 Playwright tests — android, iphone, tablet, desktop
-supabase test db    806 pgTAP assertions across eighteen suites
+supabase test db    811 pgTAP assertions across eighteen suites
 ```
 
 `prebuild` runs four guards -- the i18n check, the contact-info parity check, the claims check
