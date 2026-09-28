@@ -116,21 +116,29 @@ function p(text: string): string {
   return `<p style="margin:0 0 14px 0;">${esc(text)}</p>`;
 }
 
-function list(items: string[]): string {
-  return `<ol style="margin:0 0 14px 0;padding-left:22px;">${items
+function list(items: string[], ordered = true): string {
+  const tag = ordered ? "ol" : "ul";
+  return `<${tag} style="margin:0 0 14px 0;padding-left:22px;">${items
     .map((i) => `<li style="margin-bottom:8px;">${esc(i)}</li>`)
-    .join("")}</ol>`;
+    .join("")}</${tag}>`;
 }
 
 /* --------------------------------------------------------------- content */
 
+/** A paragraph, a numbered list, or a bulleted one. */
+type Block = string | string[] | { bullets: string[] };
+
 type Copy = {
   subject: string;
-  /** Paragraphs and lists, in order. A string is a paragraph; an array is a numbered list. */
-  blocks: (string | string[])[];
+  /**
+   * Paragraphs and lists, in order. A string is a paragraph. An array is a NUMBERED list, for
+   * things that happen in sequence. { bullets } is an unordered one, for a set of things that
+   * are simply true -- numbering those implies an order that does not exist.
+   */
+  blocks: Block[];
   cta?: string;
-  /** Closing lines below the button, e.g. the "if you did not ask for this" note. */
-  after?: string[];
+  /** Closing content below the button. Same block vocabulary as above. */
+  after?: Block[];
   tagline?: string;
 };
 
@@ -143,12 +151,19 @@ const TEMPLATES: Record<EmailTemplateKey, { en: Renderer; es: Renderer }> = {
       subject: `Verify your email — welcome to ${APP_NAME}`,
       blocks: [
         "Welcome to the brotherhood.",
-        `Thank you for joining ${APP_NAME}, the off-road recovery community where members help each other.`,
+        `Thank you for joining ${APP_NAME}, the off-road recovery community where off-roaders help off-roaders.`,
         "Please verify your email address to complete your registration.",
       ],
       cta: "Verify my email",
+      // Bulleted, not numbered: these are things you will be able to do, not steps in an order.
       after: [
-        "Once your email is verified you can complete your profile, add your vehicle, request recovery assistance, and help fellow off-roaders.",
+        "Once verified, you can:",
+        { bullets: [
+          "Create your member and vehicle profiles.",
+          "Request recovery assistance when you need help.",
+          "Offer assistance to nearby off-roaders.",
+          `Connect with other members of the ${APP_NAME} community.`,
+        ] },
         `If you did not create a ${APP_NAME} account you can ignore this email — nothing will happen until the link above is opened.`,
       ],
       tagline: "Different trails. Same brotherhood.",
@@ -157,12 +172,18 @@ const TEMPLATES: Record<EmailTemplateKey, { en: Renderer; es: Renderer }> = {
       subject: `Verifique su correo — bienvenido a ${APP_NAME}`,
       blocks: [
         "Bienvenido a la hermandad.",
-        `Gracias por unirse a ${APP_NAME}, la comunidad de rescate todoterreno donde los miembros se ayudan entre sí.`,
+        `Gracias por unirse a ${APP_NAME}, la comunidad de rescate todoterreno donde los todoterreneros se ayudan entre sí.`,
         "Verifique su dirección de correo para completar su registro.",
       ],
       cta: "Verificar mi correo",
       after: [
-        "Una vez verificado su correo podrá completar su perfil, agregar su vehículo, pedir ayuda y ayudar a otros todoterreneros.",
+        "Una vez verificado, podrá:",
+        { bullets: [
+          "Crear su perfil de miembro y el de sus vehículos.",
+          "Pedir ayuda de rescate cuando la necesite.",
+          "Ofrecer ayuda a todoterreneros cercanos.",
+          `Conectarse con otros miembros de la comunidad ${APP_NAME}.`,
+        ] },
         `Si usted no creó una cuenta en ${APP_NAME}, ignore este mensaje: no pasará nada hasta que se abra el enlace de arriba.`,
       ],
       tagline: "Distintos caminos. La misma hermandad.",
@@ -172,37 +193,39 @@ const TEMPLATES: Record<EmailTemplateKey, { en: Renderer; es: Renderer }> = {
   /* ---------------------------------------------------------------- §5 */
   "auth.welcome": {
     en: () => ({
-      subject: `You're in — welcome to the ${APP_NAME} brotherhood`,
+      subject: `You're officially part of the ${APP_NAME} brotherhood`,
       blocks: [
         `Welcome to ${APP_NAME}.`,
-        "Your account is verified, and you are now part of a community of off-roaders helping off-roaders.",
-        "Here is how to get started:",
+        "Your email is verified, and you're now part of a community built around one simple idea: off-roaders helping off-roaders.",
+        "Here's how to get started:",
+        // Numbered, not bulleted: these ARE an order -- a profile with no vehicle and no
+        // equipment matches nothing, so the sequence is the point.
         [
           "Complete your member profile.",
-          "Add your Jeep, truck or 4x4.",
+          "Add your Jeep, truck, or 4x4.",
           "Add the recovery equipment you have available.",
-          "Turn on nearby recovery notifications if you want alerts.",
-          "Look at nearby recovery requests and offer help when you can.",
+          "Turn on notifications so you hear about recoveries near you.",
+          "Explore the community and help fellow off-roaders whenever you can.",
         ],
-        `Every ${APP_NAME} member can both ask for help and offer it. There is no separate volunteer account.`,
+        `Remember, every ${APP_NAME} member can request help AND offer help.`,
       ],
       cta: `Open ${APP_NAME}`,
       tagline: "Different trails. Same brotherhood.",
     }),
     es: () => ({
-      subject: `Ya está dentro — bienvenido a la hermandad de ${APP_NAME}`,
+      subject: `Ya es parte de la hermandad de ${APP_NAME}`,
       blocks: [
         `Bienvenido a ${APP_NAME}.`,
-        "Su cuenta está verificada y ya forma parte de una comunidad de todoterreneros que se ayudan entre sí.",
+        "Su correo está verificado y ya forma parte de una comunidad construida sobre una idea sencilla: todoterreneros que se ayudan entre sí.",
         "Así puede empezar:",
         [
           "Complete su perfil de miembro.",
           "Agregue su Jeep, camioneta o 4x4.",
           "Agregue el equipo de rescate que tiene disponible.",
-          "Active las notificaciones de rescates cercanos si quiere recibir avisos.",
-          "Vea las solicitudes cercanas y ofrezca ayuda cuando pueda.",
+          "Active las notificaciones para enterarse de rescates cerca de usted.",
+          "Explore la comunidad y ayude a otros todoterreneros cuando pueda.",
         ],
-        `Todo miembro de ${APP_NAME} puede pedir ayuda y ofrecerla. No hay una cuenta aparte de voluntario.`,
+        `Recuerde: todo miembro de ${APP_NAME} puede pedir ayuda Y ofrecer ayuda.`,
       ],
       cta: `Abrir ${APP_NAME}`,
       tagline: "Distintos caminos. La misma hermandad.",
@@ -298,6 +321,24 @@ const TEMPLATES: Record<EmailTemplateKey, { en: Renderer; es: Renderer }> = {
   },
 };
 
+function renderBlocks(blocks: Block[]): string {
+  return blocks
+    .map((block) => {
+      if (Array.isArray(block)) return list(block, true);
+      if (typeof block === "object") return list(block.bullets, false);
+      return p(block);
+    })
+    .join("\n");
+}
+
+function blocksToText(blocks: Block[]): string[] {
+  return blocks.map((block) => {
+    if (Array.isArray(block)) return block.map((i, n) => `  ${n + 1}. ${i}`).join("\n");
+    if (typeof block === "object") return block.bullets.map((i) => `  - ${i}`).join("\n");
+    return block;
+  });
+}
+
 /* --------------------------------------------------------------- render */
 
 export type RenderOptions = {
@@ -324,12 +365,10 @@ export function renderEmail(key: EmailTemplateKey, options: RenderOptions): Rend
     throw new Error(`renderEmail: "${key}" has a button but no actionUrl was given`);
   }
 
-  const htmlBlocks = copy.blocks
-    .map((block) => (Array.isArray(block) ? list(block) : p(block)))
-    .join("\n");
+  const htmlBlocks = renderBlocks(copy.blocks);
 
   const cta = copy.cta && options.actionUrl ? button(options.actionUrl, copy.cta) : "";
-  const after = (copy.after ?? []).map(p).join("\n");
+  const after = renderBlocks(copy.after ?? []);
   const tagline = copy.tagline
     ? `<p style="margin:20px 0 0 0;color:${INK_SOFT};font-style:italic;">${esc(copy.tagline)}</p>`
     : "";
@@ -343,16 +382,14 @@ export function renderEmail(key: EmailTemplateKey, options: RenderOptions): Rend
 
   // The plain-text part is written from the same copy rather than stripped out of the HTML, so
   // it reads like something a person wrote instead of like a flattened table.
-  const textBlocks = copy.blocks.map((block) =>
-    Array.isArray(block) ? block.map((i, n) => `  ${n + 1}. ${i}`).join("\n") : block,
-  );
+  const textBlocks = blocksToText(copy.blocks);
 
   const text = [
     APP_NAME.toUpperCase().split(" ").join("-"),
     "",
     ...textBlocks,
     ...(copy.cta && options.actionUrl ? ["", `${copy.cta}: ${options.actionUrl}`] : []),
-    ...(copy.after?.length ? ["", ...copy.after] : []),
+    ...(copy.after?.length ? ["", ...blocksToText(copy.after)] : []),
     ...(copy.tagline ? ["", copy.tagline] : []),
     "",
     motto(locale),
