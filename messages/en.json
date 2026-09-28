@@ -997,14 +997,14 @@
       "needsTractor": "Going to need a tractor",
       "needsTractorHint": "Pick this if a truck alone won't do it.",
       "needsSecondTruck": "Going to need a second truck",
-      "needsSecondTruckHint": "Heavy vehicle, or a bad angle."
+      "needsSecondTruckHint": "Heavy vehicle, or a bad angle.",
+      "notesLabel": "Anything that helps",
+      "notesHint": "Optional. Shown publicly, so no phone numbers or links.",
+      "notesPlaceholder": "Back end dropped into a rut after the rain. Tires just spin."
     },
     "land": {
       "permissionLabel": "Who gave permission?",
-      "permissionHint": "Volunteers won't come onto private land without it.",
-      "notesLabel": "Anything else?",
-      "notesHint": "Optional. This is shown publicly, so no phone numbers or links.",
-      "notesPlaceholder": "Rear end sank in a rut after the rain. Tires spinning."
+      "permissionHint": "Volunteers won't come onto private land without it."
     },
     "contact": {
       "nameLabel": "Your first name",

@@ -997,14 +997,14 @@
       "needsTractor": "Va a hacer falta un tractor",
       "needsTractorHint": "Elija esto si una troca sola no va a poder.",
       "needsSecondTruck": "Va a hacer falta una segunda troca",
-      "needsSecondTruckHint": "Vehículo pesado, o un ángulo malo."
+      "needsSecondTruckHint": "Vehículo pesado, o un ángulo malo.",
+      "notesLabel": "Algo que ayude",
+      "notesHint": "Opcional. Se muestra públicamente, así que sin teléfonos ni enlaces.",
+      "notesPlaceholder": "La parte de atrás se hundió en un surco después de la lluvia. Las llantas solo patinan."
     },
     "land": {
       "permissionLabel": "¿Quién le dio permiso?",
-      "permissionHint": "Los voluntarios no entran a terreno privado sin permiso.",
-      "notesLabel": "¿Algo más?",
-      "notesHint": "Opcional. Esto se muestra públicamente, así que no ponga teléfonos ni enlaces.",
-      "notesPlaceholder": "La parte de atrás se hundió en un surco después de la lluvia. Las llantas solo patinan."
+      "permissionHint": "Los voluntarios no entran a terreno privado sin permiso."
     },
     "contact": {
       "nameLabel": "Su nombre",

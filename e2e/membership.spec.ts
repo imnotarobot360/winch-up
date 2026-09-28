@@ -193,10 +193,12 @@ async function fileRequest(page: Page, note: string): Promise<string> {
 
   await page.getByRole("radio", { name: /^mud$|^lodo$/i }).first().click();
   await page.getByRole("radio", { name: /to the frame|al chasis/i }).first().click();
+  // Moved here from the land step on 2026-09-27: somebody describing how they are stuck expects
+  // the free-text box on the screen that asks how they are stuck.
+  await page.getByLabel(/anything that helps|algo que ayude/i).pressSequentially(note);
   await page.getByRole("button", { name: /^(next|siguiente)$/i }).click();
 
   await page.getByRole("radio", { name: /public land|terreno público/i }).first().click();
-  await page.getByLabel(/anything else|algo más/i).pressSequentially(note);
   await page.getByRole("button", { name: /^(next|siguiente)$/i }).click();
 
   // 7. Contact. The name and number are theirs; the number is never shown publicly.

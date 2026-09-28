@@ -162,9 +162,9 @@ export function RequestWizard() {
       case "vehicle":
         return draft.vehicleClass !== null;
       case "situation":
-        return draft.stuckType !== null;
+        return draft.stuckType !== null && !containsContactInfo(draft.notes);
       case "land":
-        return draft.landType !== null && !containsContactInfo(draft.notes);
+        return draft.landType !== null;
       case "contact":
         return draft.name.trim().length > 0 && phoneE164 !== null;
       case "consent":
@@ -353,6 +353,22 @@ export function RequestWizard() {
               label={t("situation.needsSecondTruck")}
               hint={t("situation.needsSecondTruckHint")}
             />
+            <Field
+              label={t("situation.notesLabel")}
+              hint={t("situation.notesHint")}
+              htmlFor="notes"
+              error={
+                containsContactInfo(draft.notes) ? t("errors.contact_info_not_allowed") : null
+              }
+            >
+              <TextArea
+                id="notes"
+                value={draft.notes}
+                maxLength={500}
+                placeholder={t("situation.notesPlaceholder")}
+                onChange={(event) => update({ notes: event.target.value })}
+              />
+            </Field>
           </div>
         ) : null}
 
@@ -383,22 +399,6 @@ export function RequestWizard() {
                 />
               </Field>
             ) : null}
-            <Field
-              label={t("land.notesLabel")}
-              hint={t("land.notesHint")}
-              htmlFor="notes"
-              error={
-                containsContactInfo(draft.notes) ? t("errors.contact_info_not_allowed") : null
-              }
-            >
-              <TextArea
-                id="notes"
-                value={draft.notes}
-                maxLength={500}
-                placeholder={t("land.notesPlaceholder")}
-                onChange={(event) => update({ notes: event.target.value })}
-              />
-            </Field>
           </div>
         ) : null}
 
