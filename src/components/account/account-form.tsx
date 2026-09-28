@@ -51,17 +51,31 @@ export function AccountForm({ email }: { email: string }) {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [loadFailed, setLoadFailed] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
     (async () => {
-      const { data } = await supabaseBrowser()
-        .from("profiles")
-        .select("display_name, home_region, profile_public")
-        .maybeSingle();
-      if (!alive) return;
-      if (data) setProfile({ ...EMPTY, ...data });
-      setLoaded(true);
+      try {
+        const { data, error: loadError } = await supabaseBrowser()
+          .from("profiles")
+          .select("display_name, home_region, profile_public")
+          .maybeSingle();
+
+        if (!alive) return;
+        if (loadError) setLoadFailed(loadError.message);
+        if (data) setProfile({ ...EMPTY, ...data });
+      } catch (cause) {
+        // Anything that throws before the request is even made lands here -- a misconfigured
+        // client, a blocked fetch. Without this the rejection was unhandled, setLoaded never
+        // ran, and the whole screen rendered as nothing at all.
+        if (alive) setLoadFailed(cause instanceof Error ? cause.message : String(cause));
+      } finally {
+        // In a finally, so the screen always stops waiting. This is the actual bug: the load
+        // could fail in a way that skipped this line, and `if (!loaded) return null` then meant
+        // a blank page with no spinner, no error and nothing in the console.
+        if (alive) setLoaded(true);
+      }
     })();
     return () => {
       alive = false;
@@ -115,10 +129,23 @@ export function AccountForm({ email }: { email: string }) {
     router.refresh();
   }
 
-  if (!loaded) return null;
+  // Was `return null`, which is why this screen appeared to be missing entirely rather than
+  // broken. A skeleton says "wait"; nothing says "this feature does not exist".
+  if (!loaded) {
+    return (
+      <div className="space-y-3" aria-busy="true" aria-live="polite">
+        <span className="sr-only">{t("loading")}</span>
+        <div className="h-12 animate-pulse rounded-field bg-surface-sunk" />
+        <div className="h-12 animate-pulse rounded-field bg-surface-sunk" />
+        <div className="h-32 animate-pulse rounded-2xl bg-surface-sunk" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
+      {loadFailed ? <Callout tone="danger">{t("loadFailed")}</Callout> : null}
+
       <form onSubmit={save} className="space-y-4">
         {error && error !== "open_request" && error !== "active_job" ? (
           <Callout tone="danger">{t(`errors.${error}`)}</Callout>

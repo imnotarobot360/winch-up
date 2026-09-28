@@ -19,6 +19,21 @@ const START = ["/", "/board", "/resources", "/terms", "/waiver", "/privacy", "/s
 const MEMBERS_ONLY = /^\/(community|trails|business|notifications|me|account|request|moderation)/;
 
 test.describe("navigation", () => {
+  // A crawl is about a returning visitor. Since 2026-09-27 a first-time signed-out visitor to /
+  // or /es is sent to the onboarding screen, and that redirect arrives as a client navigation --
+  // which destroys the execution context underneath `$$eval` and fails with something that
+  // reads like a Playwright bug rather than a redirect. Seeding the cookie puts the crawl in the
+  // state it is actually describing. The onboarding path itself is covered in public-pages.spec.
+  test.beforeEach(async ({ context, baseURL }) => {
+    await context.addCookies([
+      {
+        name: "wu_seen_welcome",
+        value: "1",
+        url: baseURL ?? "http://127.0.0.1:3000",
+      },
+    ]);
+  });
+
   test("every internal link on every public page resolves", async ({ page, baseURL }) => {
     const seen = new Set<string>();
     const broken: string[] = [];

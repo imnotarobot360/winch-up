@@ -118,7 +118,9 @@
     "menuNotifications": "Notifications",
     "menuNotificationsHint": "What reaches your phone, and which devices",
     "menuResources": "Recovery guides",
-    "menuResourcesHint": "Gear, safety, etiquette, what to do first"
+    "menuResourcesHint": "Gear, safety, etiquette, what to do first",
+    "loading": "Loading your account…",
+    "loadFailed": "We could not load your details. What you see below may not be what is saved — reload before changing anything."
   },
   "vehicles": {
     "title": "Your rigs",

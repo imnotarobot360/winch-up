@@ -118,7 +118,9 @@
     "menuNotifications": "Notificaciones",
     "menuNotificationsHint": "Qué llega a su teléfono y en qué dispositivos",
     "menuResources": "Guías de rescate",
-    "menuResourcesHint": "Equipo, seguridad, etiqueta, qué hacer primero"
+    "menuResourcesHint": "Equipo, seguridad, etiqueta, qué hacer primero",
+    "loading": "Cargando su cuenta…",
+    "loadFailed": "No pudimos cargar sus datos. Lo que ve abajo puede no ser lo guardado; recargue antes de cambiar algo."
   },
   "vehicles": {
     "title": "Sus vehículos",
