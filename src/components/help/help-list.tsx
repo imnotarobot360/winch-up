@@ -5,6 +5,7 @@ import { useFormatter, useNow, useTranslations } from "next-intl";
 
 import { offerAssistanceAction, withdrawOfferAction } from "@/app/actions/offers";
 import { Button, Callout, Card, Checkbox, TextArea, TextInput } from "@/components/ui/primitives";
+import { Link } from "@/i18n/navigation";
 import { mapAppUrl } from "@/lib/geo";
 
 export type HelpRow = {
@@ -38,6 +39,7 @@ const KNOWN_ERRORS = [
   "not_signed_in",
   "no_recovery_profile",
   "equipment_not_acknowledged",
+  "membership_agreement_required",
   "offer_not_possible",
   "no_open_offer",
   "not_found",
@@ -62,6 +64,7 @@ const KNOWN_ERRORS = [
  */
 export function HelpList({ initial }: { initial: HelpRow[] }) {
   const t = useTranslations("help");
+  const tMembership = useTranslations("membership");
   const tEnum = useTranslations("enum");
   const format = useFormatter();
   const now = useNow({ updateInterval: POLL_MS });
@@ -124,6 +127,12 @@ export function HelpList({ initial }: { initial: HelpRow[] }) {
           {KNOWN_ERRORS.includes(error)
             ? t(`errors.${error}` as never)
             : t("errors.server_error")}
+          {/* The only refusal on this screen the member can act on immediately. */}
+          {error === "membership_agreement_required" ? (
+            <Link href="/agreement" className="mt-2 block font-semibold underline underline-offset-4">
+              {tMembership("requiredBannerCta")}
+            </Link>
+          ) : null}
         </Callout>
       ) : null}
 

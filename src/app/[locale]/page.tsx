@@ -4,6 +4,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import type { BoardRow } from "@/components/board/board-list";
 import { HomeMap } from "@/components/home/home-map";
+import { getMembershipAgreement } from "@/app/actions/membership";
+import { MembershipBanner } from "@/components/membership/membership-banner";
 import { Callout, Card } from "@/components/ui/primitives";
 import { APP_NAME } from "@/config/app";
 import { Link } from "@/i18n/navigation";
@@ -56,7 +58,17 @@ export default async function HomePage({
     // The same blurred rows the public board serves. A member's own home map is not a reason to
     // widen what a recovery's location looks like to somebody who is not on it.
     const { data } = await supabase.rpc("board_requests", { p_limit: 100 });
-    return <HomeMap rows={(data as BoardRow[] | null) ?? []} />;
+
+    // Requirement 10. Decided here rather than inside the banner so that a member with nothing
+    // to sign causes no element to exist at all -- see the note on MembershipBanner.
+    const membership = await getMembershipAgreement();
+
+    return (
+      <HomeMap
+        rows={(data as BoardRow[] | null) ?? []}
+        banner={membership?.state?.needs_signature ? <MembershipBanner /> : undefined}
+      />
+    );
   }
 
   return <LandingPage />;

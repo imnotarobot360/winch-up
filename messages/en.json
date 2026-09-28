@@ -381,7 +381,8 @@
       "offer_not_possible": "You cannot offer on this one any more.",
       "no_open_offer": "You do not have an open offer on this one.",
       "not_found": "That request no longer exists.",
-      "server_error": "Something went wrong. Try again."
+      "server_error": "Something went wrong. Try again.",
+      "membership_agreement_required": "You need to sign the membership agreement before you can do this. It only takes a minute."
     }
   },
   "post": {
@@ -419,7 +420,8 @@
       "security": "Security",
       "system": "System",
       "trails": "Trails",
-      "ads": "Ads"
+      "ads": "Ads",
+      "membership": "Agreement"
     },
     "signin": {
       "title": "Admin sign in",
@@ -1032,7 +1034,8 @@
       "server_error": "Something broke on our end. Try again — your answers are saved.",
       "validation_failed": "Something in the form isn't right. Go back and check.",
       "contact_info_not_allowed": "Take the phone number or link out — this part is shown publicly.",
-      "account_required": "You need an account to send a request. Sign in and we'll bring you back here."
+      "account_required": "You need an account to send a request. Sign in and we'll bring you back here.",
+      "membership_agreement_required": "You need to sign the membership agreement before you can do this. It only takes a minute."
     },
     "groups": {
       "location": "Location",

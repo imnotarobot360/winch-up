@@ -62,6 +62,12 @@ const REVIEWED = new Map([
     "me.location.body",
     "explains that one position is stored on a button press and is not continuous",
   ],
+  [
+    "membership.riskBody",
+    "'does not supervise a recovery or guarantee that anyone will come' -- the flagged word is " +
+      "the thing being denied. This is the risk disclosure on the membership agreement, and it " +
+      "is the strongest anti-guarantee sentence in the product",
+  ],
 ]);
 
 function flatten(value, prefix = "", out = []) {

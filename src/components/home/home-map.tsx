@@ -29,7 +29,14 @@ import { Link } from "@/i18n/navigation";
  * state. "Nothing open right now. Good." is the honest version of an empty map, and it is the
  * version a volunteer wants to read.
  */
-export function HomeMap({ rows }: { rows: BoardRow[] }) {
+export function HomeMap({
+  rows,
+  banner,
+}: {
+  rows: BoardRow[];
+  /** Slotted from the server: see where it is rendered below. */
+  banner?: React.ReactNode;
+}) {
   const t = useTranslations("homeMap");
 
   return (
@@ -40,6 +47,17 @@ export function HomeMap({ rows }: { rows: BoardRow[] }) {
       <div className="relative z-10">
         <HeaderBar />
       </div>
+
+      {/* Slotted rather than read here, because this is a client component and the prompt needs
+          the session. It OVERLAYS the top of the map rather than pushing it down: the map below
+          is positioned against a fixed header offset, so displacing it would mean this banner
+          quietly changed the geometry of the whole screen. Renders nothing when there is
+          nothing to sign, which is every day until an agreement is published. */}
+      {banner ? (
+        <div className="pointer-events-none absolute inset-x-0 top-[3.25rem] z-10 px-4 pt-3">
+          <div className="pointer-events-auto mx-auto w-full max-w-xl">{banner}</div>
+        </div>
+      ) : null}
 
       {/* The map fills what is left below the header. inset-0 with a top offset rather than a
           flex child, so the floating card can be positioned against the viewport bottom. */}

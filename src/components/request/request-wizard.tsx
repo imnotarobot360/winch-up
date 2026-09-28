@@ -15,7 +15,7 @@ import {
   TextInput,
   Toggle,
 } from "@/components/ui/primitives";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { containsContactInfo } from "@/lib/contact-info";
 import type { UploadedPhoto } from "@/lib/photos";
 import { toE164Us } from "@/lib/utils";
@@ -104,6 +104,7 @@ function emptyDraft(): Draft {
 
 export function RequestWizard() {
   const t = useTranslations("request");
+  const tMembership = useTranslations("membership");
   const tEnum = useTranslations("enum");
   const locale = useLocale();
   const router = useRouter();
@@ -474,7 +475,20 @@ export function RequestWizard() {
               })}
             </Checkbox>
             {submitError ? (
-              <Callout tone="danger">{t(`errors.${submitError}`)}</Callout>
+              <Callout tone="danger">
+                {t(`errors.${submitError}`)}
+                {/* The one refusal here that the member can actually fix on the spot. Every
+                    other error is "wait", "go back a step" or "call 911"; this one has a
+                    destination, so it gets a link rather than leaving them to find it. */}
+                {submitError === "membership_agreement_required" ? (
+                  <Link
+                    href="/agreement"
+                    className="mt-2 block font-semibold underline underline-offset-4"
+                  >
+                    {tMembership("requiredBannerCta")}
+                  </Link>
+                ) : null}
+              </Callout>
             ) : null}
           </div>
         ) : null}
