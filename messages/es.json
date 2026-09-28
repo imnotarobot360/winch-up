@@ -60,7 +60,11 @@
     "resendCta": "Enviar de nuevo",
     "resendWait": "Puede enviar otro en {seconds} s",
     "resendDone": "Enviado de nuevo. Puede tardar un minuto en llegar.",
-    "resendHint": "¿No llegó? Revise primero su carpeta de spam."
+    "resendHint": "¿No llegó? Revise primero su carpeta de spam.",
+    "nameLabel": "Nombre completo",
+    "nameHint": "Lo que ven los voluntarios cuando se le asigna alguien. Sin teléfonos ni enlaces.",
+    "phoneLabel": "Número de teléfono",
+    "phoneHint": "Opcional. Lo confirmamos por mensaje más adelante, antes de dárselo a nadie."
   },
   "account": {
     "title": "Su cuenta",

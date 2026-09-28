@@ -375,6 +375,19 @@ docs/                     decisions + runbooks
   verified before the provider was bought still gets their welcome email on the first tick after
   it is configured. Marking it failed would burn the queue silently, which is the same mistake
   the push drain avoids by leaving rows alone when VAPID is unset.
+- **A name typed at signup is dropped rather than allowed to fail the signup.**
+  `profiles.display_name` has a CHECK (1-60 chars, no contact info) and `app.handle_new_user`
+  runs INSIDE the transaction that creates the account -- so a name containing a phone number
+  would abort the INSERT into auth.users and the signup would fail with a constraint error on a
+  form whose only fault was somebody typing their number in the name box. The trigger validates
+  and nulls it instead. A blank display name is a blank field; a failed signup is a member who
+  never joined.
+- **The phone collected at signup is NOT auth.users.phone and is never treated as verified.**
+  It goes in `raw_user_meta_data.phone_unverified` and only prefills /join, where the one-time
+  code still has to pass before anything is written to the responder record. Setting the real
+  phone field would start Supabase's own SMS confirmation on top of the email one, and an
+  unverified number is worse than none here -- the requester's phone is handed to whoever takes
+  their recovery, so a number nobody proved they own is a volunteer calling a stranger.
 - **A screen that nothing links to is a screen nobody sees.** /welcome -- screen 2 of the design
   reference -- was built, tested, deployed and then left unreachable for two days, so every new
   visitor landed on the marketing page and the reference was quietly not followed. Nothing caught

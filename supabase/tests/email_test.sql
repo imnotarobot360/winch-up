@@ -22,6 +22,17 @@ set search_path = public, extensions;
 
 select no_plan();
 
+-- Start from an empty queue, inside the transaction, so the rollback puts everything back.
+--
+-- claim_email_deliveries takes the OLDEST queued rows, so this suite silently claimed somebody
+-- else's the moment the database had any -- and after e2e/signup.spec.ts started creating real
+-- accounts, the welcome trigger left nine of them behind. The assertions then failed with
+-- "have: NULL, want: mail-verifies@example.invalid", which reads like the join being broken
+-- rather than the suite claiming rows it did not write. Same reasoning as the community and
+-- trails suites: counting whatever happens to be in the database is how a test starts passing
+-- or failing on yesterday's clicking about.
+delete from public.email_deliveries;
+
 -- ---------------------------------------------------------------------------
 -- Two members: one whose account survives, one who deletes theirs
 -- ---------------------------------------------------------------------------

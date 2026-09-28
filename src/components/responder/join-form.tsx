@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
 import {
@@ -19,7 +19,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { geocodeAddress } from "@/lib/geocode";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { containsContactInfo } from "@/lib/contact-info";
-import { toE164Us } from "@/lib/utils";
+import { formatUsPhone, toE164Us } from "@/lib/utils";
 
 type Phase = "phone" | "code" | "profile" | "done";
 
@@ -62,6 +62,30 @@ export function JoinForm() {
   const [drivetrain, setDrivetrain] = useState<DriveKey>("4wd");
   const [nightOk, setNightOk] = useState(true);
   const [waiver, setWaiver] = useState(false);
+
+  // Prefill from what they typed at signup, if anything.
+  //
+  // It is a CONVENIENCE ONLY and stays that way: the number still has to pass the one-time code
+  // below before it is written to the responder record, exactly as if it had been typed here.
+  // Prefilling a field is not the same as trusting it, and the phone this app hands to a
+  // volunteer has to be one somebody proved they hold.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const { data } = await supabaseBrowser().auth.getUser();
+        const saved = data.user?.user_metadata?.phone_unverified;
+        if (alive && typeof saved === "string" && saved) {
+          setPhone((current) => (current === "" ? formatUsPhone(saved) : current));
+        }
+      } catch {
+        // A prefill that cannot load is a field somebody types into. Nothing to report.
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const e164 = toE164Us(phone);
 

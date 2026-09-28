@@ -47,7 +47,13 @@ test("a Spanish signup records the language, and confirming it signs you in", as
   await expect(page.getByRole("heading", { name: /cree su cuenta/i })).toBeVisible();
 
   // pressSequentially, not fill: on WebKit fill() on one field clears its sibling.
+  // Screen 3 of the design reference: four fields, in this order.
+  await expect(page.getByLabel(/nombre completo/i)).toBeVisible();
+  await expect(page.getByLabel(/número de teléfono/i)).toBeVisible();
+
+  await page.getByLabel(/nombre completo/i).pressSequentially("Dolores Vega");
   await page.getByLabel(/correo electrónico/i).pressSequentially(email);
+  await page.getByLabel(/número de teléfono/i).pressSequentially("(512) 555-0142");
   await page.getByLabel(/contraseña/i).pressSequentially(PASSWORD);
   await page.getByRole("button", { name: /crear cuenta/i }).click();
 

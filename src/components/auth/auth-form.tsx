@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button, Callout, Field, TextInput } from "@/components/ui/primitives";
 import { Link, useRouter } from "@/i18n/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
+import { toE164Us } from "@/lib/utils";
 
 type Mode = "signin" | "signup";
 
@@ -31,6 +32,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const [sent, setSent] = useState(false);
   const [resent, setResent] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
 
   // Tick the cooldown down. Cleared on unmount so a navigation mid-countdown does not leave an
   // interval running against a component that is gone.
@@ -86,7 +89,21 @@ export function AuthForm({ mode }: { mode: Mode }) {
           // profiles -- it is a URL segment -- and the welcome email is queued by a database
           // trigger on email confirmation, long after this tab is gone. Without this the trigger
           // has nothing to read and every welcome email is English. See 20260924000300.
-          data: { locale },
+          data: {
+            locale,
+            // Copied onto profiles.display_name by app.handle_new_user, which drops it if it
+            // would fail that column's CHECK -- a name with a phone number in it must cost a
+            // blank field, not a failed signup. See 20260927000100.
+            full_name: fullName.trim(),
+            // Deliberately NOT auth.users.phone, and deliberately not treated as verified
+            // anywhere. Setting the real phone field would start Supabase's own SMS confirmation
+            // on top of the email one, and an unverified number is worse than none here: the
+            // requester's phone is released to whoever takes their recovery, so a number nobody
+            // has proved they own is a volunteer driving to a wrong callback. This is a
+            // convenience copy that prefills /join, where it is confirmed by one-time code
+            // before anything relies on it.
+            phone_unverified: toE164Us(phone) ?? "",
+          },
         },
       });
 
@@ -232,6 +249,20 @@ export function AuthForm({ mode }: { mode: Mode }) {
     <form onSubmit={submit} className="space-y-4" noValidate>
       {error ? <Callout tone="danger">{t(`errors.${error}`)}</Callout> : null}
 
+      {mode === "signup" ? (
+        <Field label={t("nameLabel")} hint={t("nameHint")}>
+          <TextInput
+            type="text"
+            name="name"
+            autoComplete="name"
+            autoCapitalize="words"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            required
+          />
+        </Field>
+      ) : null}
+
       <Field label={t("emailLabel")}>
         <TextInput
           type="email"
@@ -245,6 +276,19 @@ export function AuthForm({ mode }: { mode: Mode }) {
           required
         />
       </Field>
+
+      {mode === "signup" ? (
+        <Field label={t("phoneLabel")} hint={t("phoneHint")}>
+          <TextInput
+            type="tel"
+            name="phone"
+            autoComplete="tel"
+            inputMode="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+        </Field>
+      ) : null}
 
       <Field label={t("passwordLabel")} hint={mode === "signup" ? t("passwordHint") : undefined}>
         <TextInput

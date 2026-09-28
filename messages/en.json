@@ -60,7 +60,11 @@
     "resendCta": "Send it again",
     "resendWait": "You can send another in {seconds}s",
     "resendDone": "Sent again. It can take a minute to arrive.",
-    "resendHint": "No email? Check your spam folder first."
+    "resendHint": "No email? Check your spam folder first.",
+    "nameLabel": "Full name",
+    "nameHint": "What volunteers see when you're matched. No phone numbers or links.",
+    "phoneLabel": "Phone number",
+    "phoneHint": "Optional. We confirm it by text later, before anybody is given it."
   },
   "account": {
     "title": "Your account",
