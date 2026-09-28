@@ -250,6 +250,32 @@ select ok(
   'a material change re-prompts a member who had signed -- requirement 14'
 );
 
+-- Requirement 7: the member can still read back the words they actually signed, which by now
+-- are two versions behind. An immutable copy nobody can retrieve would be pointless.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a1111111-0000-4000-8000-00000000000a","role":"authenticated"}';
+
+select is(
+  (public.membership_agreement() -> 'signed_document' ->> 'version')::integer,
+  1,
+  'a member reads back the version they signed, not the version that is current'
+);
+
+select is(
+  public.membership_agreement() -> 'signed_document' ->> 'body_en',
+  'Agreement text, version one.',
+  'and gets the original text verbatim, two versions later'
+);
+
+select is(
+  (public.membership_agreement() -> 'agreement' ->> 'version')::integer,
+  3,
+  'while `agreement` separately reports what is current -- the two are not the same thing'
+);
+
+reset role;
+set local request.jwt.claims = '';
+
 select is(
   (select count(*)::integer from public.membership_agreements),
   3,
@@ -270,6 +296,53 @@ select ok(
 select ok(
   not app.membership_gate_blocks('a2222222-0000-4000-8000-00000000000a'),
   'so it gates nobody until it takes effect'
+);
+
+-- ---------------------------------------------------------------------------
+-- Requirement 9: the gate, where a member actually meets it
+--
+-- Asserted through offer_assistance rather than by reading the gate function again, because
+-- "the helper returns true" and "the member is actually refused" are different claims and only
+-- the second one matters. The request id is deliberately nonsense: a gated member must be
+-- turned away before anything looks it up.
+-- ---------------------------------------------------------------------------
+
+update public.membership_agreements set effective_at = now() where version = 3;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a2222222-0000-4000-8000-00000000000a","role":"authenticated"}';
+
+select is(
+  public.offer_assistance('00000000-0000-4000-8000-0000000000ff'::uuid, null, null, true) ->> 'error',
+  'membership_agreement_required',
+  'an unsigned member cannot offer to help while the gate is armed'
+);
+
+reset role;
+set local request.jwt.claims = '';
+
+-- With the setting off -- which is how this ships -- the same call gets past the gate and fails
+-- on its own merits instead. Proving the gate is genuinely inert, not merely defaulted off.
+update public.app_settings set value = 'false'::jsonb where key = 'membership.required';
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"a2222222-0000-4000-8000-00000000000a","role":"authenticated"}';
+
+select isnt(
+  public.offer_assistance('00000000-0000-4000-8000-0000000000ff'::uuid, null, null, true) ->> 'error',
+  'membership_agreement_required',
+  'and with the setting off the gate is inert: the call proceeds and fails for its own reasons'
+);
+
+reset role;
+set local request.jwt.claims = '';
+
+update public.app_settings set value = 'true'::jsonb where key = 'membership.required';
+
+select ok(
+  (select prosrc from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proname = 'create_request') like '%membership_gate_blocks%',
+  'create_request consults the same gate -- both halves of requirement 9, not just the offering one'
 );
 
 -- ---------------------------------------------------------------------------

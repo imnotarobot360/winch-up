@@ -30,7 +30,8 @@ export type EmailTemplateKey =
   | "auth.reset"
   | "security.password_changed"
   | "security.email_changed"
-  | "security.account_deleted";
+  | "security.account_deleted"
+  | "membership.signed";
 
 export type EmailParams = Record<string, string | number | null | undefined>;
 
@@ -317,6 +318,51 @@ const TEMPLATES: Record<EmailTemplateKey, { en: Renderer; es: Renderer }> = {
         "No se guarda nada para que regrese. Si quiere volver a usar la aplicación, sería una cuenta nueva.",
       ],
       after: ["Si usted no pidió esto, comuníquese con nosotros, pero los datos ya fueron borrados."],
+    }),
+  },
+
+  /* ------------------------------------------------- the membership agreement */
+  //
+  // Sent when a member signs. Requirement 8 asks for a confirmation with a copy of the
+  // agreement, and this is where that runs into the rule at the top of this file: no
+  // attachments, and nothing longer than a person will read in an inbox. A full release of
+  // liability pasted into an email is not "a copy they can keep" -- it is a wall of text people
+  // scroll past, and it would be a SECOND copy that could drift from the signed one.
+  //
+  // So the email carries the facts that make the signed copy findable and checkable -- version,
+  // date, the name they signed, and the first characters of the document hash -- and the button
+  // goes to the page that renders the exact version they signed, with a download. One copy,
+  // one source, and the email is short enough to actually read.
+  "membership.signed": {
+    en: (p) => ({
+      subject: `Your ${APP_NAME} membership agreement — signed`,
+      blocks: [
+        "Thank you. Your membership agreement is on file.",
+        `Signed by ${p.legalName ?? "you"} on ${p.signedOn ?? "today"}, version ${p.version ?? "1"}.`,
+        "You can read or download the exact version you signed at any time using the button below. Keep this email for your records.",
+      ],
+      cta: "View the agreement I signed",
+      after: [
+        `Document reference: ${p.hashPrefix ?? ""}`,
+        "This agreement covers your membership, including the risks of off-road recovery. It does not change how we contact you — text messages, email and push notifications are each controlled separately in your notification settings, and you can change them whenever you like.",
+        `If you did not sign this, contact us at once at ${p.supportEmail ?? "help@winch-up.com"}.`,
+      ],
+      tagline: "Different trails. Same brotherhood.",
+    }),
+    es: (p) => ({
+      subject: `Su acuerdo de membresía de ${APP_NAME} — firmado`,
+      blocks: [
+        "Gracias. Su acuerdo de membresía quedó registrado.",
+        `Firmado por ${p.legalName ?? "usted"} el ${p.signedOn ?? "hoy"}, versión ${p.version ?? "1"}.`,
+        "Puede leer o descargar la versión exacta que firmó cuando quiera con el botón de abajo. Guarde este correo para sus registros.",
+      ],
+      cta: "Ver el acuerdo que firmé",
+      after: [
+        `Referencia del documento: ${p.hashPrefix ?? ""}`,
+        "Este acuerdo cubre su membresía, incluidos los riesgos del rescate todoterreno. No cambia la forma en que nos comunicamos con usted: los mensajes de texto, el correo y las notificaciones push se controlan por separado en sus preferencias y puede cambiarlos cuando quiera.",
+        `Si usted no firmó esto, comuníquese de inmediato a ${p.supportEmail ?? "help@winch-up.com"}.`,
+      ],
+      tagline: "Distintos caminos. La misma hermandad.",
     }),
   },
 };

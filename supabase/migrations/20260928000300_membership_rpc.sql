@@ -124,11 +124,34 @@ as $fn$
 declare
   uid uuid := auth.uid();
   a   public.membership_agreements%rowtype;
+  s   public.membership_agreements%rowtype;
+  v_signed_at timestamptz;
+  v_signed_name text;
   v_required boolean;
 begin
   select * into a from public.membership_agreements
    where is_current and effective_at is not null and effective_at <= now()
    limit 1;
+
+  -- The version this member actually signed, which is NOT always the current one: somebody who
+  -- signed v1 under a v3 that did not require re-signature is still bound by v1, and requirement
+  -- 7's "immutable copy of the exact agreement signed" is worth nothing if the app can only ever
+  -- show them the newest text.
+  -- Two statements, not one: a %rowtype variable cannot share an INTO list with a scalar.
+  if uid is not null then
+    select ag.* into s
+      from public.membership_signatures sig
+      join public.membership_agreements ag on ag.id = sig.agreement_id
+     where sig.user_id = uid
+     order by sig.signed_at desc
+     limit 1;
+
+    select sig.signed_at, sig.legal_name into v_signed_at, v_signed_name
+      from public.membership_signatures sig
+     where sig.user_id = uid
+     order by sig.signed_at desc
+     limit 1;
+  end if;
 
   select coalesce((value #>> '{}')::boolean, false) into v_required
     from public.app_settings where key = 'membership.required';
@@ -148,6 +171,18 @@ begin
       -- current by the time the form is submitted.
       'body_hash',  a.body_hash,
       'effective_at', a.effective_at
+    ) end,
+    -- What they signed, for reading back and downloading. Null when they have signed nothing.
+    -- Frequently the same row as `agreement` above; the client should not assume it.
+    'signed_document', case when s.id is null then null else jsonb_build_object(
+      'version',   s.version,
+      'body_en',   s.body_en,
+      'body_es',   s.body_es,
+      'body_hash', s.body_hash,
+      'signed_at', v_signed_at,
+      -- Their own name back to them. This is the caller's own signature and nobody else's --
+      -- the lookup is by auth.uid() -- so it discloses nothing they did not type.
+      'legal_name', v_signed_name
     ) end,
     'state', app.membership_state(uid)
   );

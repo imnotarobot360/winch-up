@@ -39,6 +39,63 @@ type ClaimedRow = {
   locale: string;
 };
 
+type Personalisation = { actionUrl: string; params?: Record<string, string | number> };
+
+/**
+ * What a given template needs beyond its copy, resolved at send time.
+ *
+ * Deliberately NOT stored on the queue row. `email_deliveries` holds no address, no subject, no
+ * body and no action URL by design (see 20260924000200) -- it is a delivery log that identifies
+ * nobody, which is why its rows can be kept. Putting a member's legal name in there to feed a
+ * template would quietly undo that, and would leave two copies of a fact that can drift.
+ *
+ * So the drain reads it back from the record itself. One extra query, only for the templates
+ * that need one.
+ */
+async function personalise(
+  row: ClaimedRow,
+  siteUrl: string,
+  supportEmail: string,
+): Promise<Personalisation> {
+  if (row.template_key !== "membership.signed") {
+    // The welcome email's button goes to the app itself. It carries no token: unlike
+    // verification, there is nothing single-use about "open the app", and putting a credential
+    // in an email that exists to say hello would be gratuitous.
+    return { actionUrl: siteUrl };
+  }
+
+  const { data } = await supabaseAdmin()
+    .from("membership_signatures")
+    .select("legal_name, agreement_version, body_hash, signed_at")
+    .eq("user_id", row.user_id)
+    .order("signed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const signedOn = data?.signed_at
+    ? new Date(data.signed_at).toLocaleDateString(row.locale === "es" ? "es-US" : "en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        timeZone: "America/Chicago",
+      })
+    : "";
+
+  return {
+    // Not a token. The page requires a session and shows the member their own signed version.
+    actionUrl: `${siteUrl}/${row.locale === "es" ? "es/" : ""}agreement`,
+    params: {
+      legalName: data?.legal_name ?? "",
+      signedOn,
+      version: data?.agreement_version ?? "",
+      // Enough to match an email against a record in the admin screen, and far too little to
+      // be worth anything to anybody else. The whole hash would just be noise in an inbox.
+      hashPrefix: data?.body_hash ? data.body_hash.slice(0, 12) : "",
+      supportEmail,
+    },
+  };
+}
+
 export async function drainEmail(limit = 50): Promise<EmailDrainResult> {
   const db = supabaseAdmin();
   const { siteUrl, supportEmail, provider } = emailContext();
@@ -56,14 +113,14 @@ export async function drainEmail(limit = 50): Promise<EmailDrainResult> {
 
   for (const row of rows) {
     try {
+      const { actionUrl, params } = await personalise(row, siteUrl, supportEmail);
+
       const rendered = renderEmail(row.template_key as EmailTemplateKey, {
         locale: row.locale,
         siteUrl,
         supportEmail,
-        // The welcome email's button goes to the app itself. It carries no token: unlike
-        // verification, there is nothing single-use about "open the app", and putting a
-        // credential in an email that exists to say hello would be gratuitous.
-        actionUrl: siteUrl,
+        actionUrl,
+        params,
       });
 
       const { id, configured } = await deliverRendered(row.to_email, rendered);
