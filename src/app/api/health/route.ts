@@ -95,6 +95,67 @@ export async function GET() {
     warnings.push("no volunteers are available to help: a request would reach nobody");
   }
 
+  /**
+   * Is outbound SMS actually able to send?
+   *
+   * This belongs here for the reason at the top of the file: "no texts go out" is one of the
+   * failures this endpoint exists to tell apart from a quiet afternoon. Three separate things
+   * have to line up, they live in three different places, and each fails silently on its own.
+   *
+   * The dangerous combination is the LAST one below. Between turning `sms.outbound_enabled` on
+   * and putting the credentials in Vercel, app.queue_sms stops suppressing and writes real
+   * outbox rows, and the drain then hits "Twilio is not configured", which returns
+   * retryable: false -- so every call-out is marked failed and BURNED rather than retried.
+   * That state existed in production for part of 2026-09-28 and nothing anywhere reported it;
+   * it did no harm only because no recovery happened to be open.
+   *
+   * No secret is exposed. These are booleans and a prefix shape, in the same class as the
+   * counts and ages already here -- never a SID, never a token, never a number.
+   */
+  const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+  const twilioToken = process.env.TWILIO_AUTH_TOKEN;
+  const twilioService = process.env.TWILIO_MESSAGING_SERVICE_SID;
+  const twilioFrom = process.env.TWILIO_FROM_NUMBER;
+
+  const smsConfigured = Boolean(twilioSid && twilioToken && (twilioService || twilioFrom));
+
+  // A messaging service SID is MG + 32 hex. Anything else in that variable is a misconfiguration
+  // that Twilio rejects at send time with 21212 "Invalid From Number" -- which is what a CM...
+  // identifier pasted into the equivalent Supabase field did on 2026-09-28. Checked by shape
+  // rather than reported by value, so this says "wrong kind of thing" without printing it.
+  const serviceSidLooksWrong = Boolean(twilioService) && !/^MG[0-9a-f]{32}$/i.test(twilioService!);
+
+  if (serviceSidLooksWrong) {
+    problems.push(
+      "TWILIO_MESSAGING_SERVICE_SID is not an MG... messaging service id: Twilio will reject " +
+        "every send with 21212",
+    );
+  }
+
+  if (database && !smsConfigured) {
+    let smsEnabled = false;
+    try {
+      const { data } = await supabaseAdmin()
+        .from("app_settings")
+        .select("value")
+        .eq("key", "sms.outbound_enabled")
+        .maybeSingle();
+      smsEnabled = (data?.value as boolean | null) === true;
+    } catch {
+      // Unreadable settings are already covered by "database unreachable" above.
+    }
+
+    if (smsEnabled) {
+      // Not a warning. Messages are being destroyed, one per call-out, silently.
+      problems.push(
+        "sms.outbound_enabled is ON but Twilio is not configured: every call-out is being " +
+          "marked failed and discarded, and STOP replies are refused",
+      );
+    } else {
+      warnings.push("Twilio is not configured; SMS is off, so messages are carried by push");
+    }
+  }
+
   const healthy = database && problems.length === 0;
 
   return NextResponse.json(
@@ -109,6 +170,10 @@ export async function GET() {
         notificationsQueued,
         openRequests,
         reachableVolunteers,
+        // Whether a text could go out at all, and whether the sender id is the right kind of
+        // thing. Booleans only -- see the note above.
+        smsConfigured,
+        smsSenderOk: !serviceSidLooksWrong,
       },
       problems,
       warnings,
