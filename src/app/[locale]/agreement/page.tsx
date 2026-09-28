@@ -44,6 +44,18 @@ export default async function AgreementPage({
   const signed = data?.signed_document ?? null;
   const current = data?.agreement ?? null;
 
+  /**
+   * Which of the three states this member is in.
+   *
+   * NEEDS_SIGNATURE WINS OVER HAVING SIGNED, and getting this backwards is a dead end rather
+   * than a cosmetic bug: a member who signed v1 under a v2 that requires re-signature HAS a
+   * signed_document, so branching on that alone showed them "you have signed this agreement"
+   * -- while the banner on the home screen told them to go and sign. There was no way out of
+   * that loop and no error to report. The database had requirement 14 right the whole time;
+   * this page threw the answer away.
+   */
+  const mustSign = data?.state?.needs_signature === true && current !== null;
+
   const bodyOf = (doc: { body_en: string; body_es: string }) =>
     locale === "es" ? doc.body_es : doc.body_en;
 
@@ -64,7 +76,24 @@ export default async function AgreementPage({
         <p className="mt-1 text-sm">{tLegal("reviewExplainer")}</p>
       </Callout>
 
-      {signed ? (
+      {mustSign ? (
+        <>
+          {/* Somebody re-signing after a material change is not a first-time signer, and
+              telling them so is the difference between "sign this" and "sign this again,
+              because it changed". */}
+          {signed ? (
+            <Callout tone="neutral" className="text-sm">
+              {t("signedVersion", { version: signed.version })}
+            </Callout>
+          ) : null}
+          <AgreementForm
+            version={current!.version}
+            body={bodyOf(current!)}
+            bodyHash={current!.body_hash}
+            effectiveAt={current!.effective_at}
+          />
+        </>
+      ) : signed ? (
         <section className="space-y-4">
           <Callout tone="good" className="space-y-1">
             <h2 className="text-lg font-bold">{t("signedHeading")}</h2>
