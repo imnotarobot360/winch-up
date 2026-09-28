@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 
 import { acceptOfferAction, declineOfferAction } from "@/app/actions/offers";
+import { IconPin } from "@/components/ui/icons";
 import {
   cancelRequestAction,
   markRecoveredAction,
@@ -399,14 +400,29 @@ export function StatusView({
             ? ` · ${tEnum(`stuckDepth.${data.situation.stuck_depth}`)}`
             : ""}
         </p>
-        <a
-          href={mapAppUrl(data.lat, data.lng)}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-block font-mono text-sm underline underline-offset-4"
-        >
-          {data.lat.toFixed(5)}, {data.lng.toFixed(5)}
-        </a>
+        {/* Screen 6 of the design reference has a "View on Map" button. This WAS a maps link
+            already -- but rendered as an underlined coordinate, which does not read as something
+            you can press. The person looking at this screen is stranded, or is a bystander they
+            have handed the phone to, and neither is going to reason about whether a row of
+            digits is tappable.
+
+            The coordinate stays visible as well as being the link, because it is the thing people
+            read out loud over a bad phone connection -- the same reason the short code is on
+            screen. A button alone would have removed that. */}
+        <div className="space-y-2">
+          <p className="font-mono text-sm text-ink-faint">
+            {data.lat.toFixed(5)}, {data.lng.toFixed(5)}
+          </p>
+          <a
+            href={mapAppUrl(data.lat, data.lng)}
+            target="_blank"
+            rel="noreferrer"
+            className="tap-target flex w-full items-center justify-center gap-2 rounded-field border-2 border-line px-4 text-center text-base font-semibold text-ink"
+          >
+            <IconPin size={18} aria-hidden />
+            {t("openInMaps")}
+          </a>
+        </div>
 
         {data.photo_urls.length > 0 ? (
           <ul className="grid grid-cols-3 gap-2">

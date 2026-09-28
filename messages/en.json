@@ -1092,7 +1092,8 @@
     "offersMoreBody": "Somebody is already coming. If you need a second rig — a tractor as well as a winch — you can add them to the team.",
     "offerAdd": "Add {name} to the team",
     "offersMorePrivacyNote": "Anyone you add gets your name, your number and your exact location, the same as the first.",
-    "sentTitle": "Request sent"
+    "sentTitle": "Request sent",
+    "openInMaps": "Open in maps"
   },
   "report": {
     "openLink": "Something go wrong? Report it.",
