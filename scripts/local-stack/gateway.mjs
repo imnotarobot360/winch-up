@@ -303,6 +303,39 @@ async function handleAuth(req, res, url, body) {
     return json(200, sessionFor({ id: rows[0][0], phone: rows[0][1] ?? "" }));
   }
 
+  /**
+   * GoTrue publishes which providers are configured, and the sign-in pages read it to decide
+   * which social buttons to draw -- see lib/auth/social-providers.ts. Without this the shim
+   * 404s, the lookup falls back to "none", and the positive path is untestable locally: you
+   * could only ever see the state where no button appears.
+   *
+   * LOCAL_SOCIAL_PROVIDERS turns them on for a local run, e.g.
+   *
+   *   LOCAL_SOCIAL_PROVIDERS=google,apple npm run stack
+   *
+   * The buttons then render and start a flow this shim cannot finish -- which is the point:
+   * it exercises the discovery and the layout without needing a real OAuth client.
+   */
+  if (route === "/settings") {
+    const on = (process.env.LOCAL_SOCIAL_PROVIDERS ?? "")
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    return json(200, {
+      external: {
+        email: true,
+        phone: true,
+        google: on.includes("google"),
+        facebook: on.includes("facebook"),
+        apple: on.includes("apple"),
+      },
+      disable_signup: false,
+      mailer_autoconfirm: false,
+      phone_autoconfirm: false,
+    });
+  }
+
   if (route === "/logout") return json(204, {});
 
   return json(404, { message: `auth shim does not implement ${route}` });

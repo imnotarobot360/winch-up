@@ -66,7 +66,17 @@
     "nameHint": "Lo que ven los voluntarios cuando se le asigna alguien. Sin teléfonos ni enlaces.",
     "phoneLabel": "Número de teléfono",
     "phoneHint": "Lo confirmamos por mensaje de texto antes de dárselo a nadie. A los voluntarios se les avisa por texto cuando alguien cerca necesita ayuda.",
-    "phoneInvalid": "Eso no parece un número de móvil de EE. UU."
+    "phoneInvalid": "Eso no parece un número de móvil de EE. UU.",
+    "social": {
+      "divider": "o continúe con",
+      "opening": "Abriendo…",
+      "failed": "Ese inicio de sesión no se completó. Inténtelo de nuevo o use su correo y contraseña.",
+      "continueWith": {
+        "apple": "Continuar con Apple",
+        "google": "Continuar con Google",
+        "facebook": "Continuar con Facebook"
+      }
+    }
   },
   "account": {
     "title": "Su cuenta",
