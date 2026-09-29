@@ -32,10 +32,10 @@ select u.id,
 \echo ''
 \echo '=== 2. The same phone on more than one account ==='
 
-select u.phone, count(*) as accounts, string_agg(u.id::text, ', ' order by u.created_at) as ids
+select ltrim(u.phone, '+') as phone, count(*) as accounts, string_agg(u.id::text, ', ' order by u.created_at) as ids
   from auth.users u
  where u.phone is not null and u.phone <> ''
- group by u.phone
+ group by ltrim(u.phone, '+')
 having count(*) > 1;
 
 \echo ''
@@ -59,11 +59,14 @@ select r.id as responder_id,
        u.phone      as auth_phone,
        u.email,
        (select count(*) from auth.users o
-         where o.phone = r.phone and o.id <> r.user_id) as other_accounts_with_that_number
+         where ltrim(o.phone, '+') = ltrim(r.phone, '+') and o.id <> r.user_id) as other_accounts_with_that_number
   from public.responders r
   join auth.users u on u.id = r.user_id
  where r.phone is not null
-   and coalesce(u.phone, '') <> r.phone;
+   -- NORMALISED. auth.users.phone has no leading '+' while responders.phone does, so a raw
+   -- string compare flags every correctly-linked profile as split. The first run of this file
+   -- reported 1 split that was only a missing plus sign.
+   and ltrim(coalesce(u.phone, ''), '+') <> ltrim(r.phone, '+');
 
 \echo ''
 \echo '=== SUMMARY ==='
@@ -72,7 +75,8 @@ select
   (select count(*) from auth.users) as total_accounts,
   (select count(*) from auth.users where (email is null or email = '') and phone is not null and phone <> '') as phone_only,
   (select count(*) from public.responders r join auth.users u on u.id = r.user_id
-    where r.phone is not null and coalesce(u.phone,'') <> r.phone) as split_profiles;
+    where r.phone is not null
+      and ltrim(coalesce(u.phone,''), '+') <> ltrim(r.phone, '+')) as split_profiles;
 
 \echo ''
 \echo 'All zeros in the summary means prevention only -- nothing to merge.'
