@@ -65,7 +65,8 @@
     "nameLabel": "Nombre completo",
     "nameHint": "Lo que ven los voluntarios cuando se le asigna alguien. Sin teléfonos ni enlaces.",
     "phoneLabel": "Número de teléfono",
-    "phoneHint": "Opcional. Lo confirmamos por mensaje más adelante, antes de dárselo a nadie."
+    "phoneHint": "Lo confirmamos por mensaje de texto antes de dárselo a nadie. A los voluntarios se les avisa por texto cuando alguien cerca necesita ayuda.",
+    "phoneInvalid": "Eso no parece un número de móvil de EE. UU."
   },
   "account": {
     "title": "Su cuenta",

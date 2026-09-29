@@ -68,7 +68,23 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
   const [code, setCode] = useState("");
 
-  const valid = /^\S+@\S+\.\S+$/.test(email) && password.length >= 8;
+  /**
+   * A phone number is required to SIGN UP, not only to volunteer.
+   *
+   * It used to say "Optional" right under the field, which was the last place in the
+   * product still offering an account with no way to reach the person. The number is still
+   * UNVERIFIED here and is still confirmed by one-time code at /join -- what changed is that
+   * you cannot skip past it.
+   *
+   * toE164Us returns null for anything that is not a US mobile, so this rejects a half-typed
+   * number as well as a blank one.
+   */
+  const phoneE164 = toE164Us(phone);
+
+  const valid =
+    /^\S+@\S+\.\S+$/.test(email) &&
+    password.length >= 8 &&
+    (mode !== "signup" || phoneE164 !== null);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -102,7 +118,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
             // has proved they own is a volunteer driving to a wrong callback. This is a
             // convenience copy that prefills /join, where it is confirmed by one-time code
             // before anything relies on it.
-            phone_unverified: toE164Us(phone) ?? "",
+            phone_unverified: phoneE164 ?? "",
           },
         },
       });
@@ -278,12 +294,19 @@ export function AuthForm({ mode }: { mode: Mode }) {
       </Field>
 
       {mode === "signup" ? (
-        <Field label={t("phoneLabel")} hint={t("phoneHint")}>
+        <Field
+          label={t("phoneLabel")}
+          hint={t("phoneHint")}
+          // Only once they have typed something. Marking a field you have not reached yet
+          // as wrong is the form shouting at somebody for not having finished it.
+          error={phone.length > 0 && !phoneE164 ? t("phoneInvalid") : null}
+        >
           <TextInput
             type="tel"
             name="phone"
             autoComplete="tel"
             inputMode="tel"
+            required
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />

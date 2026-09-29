@@ -65,7 +65,8 @@
     "nameLabel": "Full name",
     "nameHint": "What volunteers see when you're matched. No phone numbers or links.",
     "phoneLabel": "Phone number",
-    "phoneHint": "Optional. We confirm it by text later, before anybody is given it."
+    "phoneHint": "We confirm it by text before anybody is given it. Volunteers are reached by text when somebody nearby needs help.",
+    "phoneInvalid": "That doesn't look like a US mobile number."
   },
   "account": {
     "title": "Your account",
