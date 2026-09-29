@@ -251,8 +251,70 @@ async function handleAuth(req, res, url, body) {
       return json(200, sessionFor({ id: rows[0][0], phone: rows[0][1], email }));
     }
 
+    // Linking a phone to the account already signed in. This is the branch the join flow now
+    // uses, and it is the whole fix: the number lands on the CURRENT user instead of
+    // find-or-creating one keyed on the phone, which is how a member ended up with two
+    // accounts -- one from email or Google, one from their own phone number.
+    if (parsed.type === "phone_change") {
+      const claims = verifyJwt((req.headers.authorization ?? "").replace(/^Bearer /, ""));
+      if (!claims?.sub) return json(401, { message: "invalid claim: missing sub" });
+
+      const wanted = String(parsed.phone ?? "");
+
+      const taken = await sql(
+        `select id::text from auth.users where phone = ${quote(wanted)} and id <> ${quote(claims.sub)}`,
+      );
+      if (taken.length) {
+        return json(422, { error_code: "phone_exists", message: "Phone number already registered by another user" });
+      }
+
+      const rows = await sql(
+        `update auth.users
+            set phone = ${quote(wanted)},
+                phone_confirmed_at = coalesce(phone_confirmed_at, now()),
+                updated_at = now()
+          where id = ${quote(claims.sub)}
+        returning id::text, coalesce(phone, ''), coalesce(email, '')`,
+      );
+      if (!rows.length) return json(404, { message: "User not found" });
+
+      console.log(`  [auth shim] linked ${wanted} to existing user ${rows[0][0]}`);
+      return json(200, sessionFor({ id: rows[0][0], phone: rows[0][1], email: rows[0][2] }));
+    }
+
+    // No session: signing IN by phone, which is a legitimate path and unchanged.
     const user = await findOrCreateUser(parsed.phone);
     return json(200, sessionFor(user));
+  }
+
+  // supabase.auth.updateUser({ phone }) lands here. GoTrue does NOT write the number yet -- it
+  // sends a code and waits for verifyOtp({ type: 'phone_change' }). Modelling that matters: the
+  // whole point of the linking fix is that the phone attaches to the SIGNED-IN user rather than
+  // signing them in as a different one, and a shim that wrote it immediately would let a broken
+  // client pass locally.
+  if (route === "/user" && req.method === "PUT") {
+    const claims = verifyJwt((req.headers.authorization ?? "").replace(/^Bearer /, ""));
+    if (!claims?.sub) return json(401, { message: "invalid claim: missing sub" });
+
+    const rows = await sql(`select id::text, coalesce(phone, '') from auth.users where id = ${quote(claims.sub)}`);
+    if (!rows.length) return json(404, { message: "User not found" });
+
+    if (parsed.phone) {
+      const wanted = String(parsed.phone);
+
+      // GoTrue refuses a number already on another account rather than moving it. Spec point:
+      // "If a phone number already belongs to another account, stop the process."
+      const taken = await sql(
+        `select id::text from auth.users where phone = ${quote(wanted)} and id <> ${quote(claims.sub)}`,
+      );
+      if (taken.length) {
+        return json(422, { error_code: "phone_exists", message: "Phone number already registered by another user" });
+      }
+
+      console.log(`  [auth shim] phone_change code for ${wanted} is ${TEST_OTP}`);
+    }
+
+    return json(200, userObject({ id: rows[0][0], phone: rows[0][1] }));
   }
 
   if (route === "/user" && req.method === "GET") {
