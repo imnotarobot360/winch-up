@@ -73,8 +73,7 @@
       "failed": "Ese inicio de sesión no se completó. Inténtelo de nuevo o use su correo y contraseña.",
       "continueWith": {
         "apple": "Continuar con Apple",
-        "google": "Continuar con Google",
-        "facebook": "Continuar con Facebook"
+        "google": "Continuar con Google"
       }
     }
   },

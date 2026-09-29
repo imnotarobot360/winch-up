@@ -1,7 +1,18 @@
 import "server-only";
 
-/** The three the spec asks for, in the order the design reference draws them. */
-export const SOCIAL_PROVIDERS = ["apple", "google", "facebook"] as const;
+/**
+ * The providers this app offers, in the order the design reference draws them.
+ *
+ * FACEBOOK WAS REMOVED on 2026-09-29, by the owner's decision. It is deliberately absent from
+ * this list rather than merely left unconfigured, so that enabling it in the Supabase dashboard
+ * — by accident or by a future hand — does not make a button appear that nobody intended.
+ * The list is the app's answer to "what do we offer"; the dashboard only answers "is it usable".
+ *
+ * The cost of the original plan was never the code: Meta needs App Review before the button
+ * works for anyone but the developer, and possibly Business Verification on top. Google and
+ * email/password both work, so nobody is blocked from joining.
+ */
+export const SOCIAL_PROVIDERS = ["apple", "google"] as const;
 export type SocialProvider = (typeof SOCIAL_PROVIDERS)[number];
 
 /**

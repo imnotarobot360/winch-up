@@ -73,8 +73,7 @@
       "failed": "That sign-in did not complete. Try again, or use your email and password.",
       "continueWith": {
         "apple": "Continue with Apple",
-        "google": "Continue with Google",
-        "facebook": "Continue with Facebook"
+        "google": "Continue with Google"
       }
     }
   },

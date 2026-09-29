@@ -2,10 +2,39 @@
 
 Written 2026-09-28.
 
+## Status, 2026-09-29
+
+| provider | state |
+|---|---|
+| **Google** | **LIVE** — configured, consent screen published, account linking verified |
+| **Apple** | not started; needs a paid Apple Developer membership |
+| ~~Facebook~~ | **removed** by the owner — see below |
+
+Auth runs on a Supabase **custom domain, `auth.winch-up.com`**, so every OAuth redirect URI
+here uses that host and not the project's `*.supabase.co` one. That is what puts a branded
+domain on the consent screen, and it also keeps verification-email links off a hostname that
+reads like phishing.
+
+### Facebook was removed, not deferred
+
+`SOCIAL_PROVIDERS` in `lib/auth/social-providers.ts` lists Apple and Google only. It is absent
+from that list rather than merely left unconfigured, so enabling it in the Supabase dashboard —
+by accident or by a future hand — cannot make a button appear that nobody intended.
+
+The blocker was never code. Meta requires **App Review** before the button works for anyone but
+the developer, and possibly Business Verification on top; the submission form also kept
+reporting saved fields as missing. It buys one more sign-in button while Google and
+email/password both work, so it was not worth the cost.
+
+Two artefacts from that attempt are still useful and were kept:
+`public/brand/icon-1024-tight.png` (the project had no 1024px square icon, and any app store
+will want one) and `/data-deletion`, which is a genuinely good public page to have regardless.
+
 ## The short version
 
-The app side is done and **inert**. Sign-in and sign-up render Apple, Google and Facebook
-buttons *only for providers that are actually configured in Supabase*, discovered at runtime.
+The app side is done. Sign-in and sign-up render Apple and Google buttons *only for providers
+that are actually configured in Supabase*, discovered at runtime — so Google appears and Apple
+does not, without either being named in a page.
 Nothing is configured, so today nothing renders and the pages look exactly as they did.
 
 The moment you enable a provider in the Supabase dashboard, its button appears. **No deploy, no
@@ -52,28 +81,13 @@ not asked to sign anything yet, exactly as now. See `docs/membership-agreement.m
    application**.
 2. Authorised redirect URI — this is the **Supabase** callback, not the app's:
    ```
-   https://icpwyepfwkguaocbkawe.supabase.co/auth/v1/callback
+   https://auth.winch-up.com/auth/v1/callback
    ```
 3. OAuth consent screen: app name, support email (`help@winch-up.com`), and
    `winch-up.com` as an authorised domain.
 4. Supabase → **Authentication → Providers → Google** → paste the client ID and secret, enable.
 
 Google is the easiest of the three and needs no review for basic email/profile scopes.
-
-## Facebook
-
-1. Meta for Developers → **Create App** → *Consumer* → add **Facebook Login**.
-2. Valid OAuth Redirect URI: the same Supabase callback as above.
-3. Supabase → **Authentication → Providers → Facebook** → App ID and App Secret, enable.
-
-**Expect the A2P problem again.** A Meta app starts in Development mode and only works for
-accounts listed as developers or testers. Public use of the `email` permission needs **App
-Review**, which takes days and asks for a screencast and a privacy policy URL. Use
-`https://winch-up.com/privacy`, which is live and real.
-
-Until that review passes, the Facebook button will work for you and fail for everybody else —
-the same shape of silent failure as the 10DLC campaign, and worth remembering before announcing
-it.
 
 ## Apple
 
@@ -96,8 +110,9 @@ registered in Apple's console, so add `winch-up.com` and the Resend sending iden
 every welcome email to an Apple member bounces silently.
 
 **If you ever ship the iOS app** (spec §9): Apple requires Sign in with Apple to be offered
-wherever you offer Google or Facebook login. Shipping the other two without it is a review
-rejection.
+wherever you offer any other social login. Google is live, so shipping an iOS app without
+Apple sign-in is a review rejection — which is the main reason Apple is still on the list at
+all.
 
 ## Account linking, and the trap the spec names
 
@@ -107,7 +122,7 @@ Supabase links a new provider identity to an existing user when the email matche
 verified**. The setting that governs this is in **Authentication → Providers**; leave email
 confirmation ON, which it currently is (`mailer_autoconfirm: false`).
 
-If it were off, anybody could create a Facebook account with your email address and land inside
+If it were off, anybody could create a Google account with your email address and land inside
 your Winch Up account. That is the account-takeover route §8 is warning about, and the defence
 is a checkbox that is already set correctly — worth not un-setting.
 
@@ -122,7 +137,7 @@ The local auth shim implements `/auth/v1/settings`, so you can see the buttons a
 without a single real OAuth client:
 
 ```bash
-LOCAL_SOCIAL_PROVIDERS=google,apple,facebook npm run stack
+LOCAL_SOCIAL_PROVIDERS=google,apple npm run stack
 ```
 
 The buttons then render and start a flow the shim cannot finish, which is the point: it
@@ -131,9 +146,12 @@ the shipped state, which is no buttons at all.
 
 ## What is NOT done
 
-- No provider is configured, so none of this has ever run against a real OAuth handshake.
+- **Apple** is not configured and has never run against a real OAuth handshake. Google has:
+  configured, published, and account linking verified against an existing account.
 - Spec §10 asks that no provider be marked operational until the full registration and waiver
-  path is tested. None is marked operational, because none is enabled.
+  path is tested. Google passes that today only in the trivial sense — no agreement is
+  published, so the waiver step is a pass-through. It needs re-testing once the attorney's text
+  is live.
 - Account **linking** has no UI. Supabase links matching verified emails by itself; a member who
   signs in with a provider using a *different* address gets a second account, and merging the
   two is a manual database job today.

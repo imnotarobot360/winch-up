@@ -120,16 +120,9 @@ function ProviderMark({ provider }: { provider: SocialProvider }) {
     );
   }
 
-  if (provider === "facebook") {
-    return (
-      <svg {...common} fill="currentColor">
-        <path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0 0 22 12z" />
-      </svg>
-    );
-  }
-
   // Google's mark is multi-colour by brand guideline and must not be recoloured, so it is the
-  // one exception to currentColor here.
+  // one exception to currentColor here. It is also the fallback branch: SOCIAL_PROVIDERS has
+  // exactly two members, so anything that is not Apple is Google.
   return (
     <svg {...common}>
       <path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.9h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.4z" />
