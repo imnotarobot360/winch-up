@@ -184,6 +184,17 @@ export function MeDashboard() {
         >
           {t("goJoin")}
         </Link>
+
+        {/* This branch covers TWO different people -- signed out, and signed in with no
+            responder profile yet -- and only the second can use a settings link. They are the
+            ones who need it most: no profile means no profile card further down, which is the
+            other place it appears, so without this they have no route to /account at all and
+            therefore no route to deleting their account. */}
+        {signedIn ? (
+          <Link href="/account" className="inline-block text-base underline underline-offset-4">
+            {t("accountSettings")}
+          </Link>
+        ) : null}
       </main>
     );
   }
@@ -474,6 +485,16 @@ export function MeDashboard() {
         </p>
         <Link href="/join" className="text-base underline underline-offset-4">
           {t("editProfile")}
+        </Link>
+
+        {/* /account was reachable from nothing in the app's navigation -- only from its own
+            sub-pages, a notification deep link, and the waiver decline path. So a member could
+            not find their own settings, their rigs, their notification preferences, or the
+            button that deletes their account. Same failure as /welcome: every page rendered,
+            every link resolved, and the route in was missing.
+            Found while writing /data-deletion, because the instructions there have to be true. */}
+        <Link href="/account" className="text-base underline underline-offset-4">
+          {t("accountSettings")}
         </Link>
       </Card>
 

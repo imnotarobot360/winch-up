@@ -42,6 +42,15 @@ export default async function PrivacyPage({
       <article className="whitespace-pre-wrap text-base leading-relaxed">
         {t("privacyBody", { entity: LEGAL_ENTITY })}
       </article>
+
+      {/* Linked, not orphaned. /welcome was built, deployed and reachable from nothing for two
+          days; a page nobody can navigate to is a page nobody sees. This one also has to be
+          findable by a Meta reviewer checking the Data Deletion URL from a logged-out browser. */}
+      <p className="border-t border-line pt-5 text-base">
+        <Link href="/data-deletion" className="font-semibold underline underline-offset-4">
+          {t("deletionLink")}
+        </Link>
+      </p>
     </main>
   );
 }

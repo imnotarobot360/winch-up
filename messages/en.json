@@ -350,7 +350,8 @@
     "unverifiedBody": "An admin has not checked your profile. That does not stop you helping anyone — it just means your offers do not carry a verified badge yet.",
     "myRequestsTitle": "My recoveries",
     "myRequestHelper": "{name} is coming",
-    "myRequestOffers": "{count, plural, one {# volunteer has offered — pick one} other {# volunteers have offered — pick one}}"
+    "myRequestOffers": "{count, plural, one {# volunteer has offered — pick one} other {# volunteers have offered — pick one}}",
+    "accountSettings": "Account settings"
   },
   "board": {
     "title": "Open board",
@@ -1239,7 +1240,8 @@
     "smsTermsBody": "{entity}, trading as Winch Up, sends text messages to volunteers who have signed up and confirmed a mobile number.\n\nWHAT WE SEND. A one-time code to confirm your number, and call-outs when somebody needs recovery help near you. Message frequency varies and depends on how many recoveries happen in your area.\n\nCOST. Message and data rates may apply. Winch Up does not charge for these messages; your mobile carrier may.\n\nHOW TO STOP. Reply STOP to any message to stop receiving them. You will get one confirmation and nothing after that. Reply START to begin again.\n\nHELP. Reply HELP for help, or email help@winch-up.com.\n\nCARRIERS. Mobile carriers are not liable for delayed or undelivered messages.\n\nSpanish speakers may reply BAJA to stop and AYUDA for help.",
     "unreviewedBanner": "Not reviewed by an attorney",
     "unreviewedExplainer": "This describes how Winch Up actually handles your information today. It is accurate to the software, but it has not been reviewed by a lawyer.",
-    "unreviewedDocExplainer": "These are the rules Winch Up actually runs on, and the description is accurate to how the app works. It has not been reviewed by a lawyer."
+    "unreviewedDocExplainer": "These are the rules Winch Up actually runs on, and the description is accurate to how the app works. It has not been reviewed by a lawyer.",
+    "deletionLink": "How to delete your account and your data"
   },
   "privacyNote": {
     "phone": "Your phone number is never shown publicly. It goes only to the volunteer who takes your request.",
@@ -2049,5 +2051,38 @@
       "colRef": "Reference",
       "viewingAudited": "Opening this list is recorded in the audit log."
     }
+  },
+  "dataDeletion": {
+    "title": "Delete your Winch Up account",
+    "intro": "You can delete your account and personal information at any time, from inside the app. This page explains how, and exactly what is removed.",
+    "back": "Back",
+    "howHeading": "How to delete your account",
+    "steps": [
+      "Sign in at winch-up.com.",
+      "Open the Profile tab, then “Account settings”.",
+      "Choose “Delete my account” and confirm.",
+      "Your account is removed immediately and you are signed out."
+    ],
+    "blockedHeading": "One thing will stop it",
+    "blockedBody": "You cannot delete your account while you are in the middle of a recovery — either one you asked for, or one you agreed to help with. Deleting mid-recovery would strand the other person, who may be the one stuck. Cancel or complete it first, then delete.",
+    "removedHeading": "What is removed",
+    "removedItems": [
+      "Your account and sign-in details.",
+      "Your name, phone number and email address.",
+      "Your profile, your home area and any position you shared.",
+      "Your vehicles, your equipment list and any photos of your rig.",
+      "Your membership record."
+    ],
+    "keptHeading": "What is kept, and why",
+    "keptWhy": "A few records of what happened survive, with your identity removed from them. They no longer name you or point back to you:",
+    "keptItems": [
+      "The record that a recovery took place, with your name, number and exact location stripped out.",
+      "Safety and moderation records, so a pattern of harm cannot be erased by deleting an account.",
+      "Administrative audit entries, which keep what was done but not who did it."
+    ],
+    "noAccessHeading": "If you cannot sign in",
+    "noAccessBody": "If you have lost access to your account and cannot delete it yourself, email us and we will delete it for you. Write from the address on the account if you can, so we can tell it is you:",
+    "supportEmail": "help@winch-up.com",
+    "privacyLink": "Read the full Privacy Policy"
   }
 }

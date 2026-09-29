@@ -132,7 +132,12 @@ test.describe("the notifications entry point", () => {
     // pressSequentially, not fill: on WebKit fill() on one field clears its sibling.
     await page.getByLabel(/email|correo/i).pressSequentially("admin@winchup.test");
     await page.getByLabel(/password|contraseña/i).pressSequentially("recovery-demo-2026");
-    await page.getByRole("button", { name: /^sign in$|^entrar$/i }).click();
+    // Wait for it to ENABLE first. The button is disabled until the form validates the
+    // typed values, and on a cold compile the click can land before React has registered
+    // them -- which times out against a disabled button and reads as a broken sign-in.
+    const submit = page.getByRole("button", { name: /^sign in$|^entrar$/i });
+    await expect(submit).toBeEnabled({ timeout: 20_000 });
+    await submit.click();
     await page.waitForURL((url) => !url.pathname.endsWith("/signin"), { timeout: 20_000 });
 
     await page.goto("/");
@@ -148,5 +153,55 @@ test.describe("the notifications entry point", () => {
     await expect(page).toHaveURL(/\/notifications$/);
     await expect(page.getByRole("heading", { name: /notifications|notificaciones/i }))
       .toBeVisible();
+  });
+});
+
+
+/**
+ * /account is reachable from the app, for a member with NO responder profile.
+ *
+ * It was reachable from nothing. Only from its own sub-pages, a notification deep link, and the
+ * waiver decline path -- so a member could not find their settings, their rigs, their
+ * notification preferences, or the button that deletes their account. Same failure as /welcome:
+ * every page rendered, every link resolved, and the route in did not exist.
+ *
+ * The crawl above cannot catch it. It runs signed out, and /account is on MEMBERS_ONLY, which
+ * is allowed to bounce to /signin -- so a members-only page with no route into it passes.
+ *
+ * NO RESPONDER PROFILE ON PURPOSE. The first fix put the link inside the profile card on /me,
+ * which only renders for members who have one. admin@winchup.test does not, so it landed in the
+ * other branch entirely and the link was still missing for exactly the people most likely to
+ * want it. Using an account with a profile here would have passed and proved nothing.
+ */
+test.describe("account settings are reachable", () => {
+  test("a member with no responder profile can reach /account from /me", async ({ page }) => {
+    await page.goto("/signin");
+    // pressSequentially, not fill: on WebKit fill() on one field clears its sibling.
+    await page.getByLabel(/email|correo/i).pressSequentially("admin@winchup.test");
+    await page.getByLabel(/password|contraseña/i).pressSequentially("recovery-demo-2026");
+    // Wait for it to ENABLE first. The button is disabled until the form validates the
+    // typed values, and on a cold compile the click can land before React has registered
+    // them -- which times out against a disabled button and reads as a broken sign-in.
+    const submit = page.getByRole("button", { name: /^sign in$|^entrar$/i });
+    await expect(submit).toBeEnabled({ timeout: 20_000 });
+    await submit.click();
+    await page.waitForURL((url) => !url.pathname.endsWith("/signin"), { timeout: 20_000 });
+
+    await page.goto("/me");
+
+    // The precondition: this really is the no-profile branch. If this account ever gains a
+    // responder profile the assertion fails and says so, rather than the test passing for the
+    // wrong reason from the profile card instead.
+    await expect(page.getByRole("link", { name: /confirm my number|confirmar mi/i }))
+      .toBeVisible({ timeout: 20_000 });
+
+    const settings = page.getByRole("link", { name: /account settings|configuración de la cuenta/i });
+    await expect(settings).toBeVisible();
+
+    await settings.click();
+    await expect(page).toHaveURL(/\/account$/);
+
+    // And the thing the route exists for: deleting your account.
+    await expect(page.getByText(/delete your account|eliminar su cuenta/i).first()).toBeVisible();
   });
 });
