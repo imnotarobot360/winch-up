@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 
 import { Callout } from "@/components/ui/primitives";
 import type { SocialProvider } from "@/lib/auth/social-providers";
@@ -27,7 +27,6 @@ import { supabaseBrowser } from "@/lib/supabase/client";
  */
 export function SocialButtons({ providers }: { providers: SocialProvider[] }) {
   const t = useTranslations("auth.social");
-  const locale = useLocale();
   const [busy, setBusy] = useState<SocialProvider | null>(null);
   const [error, setError] = useState(false);
 
@@ -40,10 +39,17 @@ export function SocialButtons({ providers }: { providers: SocialProvider[] }) {
     const { error: oauthError } = await supabaseBrowser().auth.signInWithOAuth({
       provider,
       options: {
-        // The shared callback. `next` carries the member back to their language afterwards --
-        // the callback lives outside [locale] because the redirect URL is registered once in
-        // the Supabase dashboard and has to be one fixed string.
-        redirectTo: `${window.location.origin}/auth/callback?next=/${locale}/me`,
+        // EXACTLY the URL the email flow uses, with no query string, and that is deliberate.
+        //
+        // Supabase matches redirect_to against an allowlist in its dashboard. The bare callback
+        // is already on it -- email verification has worked in production for days -- but an
+        // entry registered as an exact URL does not match that same URL carrying `?next=...`.
+        // Supabase then silently falls back to the Site URL, and the symptom is "Google
+        // sign-in sends me to the wrong page", with nothing in any log to explain it.
+        //
+        // Nothing needs to ride in the query string anyway: the callback sends everybody to
+        // /me, and next-intl resolves the language from its own cookie.
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 
