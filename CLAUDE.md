@@ -327,8 +327,12 @@ docs/                     decisions + runbooks
   for exactly this reason, and it costs the local per-IP request budget — see
   `scripts/local-stack/README.md`.
 - **A field an RPC has only just started returning is OPTIONAL in its TypeScript type.** The app
-  deploys on a push to main and the migrations go across by hand, so there is always a window
-  where the frontend is ahead of the schema. `data.team.length` on a database without
+  deploys on a push to main and so, since the Supabase GitHub integration was enabled, do the
+  migrations -- on 2026-09-30 the schema was live about 90 SECONDS after the push, while Vercel
+  was still building. That order is the safe one, schema ahead of frontend, and it is the
+  opposite of what this rule was written for. Keep the rule anyway: the integration can fail or
+  lag, a migration can be reverted while the deploy is not, and either puts the frontend ahead
+  of the schema again. `data.team.length` on a database without
   20260923001600 is a TypeError on the one page a stranded driver is watching — verified by
   pointing a build at the older RPC and loading `/r/<token>`: `Cannot read properties of
   undefined`, blank page. Type it `field?:`, read it through a `?? []`, and the same window
@@ -504,7 +508,7 @@ long done. Work since then has followed the owner's 16-phase spec:
 | 14 Security, privacy & safety | done — full review in `docs/security-review.md`; account deletion actually deletes now, retention exists, a claims check guards the copy |
 | 16 Deployment & production readiness | done — `/api/health`, CI on every push, env drift check, `docs/production-readiness.md`. What is left needs the owner's accounts, not code |
 | Universal membership | done — every member can ask for help and offer it; no separate volunteer account, no approval gate, the requester picks from offers |
-| Account & Security | **done and live in the repo** (2026-09-30) — `/account/security`: every sign-in method in one place, set or change a password, add or change a phone, connect or disconnect a provider, sign out everywhere. The rule it enforces is that nobody can remove their last way in. Email change is deliberately absent (see `docs/account-security.md`). **The migration was in production within ~90s of the push, before Vercel had finished building** -- probed 42501 for the exact name against PGRST202 for two near-miss names, so it is really there. Nobody applied it by hand, and ci.yml does not. Until that is explained, do not trust either belief: check with the probe rather than assuming a migration is applied OR that it is not |
+| Account & Security | **done and live in the repo** (2026-09-30) — `/account/security`: every sign-in method in one place, set or change a password, add or change a phone, connect or disconnect a provider, sign out everywhere. The rule it enforces is that nobody can remove their last way in. Email change is deliberately absent (see `docs/account-security.md`). **The migration applied itself**: it was in production ~90s after the push, before Vercel finished building, because the Supabase GitHub integration is enabled (owner confirmed 2026-09-30). Probe rather than assume either way -- 42501 for the exact function name against PGRST202 for a near-miss name is how that was established |
 | Recovery teams & group chat | **done and live** (2026-09-24) — `recovery_participants`, one thread per recovery for the whole team, per-participant unread and mute, notification settings screen, recovery SMS switched off, an offline send queue, Realtime broadcast over a polling floor. Migrations applied in production, but see the warning under Tests about what "verified" is worth |
 
 **Proven working in production**, not just built: a signed-in person files a request, the tick

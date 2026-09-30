@@ -38,6 +38,25 @@ jobs:
           node-version: 22
           cache: npm
 
+      # MATCH THE npm THE LOCKFILE WAS WRITTEN WITH.
+      #
+      # CI failed at npm ci on every push from 2026-09-23 to 2026-09-30 -- 44 runs, five days,
+      # unnoticed, because it fails before any of this project’s own code runs. The cause is not
+      # Node and not a broken lockfile:
+      #
+      #   npm error code EUSAGE
+      #   npm ci can only install packages when your package.json and package-lock.json are in sync
+      #   Missing: @swc/helpers@0.5.23 from lock file
+      #
+      # npm 11 writes this lockfile and accepts it; npm 10, which ships with the Node images
+      # here, rejects it. Reproduced by running npm@10 against a copy of package.json and
+      # package-lock.json alone, which is also the only way to see it from a machine that has
+      # npm 11 -- a local npm ci passes and tells you nothing.
+      #
+      # Pinned rather than regenerated with npm 10, so CI runs what the developer runs. The day
+      # that stops being npm 11, this line is the thing to change, and it will say so loudly.
+      - run: npm install -g npm@11
+
       - run: npm ci
 
       - run: npm run verify
@@ -69,6 +88,25 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      # MATCH THE npm THE LOCKFILE WAS WRITTEN WITH.
+      #
+      # CI failed at npm ci on every push from 2026-09-23 to 2026-09-30 -- 44 runs, five days,
+      # unnoticed, because it fails before any of this project’s own code runs. The cause is not
+      # Node and not a broken lockfile:
+      #
+      #   npm error code EUSAGE
+      #   npm ci can only install packages when your package.json and package-lock.json are in sync
+      #   Missing: @swc/helpers@0.5.23 from lock file
+      #
+      # npm 11 writes this lockfile and accepts it; npm 10, which ships with the Node images
+      # here, rejects it. Reproduced by running npm@10 against a copy of package.json and
+      # package-lock.json alone, which is also the only way to see it from a machine that has
+      # npm 11 -- a local npm ci passes and tells you nothing.
+      #
+      # Pinned rather than regenerated with npm 10, so CI runs what the developer runs. The day
+      # that stops being npm 11, this line is the thing to change, and it will say so loudly.
+      - run: npm install -g npm@11
 
       - run: npm ci
 

@@ -166,9 +166,27 @@ recovery notifications in staging.** `SMS_DRY_RUN=1` covers the second, and the 
 refuses demo data unless explicitly marked non-production, which covers the class of mistake
 where a test seed lands somewhere real.
 
-Until there is a staging project, the honest position is that `main` deploys to production and
-the safety net is the test suite plus the fact that migrations are applied by hand, deliberately,
-one paste at a time.
+Until there is a staging project, the honest position is that `main` deploys to production --
+**and so do the migrations.** The Supabase GitHub integration applies everything in
+`supabase/migrations` on a push to main, within about ninety seconds, before Vercel has
+finished building the frontend.
+
+**That removes the human gate this section used to call a safety net, and the paragraph said
+otherwise until 2026-09-30.** A migration merged is a migration in production; there is no
+paste, no pause and nobody reading it one more time on the way past. What is left is the test
+suite, the pgTAP suites, and CI -- and CI had been failing at `npm ci` for five days before
+anybody looked, which is the other half of the same lesson.
+
+What follows from that, concretely:
+
+- A migration is reviewed BEFORE the merge or not at all.
+- `docs/verify-which-migrations.sql` is still worth running after a deploy, because "the
+  integration applied it" is an assumption until something checks. The unauthenticated probe in
+  `docs/` -- 42501 for a function that exists and is gated, PGRST202 for one that does not --
+  costs nothing and needs no database password.
+- Rolling the application back does NOT roll the schema back. Vercel promotes a previous
+  deployment in one click; the database stays where the migration put it. Write migrations that
+  an older frontend can survive.
 
 ---
 
