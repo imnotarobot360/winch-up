@@ -190,9 +190,22 @@ jobs:
           # Belt and braces: nothing here should reach Twilio, and this makes certain of it.
           SMS_DRY_RUN: "1"
         run: |
-          NEXT_PUBLIC_SUPABASE_ANON_KEY="$(supabase status -o json | jq -r '.ANON_KEY')"
-          export NEXT_PUBLIC_SUPABASE_ANON_KEY
+          # BOTH keys, and the service-role one is not optional here.
+          #
+          # Every write path in this app goes through a server action holding the service role
+          # -- filing a request, resolving /r/<token>, signing the membership agreement -- and
+          # supabaseAdmin() THROWS when the key is missing. Giving the suite only the anon key
+          # cost a full run: 11 failures that read as three unrelated features being broken
+          # (the wizard never navigating, an unknown token showing "Something broke" instead of
+          # "We couldn t find that", the agreement never signing) and were one absent variable.
+          #
+          # Production renders that unknown-token page correctly, which is how the difference
+          # was placed in the environment rather than in the app.
+          NEXT_PUBLIC_SUPABASE_ANON_KEY="$(supabase status -o json | jq -r .ANON_KEY)"
+          SUPABASE_SERVICE_ROLE_KEY="$(supabase status -o json | jq -r .SERVICE_ROLE_KEY)"
+          export NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY
           test -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY" || { echo "no anon key from supabase status"; exit 1; }
+          test -n "$SUPABASE_SERVICE_ROLE_KEY" || { echo "no service role key from supabase status"; exit 1; }
           npm run test:e2e
 
       # AFTER the browser suite, for two reasons learned on the first run that got this far.
