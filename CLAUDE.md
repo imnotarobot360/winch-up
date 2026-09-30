@@ -418,6 +418,20 @@ docs/                     decisions + runbooks
   gone. Under-counting refuses a removal that might have been survivable; over-counting orphans
   an account. Guarded in three places on purpose: the button is not rendered, the handler
   refuses again, and GoTrue (and the local shim) refuse a last identity.
+- **A STUB THAT IS KINDER THAN PRODUCTION IS A BUG WITH A DELAY ON IT.** Three in one day,
+  2026-09-30, each passing locally and failing somewhere with a worse error: `auth.identities`
+  missing from the stubs entirely; then its `created_at` declared `not null default now()`
+  when the real column has NO default, so seeded rows landed NULL and GoTrue answered every
+  sign-in with "Database error querying schema" (20 specs timing out on page.waitForURL, cause
+  visible only in the auth container log); then `auth.mfa_factors.id` defaulted when GoTrue
+  mints it, so a suite that had passed for months errored the first time it ran on CI. When
+  adding anything to `scripts/local-stack/supabase-stubs.sql`, copy the real definition
+  including what it does NOT give you.
+- **Count exit codes, not just assertions, when running the suites by hand.** A pgTAP file that
+  ERRORS mid-way reports zero failing assertions -- pg_prove calls it "Dubious ... exited 3" and
+  the assertion tally looks perfect. The loop in the README passes `-v ON_ERROR_STOP=1` and
+  checks `$?` for exactly that reason. "885 assertions, 0 failing" was true on a run where a
+  whole suite had aborted.
 - **The local stack models `auth.identities` now, and the demo seed writes the rows GoTrue
   would write.** Same class of gap as `auth.mfa_factors`: without them a demo account has zero
   identities, so "Disconnect" fails for a provider plainly on screen and the last-identity

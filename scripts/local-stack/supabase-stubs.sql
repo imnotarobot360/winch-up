@@ -152,7 +152,11 @@ end
 $$;
 
 create table if not exists auth.mfa_factors (
-  id            uuid primary key default gen_random_uuid(),
+  -- NO DEFAULT, matching the real table, where GoTrue mints the id. A default here is the
+  -- third instance in one day of a stub being kinder than production and hiding a bug until
+  -- CI: auth.identities missing entirely, then its created_at defaulted, now this. Each one
+  -- passed locally and failed somewhere with a worse error message.
+  id            uuid primary key,
   user_id       uuid not null references auth.users (id) on delete cascade,
   friendly_name text,
   factor_type   auth.factor_type not null default 'totp',
