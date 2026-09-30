@@ -138,6 +138,42 @@ jobs:
             -f scripts/local-stack/mark-local.sql \
             -f supabase/seeds/demo.sql
 
+      # PROVE SIGN-IN WORKS BEFORE SPENDING TWENTY MINUTES FINDING OUT IT DOES NOT.
+      #
+      # The first run that got this far took 21 minutes to report 20 failures, every one a
+      # page.waitForURL timeout after a sign-in -- which is an expensive way to be told that
+      # signing in is broken. Nearly every spec signs in first, so this one call decides
+      # whether the rest of the job is worth running.
+      #
+      # It makes the exact request the sign-in form makes. On failure it prints GoTrue's own
+      # container log, because a 500 from this endpoint says "Database error querying schema"
+      # and nothing else -- the actual Postgres error only exists in that log.
+      - name: Can anybody sign in?
+        run: |
+          note() { echo "::error title=diag::$1"; }
+          KEY="$(supabase status -o json | jq -r .ANON_KEY)"
+
+          CODE=$(curl -s -o /tmp/grant.json -w '%{http_code}' \
+            -X POST 'http://127.0.0.1:54321/auth/v1/token?grant_type=password' \
+            -H "apikey: $KEY" -H 'content-type: application/json' \
+            -d '{"email":"mike@winchup.test","password":"recovery-demo-2026"}')
+
+          if [ "$CODE" = "200" ]; then
+            echo "sign-in works ($CODE)"
+            exit 0
+          fi
+
+          note "password grant returned $CODE"
+          note "body=$(head -c 300 /tmp/grant.json | tr -d '\n')"
+
+          for c in $(docker ps --format '{{.Names}}' | grep -i auth); do
+            note "container $c"
+            docker logs --tail 80 "$c" 2>&1 | grep -iE 'error|fatal|denied|null|panic' | tail -15 | while read -r line; do
+              note "$(echo "$line" | cut -c1-280)"
+            done
+          done
+
+          exit 1
       - name: Install browsers
         run: npx playwright install --with-deps chromium webkit
 
@@ -211,6 +247,15 @@ jobs:
             -d '{"email":"mike@winchup.test","password":"recovery-demo-2026"}')"
           note "token body=$(head -c 300 /tmp/grant.json | tr -d '\n')"
 
+          # GoTrue answered 500 "Database error querying schema", which is its way of saying a
+          # query against the auth schema failed while telling you nothing about which one. Its
+          # own container log carries the actual Postgres error and is the only place that does.
+          for c in $(docker ps --format "{{.Names}}" | grep -i auth); do
+            note "container $c"
+            docker logs --tail 60 "$c" 2>&1 | grep -iE "error|fatal|denied|null" | tail -12 | while read -r line; do
+              note "$(echo "$line" | cut -c1-280)"
+            done
+          done
           for f in test-results/*/error-context.md; do
             [ -e "$f" ] || continue
             note "$(basename "$(dirname "$f")"): $(tr '\n' ' ' < "$f" | head -c 400)"
