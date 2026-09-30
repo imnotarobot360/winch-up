@@ -388,6 +388,20 @@ docs/                     decisions + runbooks
   phone field would start Supabase's own SMS confirmation on top of the email one, and an
   unverified number is worse than none here -- the requester's phone is handed to whoever takes
   their recovery, so a number nobody proved they own is a volunteer calling a stranger.
+- **Verifying a phone while signed in must LINK it, not sign you in as it.** `signInWithOtp` and
+  `verifyOtp({type:'sms'})` authenticate the PHONE IDENTITY, so calling them from /join for somebody
+  who already had a session handed them a SECOND account: the responder profile attached to the
+  phone account while their waiver signature, vehicles and requests stayed on the first. It
+  looked perfect from the UI -- a code arrives, it is accepted, the profile saves. With a
+  session it is `updateUser({phone})` + `verifyOtp({type:'phone_change'})`, which attaches the
+  number to the CURRENT user; `signInWithOtp` stays for somebody with no session, which is a
+  legitimate way back in. A number already on another account must be REFUSED (`phone_exists`,
+  422) and never silently moved -- moving it is the account-takeover version of this feature.
+  Neither pgTAP nor Playwright can see this: the duplicate is created above the database by the
+  auth API, and the UI is identical either way. `npm run linking:check` counts `auth.users`
+  across the calls, which is the only thing that shows it. Three duplicates from before the fix
+  were found and deleted in production on 2026-09-30; `docs/check-accounts.sql` is the standing
+  check, editor-safe because the owner's psql access does not work.
 - **Adding a defaulted parameter OVERLOADS a function, it does not replace it.** Both signatures
   then exist and PostgREST cannot choose between them for a call that matches the shorter one --
   the feed starts failing with an ambiguity error that says nothing about the change. Drop the old
