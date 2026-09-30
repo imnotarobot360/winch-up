@@ -46,8 +46,22 @@ test.describe("public pages", () => {
       expect(text.trim().length, `${page_.path} has no visible content`).toBeGreaterThan(20);
 
       // Hydration mismatches and missing translations surface here and nowhere else.
+      //
+      // The third exclusion is Next's own prefetch giving up: it speculatively fetches the RSC
+      // payload for every link in view, and on WebKit under CI load those requests abort with
+      // "TypeError: Load failed". The message says what happens next -- "Falling back to
+      // browser navigation" -- and the framework does exactly that, so the link still works
+      // and the page is fine. It failed twice on one CI run, once as a failure and once as a
+      // flake, always on the home page, which has the most links in view.
+      //
+      // Narrow on purpose: it matches that one framework message and nothing else, so a
+      // genuine network error still fails the test. The thing this assertion exists to catch
+      // -- a hydration mismatch or a missing translation -- does not speak in these words.
       const real = errors.filter(
-        (e) => !e.includes("favicon") && !e.includes("Download the React DevTools"),
+        (e) =>
+          !e.includes("favicon") &&
+          !e.includes("Download the React DevTools") &&
+          !e.includes("Failed to fetch RSC payload"),
       );
       expect(real, `${page_.path} logged console errors`).toEqual([]);
     });
