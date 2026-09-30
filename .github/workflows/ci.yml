@@ -174,12 +174,58 @@ jobs:
       - name: Database suites (pgTAP)
         run: supabase test db
 
+      # WRITE THE DIAGNOSIS WHERE IT CAN BE READ WITHOUT ADMIN RIGHTS.
+      #
+      # Job logs need admin on this repository and artifacts are no better, so a failure here
+      # has so far been a wall: "exit code 1", nothing else. Annotations are the exception --
+      # they come back from the public API, which is how the Playwright github reporter's
+      # failures were legible at all. `::error::` makes anything an annotation, so this step
+      # turns the few facts that actually separate the likely causes into ones.
+      #
+      # It is deliberately about STATE, not about the test names: 20 specs timing out on
+      # page.waitForURL after a sign-in says "sign-in did not work" and nothing about why. The
+      # database either has the demo accounts or it does not; the app either got an anon key or
+      # it did not. Those two answers pick the branch.
+      - name: Say what went wrong, as annotations
+        if: failure()
+        run: |
+          DB="postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+          note() { echo "::error title=diag::$1"; }
+
+          # Re-derived here: the key the suite used lived only in that step s own shell.
+          NEXT_PUBLIC_SUPABASE_ANON_KEY="$(supabase status -o json | jq -r .ANON_KEY)"
+
+          note "users=$(psql "$DB" -At -c 'select count(*) from auth.users' 2>&1 | tr -d '\n')"
+          note "demo users=$(psql "$DB" -At -c "select count(*) from auth.users where email like '%@winchup.test'" 2>&1 | tr -d '\n')"
+          note "identities=$(psql "$DB" -At -c 'select coalesce(string_agg(provider || chr(61) || n, chr(44)), chr(45)) from (select provider, count(*)::text n from auth.identities group by provider) x' 2>&1 | tr -d '\n')"
+          note "password verifies=$(psql "$DB" -At -c "select coalesce((select encrypted_password = extensions.crypt('recovery-demo-2026', encrypted_password) from auth.users where email = 'mike@winchup.test'), false)" 2>&1 | tr -d '\n')"
+          note "responders=$(psql "$DB" -At -c 'select count(*) from public.responders' 2>&1 | tr -d '\n')"
+          note "anon key length=${#NEXT_PUBLIC_SUPABASE_ANON_KEY}"
+
+          # What GoTrue itself says to the exact call the sign-in form makes. This is the one
+          # that distinguishes "the seed is wrong" from "the app never reached Supabase".
+          note "token grant=$(curl -s -o /tmp/grant.json -w '%{http_code}' \
+            -X POST 'http://127.0.0.1:54321/auth/v1/token?grant_type=password' \
+            -H "apikey: $NEXT_PUBLIC_SUPABASE_ANON_KEY" \
+            -H 'content-type: application/json' \
+            -d '{"email":"mike@winchup.test","password":"recovery-demo-2026"}')"
+          note "token body=$(head -c 300 /tmp/grant.json | tr -d '\n')"
+
+          for f in test-results/*/error-context.md; do
+            [ -e "$f" ] || continue
+            note "$(basename "$(dirname "$f")"): $(tr '\n' ' ' < "$f" | head -c 400)"
+          done
+
       - name: Keep the traces when something fails
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: playwright-report/
+          # playwright-report/ is the HTML reporter's directory and CI uses the github
+          # reporter, so it has never existed here -- every failed run logged "No files were
+          # found" and uploaded nothing. test-results/ is where the traces and the
+          # error-context.md files actually are, and those are the useful ones anyway.
+          path: test-results/
           retention-days: 7
 
   # ---------------------------------------------------------------------------
