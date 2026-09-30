@@ -319,14 +319,29 @@ values
 --   insert into auth.identities (provider_id, user_id, provider, identity_data)
 --   values ('google-test', '<user id>', 'google', '{"sub":"google-test"}');
 
-insert into auth.identities (provider_id, user_id, provider, identity_data)
-select u.email, u.id, 'email', jsonb_build_object('sub', u.id::text, 'email', u.email)
+-- created_at AND updated_at ARE SET EXPLICITLY, and that is not tidiness.
+--
+-- auth.identities.created_at has NO DEFAULT on a real Supabase database. Leaving it out writes
+-- NULL, and GoTrue scans that column into a *time.Time, so every sign-in then dies with
+--
+--   error finding user: unable to fetch records: sql: Scan error on column index 0,
+--   name "created_at": unsupported Scan, storing driver.Value type <nil> into type *time.Time
+--
+-- which reaches the browser as a 500 saying only "Database error querying schema". That cost a
+-- full CI run: 20 specs timing out on page.waitForURL after a sign-in, with the accounts
+-- present, the password hash verifying and the keys correct.
+--
+-- It was invisible locally because scripts/local-stack/supabase-stubs.sql declared the column
+-- `not null default now()` -- kinder than the real thing, and therefore wrong. The stub now
+-- matches production, so the next person who forgets these two columns finds out here.
+insert into auth.identities (provider_id, user_id, provider, identity_data, created_at, updated_at)
+select u.email, u.id, 'email', jsonb_build_object('sub', u.id::text, 'email', u.email), now(), now()
   from auth.users u
  where u.email is not null and u.email <> ''
 on conflict (provider_id, provider) do nothing;
 
-insert into auth.identities (provider_id, user_id, provider, identity_data)
-select u.phone, u.id, 'phone', jsonb_build_object('sub', u.id::text, 'phone', u.phone)
+insert into auth.identities (provider_id, user_id, provider, identity_data, created_at, updated_at)
+select u.phone, u.id, 'phone', jsonb_build_object('sub', u.id::text, 'phone', u.phone), now(), now()
   from auth.users u
  where u.phone is not null and u.phone <> ''
 on conflict (provider_id, provider) do nothing;

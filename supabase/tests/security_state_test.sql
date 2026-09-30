@@ -49,16 +49,19 @@ from (values
 ) as v(id, email, phone, pw)
 on conflict (id) do nothing;
 
-insert into auth.identities (provider_id, user_id, provider, identity_data)
+-- Timestamps given explicitly: the real auth.identities has no default on created_at, and a
+-- NULL there is what GoTrue refuses to scan. The fixtures match production so they cannot
+-- quietly drift from what the seed has to do.
+insert into auth.identities (provider_id, user_id, provider, identity_data, created_at, updated_at)
 values
   ('google-sub-3', '50000003-0000-4000-8000-000000000003', 'google',
-   '{"sub":"google-sub-3","email":"sec-google@example.invalid"}'::jsonb),
+   '{"sub":"google-sub-3","email":"sec-google@example.invalid"}'::jsonb, now(), now()),
   -- GoTrue writes an 'email' identity for a password account too. It must NOT be counted or
   -- listed: it is not a "connected account" and counting it would double up with has_password.
   ('sec-both@example.invalid', '50000001-0000-4000-8000-000000000001', 'email',
-   '{"sub":"50000001-0000-4000-8000-000000000001","email":"sec-both@example.invalid"}'::jsonb),
+   '{"sub":"50000001-0000-4000-8000-000000000001","email":"sec-both@example.invalid"}'::jsonb, now(), now()),
   ('+15125550004', '50000004-0000-4000-8000-000000000004', 'phone',
-   '{"sub":"50000004-0000-4000-8000-000000000004","phone":"+15125550004"}'::jsonb)
+   '{"sub":"50000004-0000-4000-8000-000000000004","phone":"+15125550004"}'::jsonb, now(), now())
 on conflict do nothing;
 
 -- ---------------------------------------------------------------------------

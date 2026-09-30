@@ -181,8 +181,18 @@ create table if not exists auth.identities (
   identity_data   jsonb not null,
   provider        text not null,
   last_sign_in_at timestamptz,
-  created_at      timestamptz not null default now(),
-  updated_at      timestamptz not null default now(),
+  -- NULLABLE AND WITHOUT A DEFAULT, matching the real one, which is the whole point.
+  --
+  -- These were `not null default now()` for about six hours on 2026-09-30, and that kindness
+  -- cost a CI run. The demo seed inserted identity rows without timestamps; locally the default
+  -- filled them in and everything worked, while on real Supabase they landed NULL and GoTrue
+  -- refused to scan them -- every sign-in 500ing with "Database error querying schema", and 20
+  -- specs timing out on page.waitForURL with no hint as to why.
+  --
+  -- A stub that is more forgiving than production does not make local development easier. It
+  -- moves the failure somewhere with a worse error message and a slower feedback loop.
+  created_at      timestamptz,
+  updated_at      timestamptz,
   email           text generated always as (lower(identity_data ->> 'email')) stored,
   unique (provider_id, provider)
 );
