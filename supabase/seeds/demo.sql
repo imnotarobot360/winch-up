@@ -316,8 +316,13 @@ values
 --
 -- Add a social identity by hand when a connected-accounts flow needs one:
 --
---   insert into auth.identities (provider_id, user_id, provider, identity_data)
---   values ('google-test', '<user id>', 'google', '{"sub":"google-test"}');
+--   insert into auth.identities (provider_id, user_id, provider, identity_data,
+--                                created_at, updated_at)
+--   values ('google-test', '<user id>', 'google', '{"sub":"google-test"}', now(), now());
+--
+-- The timestamps are part of the example on purpose. Copying a version without them is what
+-- broke every sign-in on CI: created_at has no default on the real table, and GoTrue will not
+-- scan a NULL into it.
 
 -- created_at AND updated_at ARE SET EXPLICITLY, and that is not tidiness.
 --
