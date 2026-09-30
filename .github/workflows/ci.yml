@@ -231,9 +231,12 @@ jobs:
           code=$?
           echo "$out"
           if [ $code -ne 0 ]; then
-            echo "$out" | tail -25 | while read -r line; do
-              echo "::error title=pgtap::$(echo "$line" | cut -c1-280)"
-            done
+            # The FAILING lines, not the last lines. tail -25 caught the end of a run whose
+            # suites were passing and told us nothing -- pg_prove prints its verdict in a few
+            # specific shapes, so ask for those.
+            echo "$out"               | grep -iE "not ok|^Failed|Result: FAIL|ERROR:|FATAL:|does not exist|Files=|Wstat|failed [0-9]"               | head -25               | while read -r line; do
+                  echo "::error title=pgtap::$(echo "$line" | cut -c1-280)"
+                done
           fi
           exit $code
 
