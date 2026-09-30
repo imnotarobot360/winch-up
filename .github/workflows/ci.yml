@@ -138,12 +138,6 @@ jobs:
             -f scripts/local-stack/mark-local.sql \
             -f supabase/seeds/demo.sql
 
-      # 885 assertions across nineteen suites, which have never run on CI either. They are the
-      # cheapest thing in this file and they cover the rules a browser cannot see -- RLS, the
-      # dispatch state machine, what account deletion scrubs.
-      - name: Database suites (pgTAP)
-        run: supabase test db
-
       - name: Install browsers
         run: npx playwright install --with-deps chromium webkit
 
@@ -164,6 +158,21 @@ jobs:
           export NEXT_PUBLIC_SUPABASE_ANON_KEY
           test -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY" || { echo "no anon key from supabase status"; exit 1; }
           npm run test:e2e
+
+      # AFTER the browser suite, for two reasons learned on the first run that got this far.
+      #
+      # It failed here in five seconds -- too fast to be assertions, so it is the runner not
+      # starting -- and being second in line it took the browser suite down with it, which is
+      # the thing this job exists to run. Order it last and a pgTAP problem costs pgTAP only.
+      #
+      # The other reason is quieter: `supabase test db` is entitled to reset the database it
+      # runs against, and the demo accounts loaded above are what every browser spec signs in
+      # with. Running it first risks pulling the rug out from under the suite in a way that
+      # would look like a broken app.
+      #
+      # 885 assertions across nineteen suites, none of which have ever run on CI.
+      - name: Database suites (pgTAP)
+        run: supabase test db
 
       - name: Keep the traces when something fails
         if: failure()
