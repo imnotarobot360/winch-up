@@ -42,6 +42,18 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
   ],
 
+  // A CEILING ON THE WHOLE RUN, so a hang is reported rather than executed.
+  //
+  // On 2026-09-30 a CI run that had passed in 5 minutes the time before sat for 42 and was
+  // killed by the job timeout. A job killed by the runner produces NOTHING -- no report, no
+  // annotations, no artifact -- so there was no way to see which test hung. Playwright hitting
+  // its own ceiling stops the run and still reports, which is the difference between a
+  // diagnosis and another twenty-five minute guess.
+  //
+  // 25 minutes against a 5-minute suite and a 45-minute job: loose enough that a slow runner
+  // is not a failure, tight enough to leave time for the report and the pgTAP step after it.
+  globalTimeout: process.env.CI ? 25 * 60_000 : undefined,
+
   timeout: 60_000,
 
   // One, not "as many as there are cores". This machine has 20, and Playwright's default put
