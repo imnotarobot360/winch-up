@@ -62,23 +62,32 @@ jobs:
       - run: npm run verify
 
   # ---------------------------------------------------------------------------
-  # The browser suite: 168 tests across android, iphone, tablet and desktop, on Chromium and
-  # real WebKit.
+  # The browser suite, against a Supabase this runner starts and throws away.
   #
-  # It drives the app against whatever Supabase the build points at, and it is read-only by
-  # design -- nothing in e2e/ files a request or writes a row, because the project it points at
-  # is production. It runs here only when the two public keys are present as repository secrets;
-  # without them the pages that need data render empty and the suite would fail for the wrong
-  # reason.
+  # IT USED TO BE GATED ON REPOSITORY SECRETS AND HAS THEREFORE NEVER RUN. The gate checked for
+  # NEXT_PUBLIC_SUPABASE_URL, the secret was never added, and the job went green having skipped
+  # every test in it -- a passing tick that meant nothing, for months.
   #
-  # To turn it on, add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY under
-  # Settings -> Secrets and variables -> Actions. Both are public values -- the anon key is
-  # shipped to every browser -- so this is not a secret in the usual sense, only a value.
+  # The obvious fix was to add the secrets. It is the wrong fix, twice over:
+  #
+  #   * The suite signs in as admin@ / mike@ / rosa@ / pending@winchup.test, which exist only in
+  #     supabase/seeds/demo.sql -- and that seed REFUSES to run against production on purpose.
+  #     Pointed at production the suite fails at the first sign-in screen.
+  #   * The header here used to claim the suite was read-only. It is not, and has not been since
+  #     the recovery-team work: it files requests, signs people up, posts to the community and
+  #     publishes membership agreements. Against production those are real rows, a real rate
+  #     limit, and stray accounts somebody has to go and delete by hand. Three were deleted on
+  #     2026-09-30.
+  #
+  # So the runner gets its OWN Supabase: real Postgres, real GoTrue, the full migration history
+  # and the demo seed. Nothing shared, nothing to leak, no secret to add, and the pgTAP suites
+  # -- 885 assertions that have also never run here -- come along for free.
   # ---------------------------------------------------------------------------
   browsers:
     name: end-to-end (4 viewports, 2 engines)
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # supabase start pulls images, then a production build, then the suite on one worker.
+    timeout-minutes: 45
     if: ${{ github.event_name == 'push' }}
 
     steps:
@@ -110,33 +119,51 @@ jobs:
 
       - run: npm ci
 
-      - name: Check whether this repository has been given the public Supabase values
-        id: config
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # Starts Postgres, GoTrue, PostgREST and Storage in this runner and applies every
+      # migration in supabase/migrations. Studio and the mail catcher are excluded because no
+      # human is going to look at them here.
+      - name: Start this runner's own Supabase
+        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector
+
+      # The demo accounts, loaded deliberately rather than by config.toml's seed list -- that
+      # list is reachable by `supabase db push --include-seed` and must stay reference-only.
+      # mark-local.sql first: an unmarked database calls itself production and refuses this.
+      - name: Load the demo data the suite signs in with
         run: |
-          if [ -n "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" ]; then
-            echo "ready=yes" >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=no" >> "$GITHUB_OUTPUT"
-            echo "Skipping: add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to run the browser suite." >> "$GITHUB_STEP_SUMMARY"
-          fi
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 \
+            -f scripts/local-stack/mark-local.sql \
+            -f supabase/seeds/demo.sql
+
+      # 885 assertions across nineteen suites, which have never run on CI either. They are the
+      # cheapest thing in this file and they cover the rules a browser cannot see -- RLS, the
+      # dispatch state machine, what account deletion scrubs.
+      - name: Database suites (pgTAP)
+        run: supabase test db
 
       - name: Install browsers
-        if: steps.config.outputs.ready == 'yes'
         run: npx playwright install --with-deps chromium webkit
 
       - name: Run the suite
-        if: steps.config.outputs.ready == 'yes'
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          # This runner's own stack. The anon key is read from it rather than written down,
+          # because supabase start mints one per run.
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
           NEXT_PUBLIC_SITE_URL: http://localhost:3101
-          # Optional. Without it the recovery-team suite still passes -- it falls back to pasting
-          # coordinates and says so in the log -- but the map leg of that test does not run. Add
-          # the secret to cover it. A public pk. token, URL-restricted, is what belongs here.
+          # Optional, and absent here: without it the recovery-team suite still passes -- it
+          # falls back to pasting coordinates and says so in the log -- but the map leg does not
+          # run. A public, URL-restricted pk. token is what belongs in this secret.
           NEXT_PUBLIC_MAPBOX_TOKEN: ${{ secrets.NEXT_PUBLIC_MAPBOX_TOKEN }}
-          # Belt and braces. Nothing in e2e/ sends a text, and this makes certain of it.
+          # Belt and braces: nothing here should reach Twilio, and this makes certain of it.
           SMS_DRY_RUN: "1"
-        run: npm run test:e2e
+        run: |
+          NEXT_PUBLIC_SUPABASE_ANON_KEY="$(supabase status -o json | jq -r '.ANON_KEY')"
+          export NEXT_PUBLIC_SUPABASE_ANON_KEY
+          test -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY" || { echo "no anon key from supabase status"; exit 1; }
+          npm run test:e2e
 
       - name: Keep the traces when something fails
         if: failure()
