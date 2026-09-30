@@ -279,10 +279,13 @@ reset role;
 --
 -- and pg_prove called the whole file "Dubious" -- 881 assertions passing, one suite exiting 3.
 -- The stub no longer defaults it, so this shape is now required everywhere.
-insert into auth.mfa_factors (id, user_id, friendly_name, status)
+insert into auth.mfa_factors (
+  id, user_id, friendly_name, factor_type, status, created_at, updated_at
+)
 values (
   gen_random_uuid(),
-  '00000000-0000-4000-8000-000000000001', 'Test authenticator', 'verified'
+  '00000000-0000-4000-8000-000000000001', 'Test authenticator',
+  'totp', 'verified', now(), now()
 );
 
 set local role authenticated;

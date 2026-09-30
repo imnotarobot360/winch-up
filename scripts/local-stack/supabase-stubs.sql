@@ -159,11 +159,15 @@ create table if not exists auth.mfa_factors (
   id            uuid primary key,
   user_id       uuid not null references auth.users (id) on delete cascade,
   friendly_name text,
-  factor_type   auth.factor_type not null default 'totp',
-  status        auth.factor_status not null default 'unverified',
+  -- NOT NULL AND NO DEFAULTS, all the way down, because that is the real table. Removing the
+  -- default from id alone was not enough: the next CI run failed on factor_type for the same
+  -- reason, one column later. Fixing these one per round trip is the expensive way to read a
+  -- schema -- GoTrue sets every one of these on insert, so the stub demands them all.
+  factor_type   auth.factor_type not null,
+  status        auth.factor_status not null,
   secret        text,
-  created_at    timestamptz not null default now(),
-  updated_at    timestamptz not null default now()
+  created_at    timestamptz not null,
+  updated_at    timestamptz not null
 );
 
 -- ---- auth.identities -------------------------------------------------------
