@@ -300,3 +300,33 @@ values
   ('22222222-2222-4222-8222-000000000005', 'on_site',            'responder', '11111111-1111-4111-8111-000000000009', '{}', now() - interval '2 hours 25 minutes'),
   ('22222222-2222-4222-8222-000000000005', 'recovered',          'requester', '11111111-1111-4111-8111-000000000009', '{}', now() - interval '2 hours 10 minutes'),
   ('22222222-2222-4222-8222-000000000005', 'thanked',            'requester', '11111111-1111-4111-8111-000000000009', '{}', now() - interval '2 hours 5 minutes');
+
+-- ---------------------------------------------------------------------------
+-- auth.identities, so local matches production's shape
+-- ---------------------------------------------------------------------------
+--
+-- GoTrue writes one identity row per way of signing in: an 'email' row for a password account,
+-- a 'phone' row for a number, and one per social provider. The stub tables have always created
+-- the users without them, and nothing noticed until /account/security -- which reads them to
+-- find the identity to unlink, and refuses to remove the last one exactly as GoTrue does.
+--
+-- Without these rows a demo account has ZERO identities, so "Disconnect" fails on a screen
+-- where the provider is plainly listed, and the last-identity refusal can never be reached in
+-- the state it actually guards. A seed that makes a feature untestable is a seed that is wrong.
+--
+-- Add a social identity by hand when a connected-accounts flow needs one:
+--
+--   insert into auth.identities (provider_id, user_id, provider, identity_data)
+--   values ('google-test', '<user id>', 'google', '{"sub":"google-test"}');
+
+insert into auth.identities (provider_id, user_id, provider, identity_data)
+select u.email, u.id, 'email', jsonb_build_object('sub', u.id::text, 'email', u.email)
+  from auth.users u
+ where u.email is not null and u.email <> ''
+on conflict (provider_id, provider) do nothing;
+
+insert into auth.identities (provider_id, user_id, provider, identity_data)
+select u.phone, u.id, 'phone', jsonb_build_object('sub', u.id::text, 'phone', u.phone)
+  from auth.users u
+ where u.phone is not null and u.phone <> ''
+on conflict (provider_id, provider) do nothing;

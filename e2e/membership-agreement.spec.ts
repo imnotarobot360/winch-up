@@ -47,6 +47,37 @@ const BODY_ES =
 
 async function signIn(page: Page, who: { email: string; password: string }) {
   await page.goto("/signin");
+
+  // WAIT FOR HYDRATION BEFORE TYPING A SINGLE CHARACTER.
+  //
+  // Without this the suite failed on all three projects with a DISABLED sign-in button and
+  // both fields EMPTY in the snapshot -- which reads like a broken sign-in form and is nothing
+  // of the kind. Keystrokes delivered before React attaches land in the pre-hydration DOM;
+  // hydration then takes the inputs over and resets them to their initial value, so the typing
+  // is silently undone and the form never becomes valid. It is a race, so it passed for weeks
+  // and then failed three times in a row.
+  //
+  // React writes __reactFiber$... / __reactProps$... onto the nodes it has attached to, so the
+  // presence of one is the signal. Retrying the typing would have been the other fix and is
+  // worse: clearing a field to retype it is exactly the fill() behaviour these suites avoid,
+  // because on WebKit it wipes the sibling field.
+  await page
+    .locator("form")
+    .first()
+    .evaluate(
+      (el) =>
+        new Promise<void>((resolve) => {
+          const attached = () => Object.keys(el).some((k) => k.startsWith("__react"));
+          if (attached()) return resolve();
+          const timer = setInterval(() => {
+            if (attached()) {
+              clearInterval(timer);
+              resolve();
+            }
+          }, 50);
+        }),
+    );
+
   // pressSequentially, not fill. On WebKit, fill() on one field clears its sibling -- the same
   // finding the membership and auth-gate suites are written around.
   await page.getByLabel(/email|correo/i).pressSequentially(who.email);

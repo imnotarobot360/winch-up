@@ -139,10 +139,41 @@ function userObject(user) {
     // here and a database trigger reads it much later, when the welcome email is queued -- so a
     // shim that dropped it would let that whole path look tested when it was not.
     user_metadata: user.user_metadata ?? {},
-    identities: [],
+    // Real rows from auth.identities when the caller looked them up, not a hard-coded [].
+    // supabase-js getUserIdentities() reads THIS array, and /account/security uses it to find
+    // the identity to unlink -- an empty array made "Disconnect" fail with unlink_failed for a
+    // provider that was plainly on screen.
+    identities: user.identities ?? [],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
+}
+
+/**
+ * The rows GoTrue would return in user.identities.
+ *
+ * The local database has a stub auth.identities (see supabase-stubs.sql) which nothing here
+ * populates automatically -- there is no real OAuth in this shim. Seed it by hand to exercise
+ * the connected-accounts UI:
+ *
+ *   insert into auth.identities (provider_id, user_id, provider, identity_data)
+ *   values ('google-test', '<user id>', 'google', '{"sub":"google-test"}');
+ */
+async function identitiesFor(userId) {
+  const rows = await sql(
+    `select id::text, provider, provider_id, coalesce(identity_data::text, '{}')
+       from auth.identities where user_id = ${quote(userId)} order by provider`,
+  );
+
+  return rows.map(([id, provider, providerId, data]) => ({
+    identity_id: id,
+    id: providerId,
+    user_id: userId,
+    provider,
+    identity_data: JSON.parse(data),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -299,6 +330,22 @@ async function handleAuth(req, res, url, body) {
     const rows = await sql(`select id::text, coalesce(phone, '') from auth.users where id = ${quote(claims.sub)}`);
     if (!rows.length) return json(404, { message: "User not found" });
 
+    // supabase.auth.updateUser({ password }) -- setting or changing a password from
+    // /account/security. Written immediately, unlike the phone: GoTrue has no second step for
+    // a password, and the whole point of the screen is that the member then has a way in.
+    //
+    // Hashed with the real crypt()/bcrypt, so the /token?grant_type=password path above can
+    // check it exactly as production would. A shim that stored it in plain text would let a
+    // broken client "work" locally.
+    if (parsed.password) {
+      if (String(parsed.password).length < 6) {
+        return json(422, { error_code: "weak_password", message: "Password should be at least 6 characters" });
+      }
+      await sql(
+        `update auth.users set encrypted_password = extensions.crypt(${quote(String(parsed.password))}, extensions.gen_salt('bf')), updated_at = now() where id = ${quote(claims.sub)}`,
+      );
+    }
+
     if (parsed.phone) {
       const wanted = String(parsed.phone);
 
@@ -324,7 +371,41 @@ async function handleAuth(req, res, url, body) {
     const rows = await sql(`select id::text, phone from auth.users where id = ${quote(claims.sub)}`);
     if (!rows.length) return json(404, { message: "User not found" });
 
-    return json(200, userObject({ id: rows[0][0], phone: rows[0][1] ?? "" }));
+    return json(200, userObject({
+      id: rows[0][0],
+      phone: rows[0][1] ?? "",
+      identities: await identitiesFor(claims.sub),
+    }));
+  }
+
+  /**
+   * supabase.auth.unlinkIdentity(identity) -> DELETE /user/identities/<identity id>.
+   *
+   * GoTrue REFUSES to remove the last identity, and so does this: that refusal is the server
+   * half of the rule /account/security enforces in its UI, and a shim that allowed it would
+   * let a client ship with only the client-side guard and still look tested. 422, the same
+   * status and the same error_code GoTrue uses.
+   */
+  if (route.startsWith("/user/identities/") && req.method === "DELETE") {
+    const claims = verifyJwt((req.headers.authorization ?? "").replace(/^Bearer /, ""));
+    if (!claims?.sub) return json(401, { message: "invalid claim: missing sub" });
+
+    const identityId = route.slice("/user/identities/".length);
+    const mine = await identitiesFor(claims.sub);
+
+    if (mine.length <= 1) {
+      return json(422, {
+        error_code: "single_identity_not_deletable",
+        message: "User must have at least 1 identity after unlinking",
+      });
+    }
+
+    if (!mine.some((i) => i.identity_id === identityId)) {
+      return json(404, { message: "Identity not found" });
+    }
+
+    await sql(`delete from auth.identities where id = ${quote(identityId)} and user_id = ${quote(claims.sub)}`);
+    return json(200, {});
   }
 
   if (route === "/token" && req.method === "POST") {

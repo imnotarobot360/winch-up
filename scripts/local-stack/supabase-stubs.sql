@@ -161,3 +161,30 @@ create table if not exists auth.mfa_factors (
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now()
 );
+
+-- ---- auth.identities -------------------------------------------------------
+-- GoTrue owns this table too, and it is the record of HOW somebody signs in: one row per
+-- method, so a member with a password and Google has two. `my_security_state()` reads it to
+-- decide whether disconnecting a provider would remove the last way into the account.
+--
+-- Added 2026-09-30, for the same reason mfa_factors was: without it the RPC and its pgTAP
+-- suite fail on a freshly built database with "relation does not exist", while passing on a
+-- machine whose database predates the need.
+--
+-- Shaped after the real one, including the generated `email` column and the (provider_id,
+-- provider) uniqueness -- that pair is what makes "this Google account is already attached to
+-- somebody else" a constraint violation rather than a silent second link.
+create table if not exists auth.identities (
+  id              uuid primary key default gen_random_uuid(),
+  provider_id     text not null,
+  user_id         uuid not null references auth.users (id) on delete cascade,
+  identity_data   jsonb not null,
+  provider        text not null,
+  last_sign_in_at timestamptz,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now(),
+  email           text generated always as (lower(identity_data ->> 'email')) stored,
+  unique (provider_id, provider)
+);
+
+create index if not exists identities_user_id_idx on auth.identities (user_id);

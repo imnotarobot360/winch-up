@@ -9,6 +9,7 @@ import {
   IconHook,
   IconPin,
   IconRing,
+  IconShackle,
   IconTruck,
   IconWinch,
 } from "@/components/ui/icons";
@@ -235,6 +236,12 @@ export function AccountForm({ email }: { email: string }) {
               label: t("menuNotifications"),
               hint: t("menuNotificationsHint"),
               icon: <IconRing size={22} />,
+            },
+            {
+              href: "/account/security",
+              label: t("menuSecurity"),
+              hint: t("menuSecurityHint"),
+              icon: <IconShackle size={22} />,
             },
             {
               href: "/resources",

@@ -402,6 +402,25 @@ docs/                     decisions + runbooks
   across the calls, which is the only thing that shows it. Three duplicates from before the fix
   were found and deleted in production on 2026-09-30; `docs/check-accounts.sql` is the standing
   check, editor-safe because the owner's psql access does not work.
+- **Nobody may remove their last way into their account, and the count that decides it comes
+  from the database.** `/account/security` lets a member remove a password, a phone or a
+  provider, and there is no support desk behind this product -- an account locked out is locked
+  out permanently, with its recovery history and its signed waiver. `my_security_state()`
+  counts the methods in the same snapshot as the facts it counts, and the screen re-reads it
+  after every change; a count taken from the browser's session object goes stale in another tab.
+  **A confirmed email is deliberately NOT counted.** It looks like a way back in -- send yourself
+  a reset link -- but a reset link sets a PASSWORD, and an account whose only email came from
+  Google has neither a password to reset nor a way to prove the address once the provider is
+  gone. Under-counting refuses a removal that might have been survivable; over-counting orphans
+  an account. Guarded in three places on purpose: the button is not rendered, the handler
+  refuses again, and GoTrue (and the local shim) refuse a last identity.
+- **The local stack models `auth.identities` now, and the demo seed writes the rows GoTrue
+  would write.** Same class of gap as `auth.mfa_factors`: without them a demo account has zero
+  identities, so "Disconnect" fails for a provider plainly on screen and the last-identity
+  refusal can never be reached in the state it guards. A seed that makes a feature untestable is
+  a seed that is wrong. `LOCAL_SOCIAL_PROVIDERS=google` on the gateway makes the connected-
+  accounts card appear; the server caches that list for five minutes, so clear
+  `.next/cache/fetch-cache` rather than concluding the card is broken.
 - **Adding a defaulted parameter OVERLOADS a function, it does not replace it.** Both signatures
   then exist and PostgREST cannot choose between them for a call that matches the shorter one --
   the feed starts failing with an ambiguity error that says nothing about the change. Drop the old
@@ -485,6 +504,7 @@ long done. Work since then has followed the owner's 16-phase spec:
 | 14 Security, privacy & safety | done — full review in `docs/security-review.md`; account deletion actually deletes now, retention exists, a claims check guards the copy |
 | 16 Deployment & production readiness | done — `/api/health`, CI on every push, env drift check, `docs/production-readiness.md`. What is left needs the owner's accounts, not code |
 | Universal membership | done — every member can ask for help and offer it; no separate volunteer account, no approval gate, the requester picks from offers |
+| Account & Security | **done and live in the repo** (2026-09-30) — `/account/security`: every sign-in method in one place, set or change a password, add or change a phone, connect or disconnect a provider, sign out everywhere. The rule it enforces is that nobody can remove their last way in. Email change is deliberately absent (see `docs/account-security.md`); the migration still has to be applied in production |
 | Recovery teams & group chat | **done and live** (2026-09-24) — `recovery_participants`, one thread per recovery for the whole team, per-participant unread and mute, notification settings screen, recovery SMS switched off, an offline send queue, Realtime broadcast over a polling floor. Migrations applied in production, but see the warning under Tests about what "verified" is worth |
 
 **Proven working in production**, not just built: a signed-in person files a request, the tick

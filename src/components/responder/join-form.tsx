@@ -16,6 +16,7 @@ import {
 import { EQUIPMENT_ICONS } from "@/components/ui/icons";
 import { ENUMS } from "@/config/app";
 import { Link, useRouter } from "@/i18n/navigation";
+import { confirmPhoneCode, sendPhoneCode } from "@/lib/auth/link-phone";
 import { geocodeAddress } from "@/lib/geocode";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { containsContactInfo } from "@/lib/contact-info";
@@ -102,63 +103,16 @@ export function JoinForm() {
     setBusy(true);
     setError(null);
 
-    const supabase = supabaseBrowser();
+    // Both halves of this live in lib/auth/link-phone.ts, with the explanation of why the two
+    // auth primitives are not interchangeable. /account/security calls the same pair; when this
+    // was inline, the second screen would have had to re-derive the decision.
+    const sent = await sendPhoneCode(supabaseBrowser(), e164, "join");
 
-    /**
-     * LINK the phone to the account already signed in, rather than signing in as the phone.
-     *
-     * This used to be signInWithOtp({ phone }) unconditionally, and that is how members ended
-     * up with two accounts. signInWithOtp/verifyOtp authenticate the PHONE IDENTITY: a member
-     * who joined with email or Google and then verified their number here was not linking it,
-     * they were being handed a second, separate user. Their responder profile then hung off
-     * that one while their waiver signature, vehicles and requests hung off the first.
-     *
-     * updateUser({ phone }) is the other primitive: it attaches a number to the CURRENT user
-     * and sends the code, and verifyOtp({ type: "phone_change" }) confirms it. Same code to
-     * the same handset, one account at the end of it.
-     *
-     * Signing in by phone is still legitimate for somebody with no session -- that is how a
-     * returning volunteer gets back in -- so the old path stays for exactly that case.
-     */
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    setLinking(Boolean(session));
-
-    const { error: otpError } = session
-      ? await supabase.auth.updateUser({ phone: e164 })
-      : await supabase.auth.signInWithOtp({ phone: e164, options: { channel: "sms" } });
-
+    setLinking(sent.linking);
     setBusy(false);
 
-    if (otpError) {
-      // The provider's own reason, which used to be dropped on the floor.
-      //
-      // Phone verification goes out through Supabase Auth's Twilio settings, NOT the TWILIO_*
-      // variables this app uses for dispatch -- two separate configurations that fail in
-      // indistinguishable ways from this screen. When the Supabase side is misconfigured the
-      // useful detail is all in here: Twilio 21212 (invalid From -- usually a phone number
-      // pasted where the Messaging Service SID goes), 21608 (trial account, number not
-      // verified), 21610 (recipient replied STOP).
-      //
-      // The member still sees the plain message below. This is for whoever is debugging it,
-      // and its absence cost several rounds of guessing.
-      console.error(
-        "[join] sending the code failed",
-        {
-          linking: Boolean(session),
-          status: otpError.status,
-          code: otpError.code,
-          message: otpError.message,
-        },
-      );
-
-      // A number already on somebody else's account is a different problem from a failed send,
-      // and telling the member "try again" would have them retry forever. GoTrue reports it as
-      // phone_exists; the spec's answer is to stop and route to recovery rather than move the
-      // number, and moving it silently would be the account-takeover version of this feature.
-      setError(otpError.code === "phone_exists" ? "phone_taken" : "otp_send_failed");
+    if (!sent.ok) {
+      setError(sent.error);
       return;
     }
 
@@ -174,26 +128,15 @@ export function JoinForm() {
     setBusy(true);
     setError(null);
 
-    // Must match how the code was SENT. `phone_change` confirms a number being attached to the
-    // signed-in account; `sms` authenticates the phone identity itself and would hand back a
-    // different user. Getting these two the wrong way round is the bug this whole change is
-    // about, so the flag is set once in sendCode and read here rather than re-derived.
-    const { error: verifyError } = await supabaseBrowser().auth.verifyOtp({
-      phone: e164,
-      token: code.trim(),
-      type: linking ? "phone_change" : "sms",
-    });
+    // `linking` is the value the send returned, not a fresh lookup: signing in by phone
+    // creates a session, so asking again here can answer differently from the call that chose
+    // how the code was sent.
+    const confirmed = await confirmPhoneCode(supabaseBrowser(), e164, code, linking, "join");
 
     setBusy(false);
 
-    if (verifyError) {
-      console.error("[join] verify failed", {
-        linking,
-        status: verifyError.status,
-        code: verifyError.code,
-        message: verifyError.message,
-      });
-      setError(verifyError.code === "phone_exists" ? "phone_taken" : "bad_code");
+    if (!confirmed.ok) {
+      setError(confirmed.error);
       return;
     }
 
