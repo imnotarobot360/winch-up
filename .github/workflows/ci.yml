@@ -221,7 +221,21 @@ jobs:
       #
       # 885 assertions across nineteen suites, none of which have ever run on CI.
       - name: Database suites (pgTAP)
-        run: supabase test db
+        run: |
+          # Captured and echoed as annotations, because this step has failed in five seconds
+          # on every run so far and the log needs admin rights to read. Five seconds is too
+          # fast to be assertions, so it is the runner refusing to start -- and its reason has
+          # been invisible.
+          set +e
+          out=$(supabase test db 2>&1)
+          code=$?
+          echo "$out"
+          if [ $code -ne 0 ]; then
+            echo "$out" | tail -25 | while read -r line; do
+              echo "::error title=pgtap::$(echo "$line" | cut -c1-280)"
+            done
+          fi
+          exit $code
 
       # WRITE THE DIAGNOSIS WHERE IT CAN BE READ WITHOUT ADMIN RIGHTS.
       #
