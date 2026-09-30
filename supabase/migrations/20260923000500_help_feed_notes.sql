@@ -21,6 +21,24 @@
 
 set search_path = public, extensions;
 
+-- REPLAYABLE, 2026-09-30. `create or replace` cannot change a return type, and this file does
+-- exactly that (nearby_requests gains a notes column in its RETURNS TABLE). On a database where the old signature exists -- which is
+-- every database replaying this history in order -- the statement below fails with
+--
+--   ERROR:  cannot change return type of existing function
+--
+-- and the replay stops here. Production never hit it because these went across one at a time,
+-- by hand; a fresh build hit it every time, and scripts/local-stack/rebuild.mjs carried a
+-- DROPS_BEFORE table solely to inject this line. That workaround is gone and the fix lives
+-- where the problem is.
+--
+-- EDITING AN APPLIED MIGRATION, deliberately and with the owner's decision (2026-09-30). It is
+-- safe here and nowhere near as general as it sounds: production records this version in
+-- supabase_migrations.schema_migrations, so the file will never run there again, and `if
+-- exists` makes the statement a no-op on any database that has already moved past it. The rule
+-- still stands for anything that CHANGES what a migration did -- this changes nothing it did.
+drop function if exists public.nearby_requests(double precision, double precision, integer, integer);
+
 create or replace function public.nearby_requests(
   p_lat          double precision default null,
   p_lng          double precision default null,

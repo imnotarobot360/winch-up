@@ -588,11 +588,20 @@ yesterday's clicking about.
 `node scripts/local-stack/rebuild.mjs` is that documented way, and it is worth actually running
 now and then rather than carrying one database forward for weeks. It found two things the day it
 was written: the migration history had stopped replaying at all (two `create or replace`
-statements that change a return type, which Postgres refuses — see `DROPS_BEFORE` in the script),
+statements that change a return type, which Postgres refuses),
 and `privacy_rls_test` had come to depend on dispatch rows that only exist once somebody has run
 the tick. That suite passed for weeks and failed the first time anybody built from scratch, on
 the one assertion that would have gone quiet if the volunteer feed genuinely broke. It creates
 its own invitation now.
+
+**The history replays in plain filename order again, as of 2026-09-30.** That first finding was
+worked around rather than fixed: rebuild.mjs carried a `DROPS_BEFORE` table that injected the
+missing `drop function` for those two files, so THIS script worked while `supabase db reset`,
+`supabase start` and anybody following the README still failed -- which is also why CI could
+not run the suites at all. The drops now live at the top of 20260923000500 and 20260923001700,
+where every replay gets them, and the table is gone. Editing two applied migrations was the
+owner's decision; both files carry the reasoning, and neither changes anything it originally
+did. **If this bites again, put the drop in the migration, never back in the script.**
 
 Operational procedures are in `docs/runbook.md`. Keep it current: it is written for whoever is
 holding the phone at 11pm, not for whoever wrote the code.

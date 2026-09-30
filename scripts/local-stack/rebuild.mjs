@@ -62,29 +62,22 @@ const PSQL_BIN_DIR = PSQL.replace(/[\\/][^\\/]+$/, "");
 const LOG_DIR = process.env.LOCAL_STACK_LOG_DIR ?? "C:/Users/jjser/tools";
 
 /**
- * Statements to run immediately BEFORE a given migration file.
+ * There is no DROPS_BEFORE table any more, and that is the point.
  *
- * Every entry here is the same bug: a `create or replace function` that changes a return type,
- * which Postgres refuses. Dropping first is safe because the very next thing that runs recreates
- * the function, and nothing holds a reference across the gap -- these are all called by the app
- * over PostgREST by name, not by a stored dependency.
+ * It used to hold a `drop function if exists` for each migration that changes a function's
+ * RETURN TYPE, because `create or replace` cannot do that and the replay died on the two files
+ * that try. Injecting the drop here made THIS script work and left the actual history
+ * unreplayable: `supabase db reset`, `supabase start` and anybody following the README all
+ * still failed, and CI could not run the suites at all.
  *
- * Add to this list rather than editing a migration. If a rebuild fails with "cannot change
- * return type of existing function", the message names the file; find the function it redefines
- * and put it here.
+ * The drops now live at the top of the two migrations that need them
+ * (20260923000500 and 20260923001700), so the history replays anywhere, in filename order, with
+ * no special knowledge. Editing an applied migration was the owner's decision on 2026-09-30 and
+ * the reasoning is written into both files.
+ *
+ * If a rebuild ever fails with "cannot change return type of existing function" again, put the
+ * drop in the migration that causes it -- not back in here.
  */
-const DROPS_BEFORE = {
-  // nearby_requests gains a `notes` column in its RETURNS TABLE.
-  "20260923000500_help_feed_notes.sql": [
-    "drop function if exists public.nearby_requests(double precision, double precision, integer, integer);",
-  ],
-  // claim_push_deliveries gains `url`. 20260923002600 is the production fix for the same thing;
-  // here the drop has to happen before the file rather than after it.
-  "20260923001700_chat_notifications.sql": [
-    "drop function if exists public.claim_push_deliveries(integer);",
-  ],
-};
-
 function psql(database, args_, { input } = {}) {
   return execFileSync(
     PSQL,
@@ -104,9 +97,11 @@ function step(label, fn) {
     console.error(text.split("\n").filter((l) => l.includes("ERROR")).slice(0, 3).join("\n") || text);
     if (text.includes("cannot change return type")) {
       console.error(
-        "\nThat is the return-type bug. Add a `drop function if exists ...` for the function this\n" +
-          "file redefines to DROPS_BEFORE at the top of scripts/local-stack/rebuild.mjs, then\n" +
-          "run this again. Do not edit the migration.",
+        "\nThat is the return-type bug: `create or replace` cannot change a return type. Put a\n" +
+          "`drop function if exists <the old signature>;` at the TOP of the migration named above,\n" +
+          "with a note saying why, and run this again. It belongs in the migration so that every\n" +
+          "replay gets it -- supabase db reset, supabase start and CI included, not just this\n" +
+          "script. See 20260923000500 for the shape.",
       );
     }
     process.exit(1);
@@ -245,12 +240,6 @@ const files = readdirSync("supabase/migrations").filter((f) => f.endsWith(".sql"
 console.log(`\n  ${files.length} migrations\n`);
 
 for (const file of files) {
-  const drops = DROPS_BEFORE[file];
-  if (drops) {
-    step(`  (drop first, see DROPS_BEFORE) ${file}`, () => {
-      for (const sql of drops) psql(DB, ["-c", sql]);
-    });
-  }
   step(`  ${file}`, () => psql(DB, ["-f", join("supabase/migrations", file)]));
 }
 
