@@ -194,6 +194,12 @@ with expected(kind, name, detail, migration, file) as (
     ('index',    'content_reports_one_per_reporter_content',     '', '001700', '20261001001700_report_a_member_again.sql'),
     ('hasref',   'community_report',   'target_kind <> ', '001800', '20261001001800_community_report_conflict_target.sql')
 ),
+-- The text searches below are strpos, not LIKE. Every one of these needles contains an underscore,
+-- which LIKE reads as a single-character wildcard -- so `%profile_public%` matches
+-- `v_profile public.profiles%rowtype` with the underscore standing in for a space. That made
+-- app.notify look like it referenced a column it has never named, and the absence checks (nogate,
+-- noref) are the ones where a false match reports the opposite of the truth.
+
 checked as (
   select
     e.*,
@@ -233,7 +239,7 @@ checked as (
       when 'hasref' then exists (
         select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
          where n.nspname in ('public', 'app') and p.proname = e.name
-           and pg_get_functiondef(p.oid) like '%' || e.detail || '%')
+           and strpos(pg_get_functiondef(p.oid), e.detail) > 0)
       -- An ARGUMENT, because adding one creates a new signature rather than changing the old one.
       -- A frontend that passes it gets PGRST202 from PostgREST while the function plainly exists,
       -- which reads as a missing function and is not one. This is the check that would have caught
@@ -247,7 +253,7 @@ checked as (
       when 'reportkind' then exists (
         select 1 from pg_constraint
          where conname = 'content_reports_target_kind_check'
-           and pg_get_constraintdef(oid) like '%' || e.name || '%')
+           and strpos(pg_get_constraintdef(oid), e.name) > 0)
       -- A SETTING's value. 20261001000600 changes data, not structure: the first dispatch ring
       -- became 10 miles instead of 15, and nothing about the schema shows whether it ran.
       when 'ring10' then exists (
@@ -256,7 +262,7 @@ checked as (
       when 'nogate' then exists (
         select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
          where n.nspname = 'app' and p.proname = e.name
-           and pg_get_functiondef(p.oid) not like '%' || e.detail || '%')
+           and strpos(pg_get_functiondef(p.oid), e.detail) = 0)
       -- Same question as nogate, for a function in `public`. nogate is pinned to schema app
       -- because that is where app.candidates lives; a removal in a public RPC needs this one.
       -- A check that something is ABSENT is the right shape for a migration whose whole job is a
@@ -265,7 +271,7 @@ checked as (
       when 'noref' then exists (
         select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
          where n.nspname in ('public', 'app') and p.proname = e.name
-           and pg_get_functiondef(p.oid) not like '%' || e.detail || '%')
+           and strpos(pg_get_functiondef(p.oid), e.detail) = 0)
       -- A trigger is the half of a producer that is easy to lose: the function survives a
       -- re-run of the file, and the CREATE TRIGGER is what a truncated paste drops.
       when 'trigger' then exists (

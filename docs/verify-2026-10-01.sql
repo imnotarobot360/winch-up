@@ -16,6 +16,24 @@
 --
 -- One statement, one result set. Failures sort to the top. Read every row.
 
+-- EVERY SEARCH HERE IS strpos, NOT LIKE, and that is not a style choice.
+--
+-- `like '%suspended_at%'` treats the underscore as a WILDCARD: it matches "suspendedXat" too. Most
+-- of these needles are distinctive enough that it made no practical difference, but one was pure
+-- luck -- `not like '%profile_public%'` was being used to prove a column reference had been REMOVED,
+-- and in app.notify that very pattern matches the declaration
+--
+--     v_profile public.profiles%rowtype
+--
+-- where the underscore matched a space. So a function that never mentioned the column looked like it
+-- did, and a check for absence could have reported presence. Demonstrated rather than reasoned:
+--
+--     select 'v_profile public.profiles%rowtype' like '%profile_public%'  -> true
+--     select strpos('v_profile public.profiles%rowtype', 'profile_public') -> 0
+--
+-- This is the same bug as the one in the member search box, found an hour apart: a string treated as
+-- a pattern when it was meant literally. There it let a member enumerate the directory; here it
+-- would have let a verifier lie.
 with expected(file, what, ok) as (
   values
     -- ---- file 3: 20261001000700_photos_for_ring.sql -------------------------
@@ -59,7 +77,7 @@ with expected(file, what, ok) as (
     ('001100', 'member_profile no longer reads profile_public',
       exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                where n.nspname = 'public' and p.proname = 'member_profile'
-                 and pg_get_functiondef(p.oid) not like '%profile_public%')),
+                 and strpos(pg_get_functiondef(p.oid), 'profile_public') = 0)),
 
     -- ---- file 6: 20261001001200_dispatch_respects_suspension.sql ------------
     -- The one that matters most: a suspended member still being dispatched to is invisible to the
@@ -67,34 +85,34 @@ with expected(file, what, ok) as (
     ('001200', 'app.candidates excludes suspended members',
       exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                where n.nspname = 'app' and p.proname = 'candidates'
-                 and pg_get_functiondef(p.oid) like '%suspended_at%')),
+                 and strpos(pg_get_functiondef(p.oid), 'suspended_at') > 0)),
     ('001200', 'app.candidates honours blocking',
       exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                where n.nspname = 'app' and p.proname = 'candidates'
-                 and pg_get_functiondef(p.oid) like '%blocks_between%')),
+                 and strpos(pg_get_functiondef(p.oid), 'blocks_between') > 0)),
     -- And that file 1 did not get pasted afterwards, which would have reverted both of the above.
     ('001200', 'app.candidates still excludes the requester',
       exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                where n.nspname = 'app' and p.proname = 'candidates'
-                 and pg_get_functiondef(p.oid) like '%requester_user_id%')),
+                 and strpos(pg_get_functiondef(p.oid), 'requester_user_id') > 0)),
 
     -- ---- file 7: 20261001001300_profile_rigs_and_activity.sql ---------------
     ('001300', 'member_profile returns rig_count',
       exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                where n.nspname = 'public' and p.proname = 'member_profile'
-                 and pg_get_functiondef(p.oid) like '%rig_count%')),
+                 and strpos(pg_get_functiondef(p.oid), 'rig_count') > 0)),
 
     -- ---- file 9: 20261001001500_content_queue_excludes_members.sql ----------
     ('001500', 'moderation_queue excludes reported members',
       exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                where n.nspname = 'public' and p.proname = 'moderation_queue'
-                 and pg_get_functiondef(p.oid) like '%target_kind <> %')),
+                 and strpos(pg_get_functiondef(p.oid), 'target_kind <> ') > 0)),
 
     -- ---- file 10: 20261001001600_reported_members_by_member.sql -------------
     ('001600', 'the members queue is grouped per member',
       exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                where n.nspname = 'public' and p.proname = 'moderation_reported_members'
-                 and pg_get_functiondef(p.oid) like '%reports_open%')),
+                 and strpos(pg_get_functiondef(p.oid), 'reports_open') > 0)),
 
     -- ---- file 11: 20261001001700_report_a_member_again.sql ------------------
     ('001700', 'one OPEN member report per reporter (partial index)',
@@ -110,7 +128,7 @@ with expected(file, what, ok) as (
     ('001400', 'a member can be the target of a report',
       exists (select 1 from pg_constraint
                where conname = 'content_reports_target_kind_check'
-                 and pg_get_constraintdef(oid) like '%member%')),
+                 and strpos(pg_get_constraintdef(oid), 'member') > 0)),
 
     -- ---- file 12: 20261001001800_community_report_conflict_target.sql ------
     -- Without this, reporting a POST raises "no unique or exclusion constraint matching the ON
@@ -118,7 +136,7 @@ with expected(file, what, ok) as (
     ('001800', 'community_report infers the partial index',
       exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                where n.nspname = 'public' and p.proname = 'community_report'
-                 and pg_get_functiondef(p.oid) like '%target_kind <> %')),
+                 and strpos(pg_get_functiondef(p.oid), 'target_kind <> ') > 0)),
 
     -- ---- file 2: 20261001000600_first_ring_ten_miles.sql -------------------
     -- Data, not structure. Nothing about the schema shows whether this ran.

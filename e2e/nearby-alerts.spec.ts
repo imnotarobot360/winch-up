@@ -100,13 +100,32 @@ test("a recovery reaches the member a few miles away and not the one in another 
   await near.page.goto("/account/notifications");
   // role=switch with aria-checked, not a checkbox: the design system's Toggle is a button.
   // getByLabel().isChecked() throws on it, which is how this failed once.
-  const available = near.page.getByRole("switch", { name: /^available to help|^disponible para ayudar/i });
+  const available = near.page.getByRole("switch", {
+    name: /^available to help|^disponible para ayudar/i,
+  });
   if ((await available.getAttribute("aria-checked")) !== "true") {
     await available.click();
     await expect(available, "the switch stays on").toHaveAttribute("aria-checked", "true", {
       timeout: 20_000,
     });
   }
+
+  // AND PROVE IT THROUGH A RELOAD, because the switch is optimistic.
+  //
+  // notification-settings.tsx flips the control first and reverts if the server action refuses, so
+  // reading aria-checked proves the CLICK landed, not the WRITE. When the write does not land, nothing
+  // here fails -- the spec carries on and dies a hundred lines later on "Photos are not available for
+  // this request", because app.may_see_request_photos reads profiles.available_to_help and found it
+  // false. That is what happened in the full suite on 2026-10-01: the file passed in isolation, failed
+  // in the suite, and the message pointed at the photographs rather than at the switch.
+  //
+  // A reload is the only thing that distinguishes the two, and it costs one page load in a test that
+  // already does a dozen.
+  await near.page.reload();
+  await expect(
+    available,
+    "available to help survived a reload, so the database agrees and not just the screen",
+  ).toHaveAttribute("aria-checked", "true", { timeout: 20_000 });
 
   await near.page.goto("/me");
   await near.page.getByRole("button", { name: /share where i am|update my position/i }).click();

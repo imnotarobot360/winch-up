@@ -60,6 +60,33 @@ export default defineConfig({
 
   timeout: 60_000,
 
+  /**
+   * ASSERTIONS GET FIFTEEN SECONDS, not Playwright's default five.
+   *
+   * 76 of the 161 assertions in this suite do not ask for a timeout, so they took the 5s default --
+   * and 5s is below the noise floor here. One worker drives 250 tests against one `next start`, and a
+   * link click in this app is a client-side navigation whose redirect arrives in an RSC payload rather
+   * than as a 302, so "did the URL change" is not a question with a fast guaranteed answer under load.
+   *
+   * The symptom was a different single failure on each full run while every spec passed in isolation:
+   * `[iphone] auth-gate` on one, `[android] nearby-alerts` on another, `[android]
+   * membership-agreement` on a third -- the last one on `expect(page).toHaveURL(/\/agreement$/)`
+   * five seconds after clicking the link that goes there. Whack-a-mole on individual assertions would
+   * have fixed three and left seventy-three.
+   *
+   * This is NOT the same thing as hiding a hang. The per-test timeout above is 60s and unchanged, so
+   * anything genuinely stuck still fails the test; 15s only stops a slow-but-correct navigation being
+   * reported as a broken one. The 85 assertions that explicitly ask for 20s keep it -- those are the
+   * ones waiting on a server action, a dispatch tick or a signed URL, and they chose their number for
+   * a reason.
+   *
+   * If a run ever goes red on a timeout at FIFTEEN seconds, that is worth reading as a real finding
+   * rather than raising this again.
+   */
+  expect: {
+    timeout: 15_000,
+  },
+
   // One, not "as many as there are cores". This machine has 20, and Playwright's default put
   // enough concurrent browsers against a single next start that 18 of 19 tests failed -- every
   // one of which passed when run alone. Pages answer in under half a second here, so the

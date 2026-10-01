@@ -1630,6 +1630,31 @@ docs/                     decisions + runbooks
   green while restoring nothing.
  and psql reported a
   syntax error pointing at the quote. Use a function replacer.
+- **`LIKE '%needle%'` IS A PATTERN, AND EVERY IDENTIFIER HERE CONTAINS AN UNDERSCORE.** `_` matches
+  any single character, so `%profile_public%` matches `v_profile public.profiles%rowtype` -- which is
+  how `app.notify` appeared to reference a column it has never named. `strpos(haystack, needle) > 0`
+  is the literal search; both verifiers in `docs/` use it now. This bit twice on 2026-10-01, an hour
+  apart: once in the member search box, where an unescaped `_` let somebody enumerate the directory,
+  and once in the verifiers, where it could have reported a removal that had not happened. A string
+  treated as a pattern when it was meant literally.
+- **A verifier has to survive the absence it is looking for.** `select app.like_contains('a\b') = …`
+  is better evidence than reading the function's source -- it asks what the code DOES -- but naming a
+  function that does not exist fails when the statement is PARSED, so on the one database where the
+  check mattered the whole query died and reported none of its other seventeen rows. Prove a verifier
+  by breaking things in a transaction and checking it still answers; `docs/verify-2026-10-01.sql` was
+  wrong in exactly this way until that was done.
+- **The Supabase GitHub integration stopped on 2026-10-01 and applied nothing all day.** Twelve
+  migrations went in by hand through the SQL editor; `docs/apply-2026-10-01.md` is the procedure and
+  the traps. Two worth carrying forward: a migration that replaces a whole function can REVERT a later
+  one when pasted out of order (20261001000500 now refuses to, and says so), and `tests/*_test.sql` is
+  not a migration -- one was pasted into production by mistake, harmlessly, because pgTAP suites wrap
+  themselves in begin/rollback. **Verify after every deploy that ships a migration** rather than
+  assuming the integration ran; probing production over HTTP with the publishable key costs nothing.
+- **PostgREST validates a COLUMN name before it checks the table grant.** So `GET
+  /rest/v1/profiles?select=suspended_at` answers `42703` when the column is missing and `42501` when
+  it exists but `anon` cannot read the table -- which makes column existence probeable from outside
+  with no credentials at all. Control it with a name that certainly does not exist, as the only thing
+  separating "present" from "the endpoint always says that".
 - **`npm run build` runs the i18n check first** (`prebuild`). A missing Spanish key fails the
   build rather than silently falling back to English.
 
@@ -1675,7 +1700,7 @@ Four layers. Run all of them before claiming anything works.
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
 npm test            171 unit + component tests (vitest)
 npm run test:e2e    213 Playwright tests — android, iphone, tablet, desktop
-supabase test db    961 pgTAP assertions across twenty-three suites
+supabase test db    964 pgTAP assertions across twenty-three suites
 ```
 
 `prebuild` runs four guards -- the i18n check, the contact-info parity check, the claims check
