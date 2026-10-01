@@ -540,8 +540,12 @@ select is(
 
 -- A stale bookmark or a client ahead of the schema must not produce an error on the page
 -- somebody opened to read about a gate closure.
+--
+-- THE LABEL HERE MUST STAY FICTIONAL. This read 'events' until 2026-10-01, and 'tips' was used
+-- below -- both plausible enough that adding them as real topics broke these two assertions
+-- and nothing else. A test for "unknown" has to name something nobody would ever ship.
 select is(
-  jsonb_array_length(public.community_feed(null, 50, 'events') -> 'posts'),
+  jsonb_array_length(public.community_feed(null, 50, 'not_a_real_topic_xyzzy') -> 'posts'),
   3,
   'an unknown topic falls back to the whole feed rather than erroring'
 );
@@ -554,7 +558,7 @@ set local role authenticated;
 set local request.jwt.claim.sub = 'c9000000-0000-4000-8000-00000000000c';
 
 select is(
-  public.community_post('Filed under something invented', null, 'tips') ->> 'ok',
+  public.community_post('Filed under something invented', null, 'not_a_real_topic_xyzzy') ->> 'ok',
   'true',
   'posting with an unknown topic succeeds'
 );
