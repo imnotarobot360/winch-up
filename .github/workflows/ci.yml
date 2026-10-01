@@ -313,3 +313,115 @@ jobs:
   #
   # Saying so here is better than a job that silently skips and turns the badge green.
   # ---------------------------------------------------------------------------
+
+  # ---------------------------------------------------------------------------
+  # Migrations reach production from here, because the Supabase GitHub integration stopped.
+  #
+  # On 1 October it applied nothing all day while Vercel deployed normally, and twenty-one
+  # migrations went in by hand through the SQL editor. It leaves no trace in GitHub -- no commit
+  # status, no check run, no deployment, on any commit including the day it demonstrably worked --
+  # so there was nothing to watch and no way to notice. This job replaces a mechanism that reports
+  # nowhere with one that goes red in the same place everything else does.
+  #
+  # IT RUNS ONLY IF THE SUITE PASSED. `needs` is both jobs, so schema cannot reach production from a
+  # commit whose tests are red. That is a stronger guarantee than the integration ever gave: it
+  # applied on push, test results be damned.
+  #
+  # WORST CASE IS A RED BUILD, NOT DAMAGE. The CLI applies each migration in its own transaction and
+  # stops at the first failure, so a file that cannot run leaves the database as it was. That matters
+  # here more than usual -- see the warning about the ledger below.
+  #
+  # THE LEDGER HAS TO BE RIGHT FIRST, and on 1 October it was not. `db push` applies every version
+  # that supabase_migrations.schema_migrations does not list, and the twenty-one applied by hand are
+  # almost certainly absent from it. Those twenty-one are safe to replay -- measured, not assumed:
+  # all twenty-one were re-run against a database that already had them, zero failed. But SIXTEEN of
+  # the other eighty-three are NOT replayable, because `create type`, `create table`, `create
+  # trigger` and `create policy` are meant to run once in order. So if the ledger is behind on any of
+  # those, the first run of this job goes red on "type already exists" and applies nothing.
+  #
+  # That is the safe failure, not the fix. The fix is to reconcile the ledger once:
+  #
+  #   select version, name from supabase_migrations.schema_migrations order by version desc;
+  #   supabase migration repair --status applied <version>   -- for each already-applied version
+  #
+  # docs/apply-2026-10-01.md has the longer version.
+  #
+  # ORDER AGAINST VERCEL is not controlled from here. Both start on the same push; this job is
+  # short and Vercel's build is not, so schema usually lands first, which is the safe direction.
+  # It is not guaranteed, which is why CLAUDE.md's rule stands: a field an RPC has only just started
+  # returning is OPTIONAL in its TypeScript type.
+  # ---------------------------------------------------------------------------
+  migrate:
+    name: apply migrations to production
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [verify, browsers]
+
+    # Pushes to main only. Never a pull request, never a fork: a PR from outside this repository
+    # must not be able to run anything against the production database.
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'imnotarobot360/winch-up' }}
+
+    # One at a time, and never cancelled halfway. Two pushes racing to apply migrations is the one
+    # thing worse than applying them late -- note this does NOT inherit the file-level concurrency
+    # group above, which cancels in progress.
+    concurrency:
+      group: db-push-production
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # The secrets may not exist yet. Skipping loudly beats a red badge on every push until
+      # somebody adds them, and beats a green one that quietly did nothing.
+      - name: Are the secrets here?
+        id: secrets
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          missing=""
+          [ -n "$TOKEN" ]       || missing="$missing SUPABASE_ACCESS_TOKEN"
+          [ -n "$REF" ]         || missing="$missing SUPABASE_PROJECT_REF"
+          [ -n "$DB_PASSWORD" ] || missing="$missing SUPABASE_DB_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Migrations not applied::Missing repository secrets:$missing."
+            echo "Nothing was applied. Add them in Settings -> Secrets and variables -> Actions."
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # What it is ABOUT to do, printed before it does it. `migration list` shows local versus
+      # remote side by side, so the log answers "what changed" without anybody opening a dashboard --
+      # and if the ledger is behind, this is where that becomes visible.
+      - name: What does production already have?
+        if: steps.secrets.outputs.ready == 'true'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
+          supabase migration list --linked
+
+      - name: Apply what is missing
+        if: steps.secrets.outputs.ready == 'true'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: supabase db push --linked
+
+      # Read this when it goes red. The most likely cause is the ledger, not the SQL.
+      - name: Why a failure here is usually not the migration
+        if: ${{ failure() && steps.secrets.outputs.ready == 'true' }}
+        run: |
+          echo "::error title=Migrations did not apply::Nothing was changed -- each migration runs in its own transaction and the first failure stops the run."
+          echo "If the error says 'already exists', the ledger is behind rather than the SQL being wrong:"
+          echo "  supabase_migrations.schema_migrations does not list a version that IS applied,"
+          echo "  so the CLI tried to run it again. Reconcile once with:"
+          echo "    supabase migration repair --status applied <version>"
+          echo "docs/apply-2026-10-01.md has the full procedure and the query that shows the divergence."
