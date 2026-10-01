@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { ModerationQueue } from "@/components/community/moderation-queue";
+import { ReportedMembers } from "@/components/community/reported-members";
 import { Callout } from "@/components/ui/primitives";
 import { Link } from "@/i18n/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
@@ -56,9 +57,17 @@ export default async function ModerationPage({
     );
   }
 
+  // Suspension is an admin action, not a moderator one -- so the page works out which this is
+  // and passes it down. It decides what RENDERS and nothing more:
+  // admin_suspend_member() calls app.require_admin(), which raises, so a moderator who reached
+  // the call another way is refused by the database. The prop is there so nobody is shown a
+  // button that can only fail.
+  const isAdmin = roles.some((r) => r.role === "admin");
+
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-8">
+    <main className="mx-auto w-full max-w-2xl space-y-8 px-4 py-8">
       <ModerationQueue />
+      <ReportedMembers isAdmin={isAdmin} />
     </main>
   );
 }

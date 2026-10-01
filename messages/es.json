@@ -201,7 +201,9 @@
       "addPhotoCta": "Agregar foto",
       "addRig": "Agregue su vehículo, para que los miembros vean qué conduce y qué puede aportar.",
       "addRigCta": "Agregar vehículo"
-    }
+    },
+    "showInCommunity": "Mostrar este vehículo en mi perfil",
+    "showInCommunityHint": "Otros miembros ven el vehículo y su foto. Sus notas nunca se muestran."
   },
   "home": {
     "stuckCta": "Estoy atascado — necesito ayuda",
@@ -1368,7 +1370,28 @@
     "notModerator": "Esta pantalla es para moderadores.",
     "signedOut": "Inicia sesión para abrir la cola de moderación.",
     "backToFeed": "Volver a la comunidad",
-    "signIn": "Iniciar sesión"
+    "signIn": "Iniciar sesión",
+    "members": {
+      "title": "Miembros reportados",
+      "empty": "No hay miembros reportados.",
+      "loading": "Buscando…",
+      "failed": "No funcionó. Intente de nuevo.",
+      "someone": "Un miembro",
+      "openProfile": "Abrir su perfil",
+      "reportedWhen": "Reportado {when}",
+      "reportsTotal": "{count, plural, one {# reporte en total} other {# reportes en total}}",
+      "memberSince": "Miembro desde {when}",
+      "suspend": "Suspender esta cuenta",
+      "suspendConfirm": "Suspender",
+      "suspendWarning": "Sale del directorio, su perfil deja de abrirse y deja de ser llamado a rescates. Nada se borra y se puede deshacer.",
+      "reasonLabel": "¿Por qué? (obligatorio — este es el registro)",
+      "cancel": "Cancelar",
+      "working": "Trabajando…",
+      "suspended": "Suspendido",
+      "suspendedFor": "Suspendido por: {reason}",
+      "restore": "Levantar la suspensión",
+      "adminOnly": "Un administrador puede suspender esta cuenta."
+    }
   },
   "trails": {
     "title": "Caminos",
@@ -2047,7 +2070,35 @@
     "howToReach": "Aquí no hay mensajes directos. Si se ofrece en su rescate, o usted en el suyo, la conversación se abre con él.",
     "rigPhotoAlt": "El vehículo de {name}",
     "years": "{count, plural, one {Año} other {Años}}",
-    "underOneYear": "<1"
+    "underOneYear": "<1",
+    "rigs": "Sus vehículos",
+    "aRig": "Un vehículo",
+    "primaryRig": "vehículo principal",
+    "hasWinch": "Winch",
+    "winchLb": "Winch de {lb, number} lb",
+    "posts": "{count, plural, one {Publicación} other {Publicaciones}}",
+    "comments": "{count, plural, one {Comentario} other {Comentarios}}",
+    "safety": {
+      "report": "Reportar a este miembro",
+      "block": "Bloquearlo",
+      "explainer": "Bloquear los oculta el uno del otro. Reportar envía esto a un administrador, que puede suspender una cuenta.",
+      "reportTitle": "Reportar a {name}",
+      "reasonLegend": "¿Qué pasó?",
+      "reason": {
+        "harassment": "Acoso o abuso",
+        "impersonation": "Se hace pasar por otra persona",
+        "spam": "Spam",
+        "soliciting_payment": "Pide dinero",
+        "unsafe_advice": "Consejos peligrosos",
+        "other": "Otra cosa"
+      },
+      "noteLabel": "Algo que el administrador deba saber (opcional)",
+      "sendReport": "Enviar reporte",
+      "cancel": "Cancelar",
+      "working": "Enviando…",
+      "reportedBody": "Gracias. Un administrador lo revisará. Si quiere, también puede bloquearlo.",
+      "failed": "No se pudo enviar. Intente de nuevo."
+    }
   },
   "membership": {
     "title": "Acuerdo de Membresía",

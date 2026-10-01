@@ -15,10 +15,19 @@ have been redefined and the older copies are stale.
 | `responders` | self read / insert / update |
 | `vehicles` | owner read / insert / update / delete |
 
-On top of that, `profiles` has **column-level grants**: `authenticated` may select only
-`available_to_help, notify_chat, notify_recovery_status` and update only the last two. So a member
-cannot reach another member's row by any direct API request, which is what §5 asks for, and it is
-already true.
+What stops a member reaching another member's row is **RLS, not column grants** — and that
+distinction is worth writing down, because the first version of this audit got it backwards.
+`20260923001800` adds column grants for three columns (`available_to_help`, `notify_chat`,
+`notify_recovery_status`), and reading that migration alone suggests those are the only three
+columns `authenticated` can select. They are not: the table already carried a broad grant, so a
+member may select most of `profiles`. A pgTAP assertion written on that mistaken basis failed with
+ten extra column names.
+
+The fence is `profiles_self_read`: `user_id = auth.uid() OR app.is_admin()`. A member selecting the
+whole table gets exactly one row — their own — which is what §5 asks for, and it is already true.
+`auth_roles_test.sql` now asserts that from a member's seat rather than asserting the grants, because
+an audit that names the wrong mechanism is worse than one that names none: the next person tightens
+the part that was never holding the weight.
 
 The directory therefore works the way §5 wants it to: through `security definer` RPCs that return
 a hand-written whitelist of fields. `nearby_members()` and `member_profile()` both do this, and
@@ -97,3 +106,47 @@ and turning off availability must still remove them from the ring and from the p
 `member_profile()` is defined twice in the migration history; the live one is
 `20260928001000_member_rig_photo.sql`, not `20260924000100_nearby_members.sql`. Any change builds
 on that one.
+
+
+## What was built, and what the tests found
+
+Shipped: the two gates removed, the join fixed, search moved to the server with escaping,
+`profiles.suspended_at` with an admin suspend/restore pair, member reporting, a per-rig
+`show_in_community` flag with the rigs on the profile, community activity counts, and a
+reported-members queue separate from the content queue.
+
+Six things were found by the tests and the browser rather than by reading, and all six were real:
+
+1. **A suspended member was still dispatched to.** Found by pairing "a quiet member is not
+   dispatched to" with its control — on its own that assertion passes when `app.candidates()`
+   returns nothing at all.
+2. **Blocking reached neither the directory nor the ring.** `app.blocks_between` already existed
+   and is symmetric; nothing called it. A member you blocked could be dispatched to your recovery,
+   which hands them your phone number on acceptance.
+3. **Your own profile 404'd**, because unifying the listable predicate made `member_profile()` ask
+   "are you not yourself?" about the member being viewed. `rig_photos_test` caught it.
+4. **Reported members leaked into the content queue**, rendering a raw translation key and
+   offering "Put it back" for a human — a button that would have looked up a post id that is
+   actually a user id and done nothing, silently. Found by opening the screen.
+5. **The undo was unreachable.** Suspending closes the open reports, so a queue keyed on open
+   reports lost the member a second after the suspension, while the warning text promised "you can
+   undo it". Found by using it.
+6. **A member could only ever be reported once, by anyone, forever** — `content_reports` carried a
+   blanket unique constraint that is right for a post and wrong for a person. Found on the e2e
+   suite's *second* run, which is the first run where a previous report existed.
+
+And one self-inflicted break worth recording: replacing that constraint with partial indexes broke
+`community_report()`, whose `on conflict (columns)` can only infer a non-partial index. Reporting a
+post stopped working, because of a migration about reporting people. No assertion failed —
+`community_test` and `trails_test` **aborted**, which pgTAP reports as zero failures and exit 3.
+The run said "928 passed, 0 failed" with two whole suites unfinished.
+
+## Not built, and why
+
+- **Member-to-member messaging.** §2 says "send messages where messaging is enabled", and it is not
+  enabled: the only conversation in this product is attached to a recovery and scoped to its
+  participants. The profile says where a conversation does open instead, rather than carrying a
+  button that opens nothing.
+- **Search by username.** There is no handle or username column anywhere in `profiles`. Searching
+  by one would mean inventing handles for the whole membership, which is a product decision and not
+  a directory change. Search is by display name.

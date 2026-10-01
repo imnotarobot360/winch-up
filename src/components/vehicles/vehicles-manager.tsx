@@ -4,14 +4,15 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { EQUIPMENT_ICONS } from "@/components/ui/icons";
-import { Button, Callout, Card } from "@/components/ui/primitives";
+import { Button, Callout, Card, Toggle } from "@/components/ui/primitives";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
 import { VehicleForm, type Vehicle } from "./vehicle-form";
 
 const COLUMNS =
   "id, make, model, year, vehicle_class, drivetrain, tire_size, recovery_points, " +
-  "has_winch, winch_capacity_lb, equipment, notes, photo_path, is_primary";
+  "has_winch, winch_capacity_lb, equipment, notes, photo_path, is_primary, " +
+  "show_in_community";
 
 /**
  * A member's rigs.
@@ -53,6 +54,35 @@ export function VehiclesManager({ userId }: { userId: string }) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  /**
+   * Show this rig on my profile, or do not.
+   *
+   * Optimistic, with a reload on failure rather than a rollback: the list is re-read anyway
+   * after anything else that changes it, and a switch that silently snaps back is worse than
+   * one that corrects itself from the server.
+   *
+   * It defaults to ON for every rig, new and existing. The spec lists vehicle details among
+   * what members may see, and a default-off flag here would mean profiles with no rigs on them
+   * -- which is the exact shape of the mistake the directory itself just climbed out of. This
+   * is for the one rig somebody would rather not show: a work truck with signage, a plate in
+   * the photograph.
+   */
+  async function setShown(id: string, shown: boolean) {
+    setRows((current) =>
+      current.map((v) => (v.id === id ? { ...v, show_in_community: shown } : v)),
+    );
+
+    const { error: saveError } = await supabaseBrowser()
+      .from("vehicles")
+      .update({ show_in_community: shown })
+      .eq("id", id);
+
+    if (saveError) {
+      setError("load_failed");
+      await load();
+    }
+  }
 
   async function makePrimary(id: string) {
     setError(null);
@@ -156,6 +186,17 @@ export function VehiclesManager({ userId }: { userId: string }) {
               ) : null}
 
               {vehicle.notes ? <p className="text-base text-ink-soft">{vehicle.notes}</p> : null}
+
+              {/* WHAT OTHER MEMBERS SEE. The notes field is never published -- it has no
+                  contains_contact_info CHECK on it, so it is the one place a phone number can
+                  legitimately sit, and member_rigs() leaves it out. This switch is about the
+                  rest: the make, the photograph, the gear. */}
+              <Toggle
+                checked={vehicle.show_in_community !== false}
+                onChange={(v) => void setShown(vehicle.id, v)}
+                label={t("showInCommunity")}
+                hint={t("showInCommunityHint")}
+              />
 
               {confirmDelete === vehicle.id ? (
                 <div className="space-y-2">

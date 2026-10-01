@@ -32,7 +32,9 @@ export type Vehicle = {
   equipment: string[];
   notes: string | null;
   photo_path: string | null;
-  is_primary: boolean;
+    is_primary: boolean;
+  /** Added by 20261001001300, so optional: the frontend can deploy ahead of the schema. */
+  show_in_community?: boolean;
 };
 
 type Draft = Omit<Vehicle, "id" | "is_primary">;

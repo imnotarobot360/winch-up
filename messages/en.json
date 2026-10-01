@@ -201,7 +201,9 @@
       "addPhotoCta": "Add photo",
       "addRig": "Add your rig, so members can see what you drive and what you can bring.",
       "addRigCta": "Add your rig"
-    }
+    },
+    "showInCommunity": "Show this rig on my profile",
+    "showInCommunityHint": "Other members see the rig and its photo. Your notes are never shown."
   },
   "home": {
     "stuckCta": "I'm stuck — get help",
@@ -1368,7 +1370,28 @@
     "notModerator": "This screen is for moderators.",
     "signedOut": "Sign in to open the moderation queue.",
     "backToFeed": "Back to the feed",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "members": {
+      "title": "Reported members",
+      "empty": "Nobody has been reported.",
+      "loading": "Looking…",
+      "failed": "That did not work. Try again.",
+      "someone": "A member",
+      "openProfile": "Open their profile",
+      "reportedWhen": "Reported {when}",
+      "reportsTotal": "{count, plural, one {# report in total} other {# reports in total}}",
+      "memberSince": "Member since {when}",
+      "suspend": "Suspend this account",
+      "suspendConfirm": "Suspend",
+      "suspendWarning": "They come out of the directory, their profile stops opening, and they stop being called out to recoveries. Nothing is deleted and you can undo it.",
+      "reasonLabel": "Why? (required — this is the record)",
+      "cancel": "Cancel",
+      "working": "Working…",
+      "suspended": "Suspended",
+      "suspendedFor": "Suspended for: {reason}",
+      "restore": "Lift the suspension",
+      "adminOnly": "An admin can suspend this account."
+    }
   },
   "trails": {
     "title": "Trails",
@@ -2047,7 +2070,35 @@
     "howToReach": "There is no direct messaging here. If they offer on your recovery, or you offer on theirs, the conversation opens with it.",
     "rigPhotoAlt": "{name}'s rig",
     "years": "{count, plural, one {Year} other {Years}}",
-    "underOneYear": "<1"
+    "underOneYear": "<1",
+    "rigs": "Their rigs",
+    "aRig": "A rig",
+    "primaryRig": "main rig",
+    "hasWinch": "Winch",
+    "winchLb": "{lb, number} lb winch",
+    "posts": "{count, plural, one {Post} other {Posts}}",
+    "comments": "{count, plural, one {Comment} other {Comments}}",
+    "safety": {
+      "report": "Report this member",
+      "block": "Block them",
+      "explainer": "Blocking hides you from each other. Reporting sends this to an admin, who can suspend an account.",
+      "reportTitle": "Report {name}",
+      "reasonLegend": "What happened?",
+      "reason": {
+        "harassment": "Harassment or abuse",
+        "impersonation": "Pretending to be someone else",
+        "spam": "Spam",
+        "soliciting_payment": "Asking for payment",
+        "unsafe_advice": "Dangerous advice",
+        "other": "Something else"
+      },
+      "noteLabel": "Anything an admin should know (optional)",
+      "sendReport": "Send report",
+      "cancel": "Cancel",
+      "working": "Sending…",
+      "reportedBody": "Thank you. An admin will look at this. You can block them as well if you want.",
+      "failed": "That did not go through. Try again."
+    }
   },
   "membership": {
     "title": "Membership Agreement",

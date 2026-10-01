@@ -4,8 +4,8 @@ import { existsSync } from "node:fs";
 /**
  * Put the database into a known state before the suite runs.
  *
- * Two kinds of leftover make a run fail in a way that reads as a product bug, and both of them are
- * state the previous run left behind rather than anything the app got wrong.
+ * Three kinds of leftover make a run fail in a way that reads as a product bug, and all of them are
+ * state a previous run left behind rather than anything the app got wrong.
  *
  * THE RATE-LIMIT COUNTERS. Several guards here are per-day and per-person: three new groups a day,
  * ten events, twenty posts an hour, five recoveries an hour from one connection. Those are human
@@ -44,6 +44,13 @@ export default function globalSetup() {
         set status = 'cancelled', cancelled_at = now(), cancel_reason = 'stale test run'
       where requester_user_id is not null
         and status in ('submitted','dispatching','unmatched','accepted','on_site')`,
+    // AND NOBODY IS LEFT SUSPENDED. member-directory.spec suspends a demo account to prove the
+    // moderation loop and lifts it again, but a run that dies in between leaves a shared account
+    // invisible to every other spec -- the directory, the dispatch ring and their profile all refuse
+    // them. That reads as a broken directory three specs later.
+    `update public.profiles
+        set suspended_at = null, suspended_reason = null, suspended_by = null
+      where suspended_at is not null`,
   ];
 
   for (const statement of sql) {
