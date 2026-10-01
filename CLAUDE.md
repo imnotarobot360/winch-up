@@ -460,6 +460,15 @@ docs/                     decisions + runbooks
   profile from a session with no claim COALESCEs rather than blanking, or a member would lose a
   verified number by changing their radius. The cost, named: `blocklist` is keyed by phone, so
   a phoneless volunteer is banned with `approval = 'banned'` instead.
+- **"DEFERRED" IN THIS FILE HAS MEANT "THE UI IS DEFERRED, THE BACKEND IS BUILT" TWICE.**
+  Events and groups both had tables, RPCs and pgTAP coverage from phase 12 while the planning
+  notes called them deferred, and on 2026-10-01 both got screens that were the only missing
+  part. Worse, building events from scratch nearly clobbered the real thing: a
+  `create or replace function public.events_upcoming(integer)` with the same signature
+  REPLACED the existing one, and only data_model_test failing on `going_count` revealed it.
+  **Before building anything the notes call deferred, grep the whole migrations folder for it.**
+  `docs/built-but-unreachable.md` is the sweep that finds this class of thing, and it is worth
+  re-running whenever the word appears.
 - **A screen that nothing links to is a screen nobody sees.** /welcome -- screen 2 of the design
   reference -- was built, tested, deployed and then left unreachable for two days, so every new
   visitor landed on the marketing page and the reference was quietly not followed. Nothing caught
