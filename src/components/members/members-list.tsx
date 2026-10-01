@@ -69,13 +69,43 @@ export function MembersList() {
     return () => clearTimeout(timer);
   }, [query]);
 
+  // AND IT FALLS BACK WHEN THE SCHEMA IS BEHIND THE FRONTEND.
+  //
+  // This is not hypothetical and it was not free. 20261001001100 added p_query to
+  // nearby_members(); the frontend went live in production and the migration did not, so every
+  // call carried a parameter the function did not have, PostgREST answered PGRST202, and the
+  // directory showed "Could not load members" to everybody for the better part of an hour.
+  //
+  // Migrations and the app deploy from the same push, in that order, and usually about ninety
+  // seconds apart -- but either half can lag or fail, and the cost of being strict here is a dead
+  // screen rather than a missing search box. So: on a failure, ask again without p_query and
+  // filter in the browser. That is the behaviour this component had until today, it is correct for
+  // a membership small enough to fit in one page, and once the function exists the fallback never
+  // runs again.
+  const [serverSearch, setServerSearch] = useState(true);
+
   useEffect(() => {
     let alive = true;
     (async () => {
-      const { data, error } = await supabaseBrowser().rpc("nearby_members", {
-        p_equipment: equipment,
-        p_query: debounced || null,
-      });
+      const client = supabaseBrowser();
+      const withQuery = serverSearch && debounced.length > 0;
+
+      let { data, error } = await client.rpc(
+        "nearby_members",
+        withQuery
+          ? { p_equipment: equipment, p_query: debounced }
+          : { p_equipment: equipment },
+      );
+
+      // PGRST202 is "no function with those arguments", which here means the migration has not
+      // landed. Anything else -- a dead connection, a refused grant -- is a real failure and is
+      // reported as one rather than quietly retried.
+      if (withQuery && error && (error as { code?: string }).code === "PGRST202") {
+        if (!alive) return;
+        setServerSearch(false);
+        ({ data, error } = await client.rpc("nearby_members", { p_equipment: equipment }));
+      }
+
       if (!alive) return;
       const result = data as { ok: boolean; members?: Member[] } | null;
       if (error || !result?.ok) {
@@ -89,10 +119,16 @@ export function MembersList() {
     return () => {
       alive = false;
     };
-  }, [equipment, debounced]);
-  // No second filter here. The rows that came back ARE the answer to what was typed, and
-  // filtering them again in the browser would quietly re-impose the limit this just removed.
-  const shown = members;
+  }, [equipment, debounced, serverSearch]);
+  // Normally no second filter: the rows that came back ARE the answer to what was typed, and
+  // filtering them again would quietly re-impose the limit the server search removed. The
+  // exception is the fallback above, where the server was never given the query at all.
+  const shown =
+    serverSearch || !members || debounced.length === 0
+      ? members
+      : members.filter((m) =>
+          (m.display_name ?? "").toLowerCase().includes(debounced.toLowerCase()),
+        );
   return (
     <div className="space-y-4">
       <input
