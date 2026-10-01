@@ -278,16 +278,40 @@ test("a recovery reaches the member a few miles away and not the one in another 
     ).toBeVisible({ timeout: 20_000 });
   }
 
-  // AVAILABILITY IS LEFT ON, deliberately and after trying twice to turn it back off.
+  // AND SWITCH AVAILABILITY BACK OFF. It ships off, so off is the state the rest of the suite
+  // was written against.
   //
-  // Clicking the switch from here did not stick -- the page reports aria-checked true again
-  // afterwards -- and a cleanup that silently does nothing while the test goes green is
-  // worse than no cleanup, because the next person believes it.
-  //
-  // It is also the harmless half. What broke membership.spec was the POSITION: this test
-  // moves a shared demo member 145 miles to Austin, and a later spec expecting her near
-  // Houston then found nobody. That is cleared above. A demo volunteer who is willing to be
-  // called out is a reasonable state for the other suites to meet, and closer to a real one.
+  // Asserted, not attempted. The first version of this read aria-checked and only clicked when
+  // it said true -- so when the read came back anything else the restore quietly did nothing,
+  // the test went green, and the switch stayed on. There is no uncertainty to be careful about
+  // here: this spec turned it on itself a hundred lines up. If the screen now disagrees, that
+  // is worth failing over, because a member being shown OFF while the dispatcher sees ON is how
+  // somebody gets rung at 2am after deciding they would not be.
+  await near.page.goto("/account/notifications");
+  const stillAvailable = near.page.getByRole("switch", {
+    name: /^available to help|^disponible para ayudar/i,
+  });
+  await stillAvailable.waitFor({ state: "visible", timeout: 20_000 });
+  await expect(
+    stillAvailable,
+    "the switch this spec turned on still reads as on",
+  ).toHaveAttribute("aria-checked", "true", { timeout: 20_000 });
+
+  await stillAvailable.click();
+  await expect(
+    stillAvailable,
+    "and it goes back off, so the next spec starts where the seed left it",
+  ).toHaveAttribute("aria-checked", "false", { timeout: 20_000 });
+
+  // The switch is optimistic with a rollback: it flips first and reverts if the server action
+  // refuses. So reading it once proves the click landed, not that the write did. Reloading is
+  // what distinguishes those two, and it is the only part of this a stale render cannot fake.
+  await near.page.reload();
+  await stillAvailable.waitFor({ state: "visible", timeout: 20_000 });
+  await expect(
+    stillAvailable,
+    "still off after a reload, which means the database agrees and not just the screen",
+  ).toHaveAttribute("aria-checked", "false", { timeout: 20_000 });
   await near.context.close();
   await stuck.context.close();
 });
