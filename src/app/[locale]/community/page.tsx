@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { CommunityFeed } from "@/components/community/community-feed";
-import { IconPeople } from "@/components/ui/icons";
+import { IconBoards, IconPeople } from "@/components/ui/icons";
 import { MenuList } from "@/components/ui/menu-list";
 import { redirect } from "@/i18n/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
@@ -30,6 +30,7 @@ export default async function CommunityPage({ params }: { params: Promise<{ loca
   if (!user) redirect({ href: "/signin", locale });
 
   const tMembers = await getTranslations({ locale, namespace: "members" });
+  const tGroups = await getTranslations({ locale, namespace: "groups" });
 
   return (
     <main className="mx-auto w-full max-w-xl space-y-5 px-4 py-8">
@@ -50,6 +51,12 @@ export default async function CommunityPage({ params }: { params: Promise<{ loca
             label: tMembers("title"),
             hint: tMembers("subtitle"),
             icon: <IconPeople size={22} />,
+          },
+          {
+            href: "/groups",
+            label: tGroups("title"),
+            hint: tGroups("subtitle"),
+            icon: <IconBoards size={22} />,
           },
         ]}
       />

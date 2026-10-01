@@ -2227,5 +2227,45 @@
       "last_method": "Es su única forma de entrar. Primero ponga una contraseña o agregue su teléfono.",
       "signout_failed": "No pudimos cerrar la sesión en todas partes. Inténtelo de nuevo."
     }
+  },
+  "groups": {
+    "title": "Grupos",
+    "subtitle": "Equipos locales dentro de la comunidad. Abiertos para unirse, los lleva quien los creó.",
+    "backToCommunity": "Volver a la comunidad",
+    "searchPlaceholder": "Busque por nombre o condado…",
+    "searchLabel": "Buscar grupos",
+    "loading": "Cargando grupos…",
+    "working": "Un momento…",
+    "join": "Unirme",
+    "leave": "Salir",
+    "yours": "Suyo",
+    "members": "{count, plural, one {# miembro} other {# miembros}}",
+    "role": {
+      "owner": "Usted lo creó",
+      "organizer": "Usted organiza",
+      "member": "Usted pertenece"
+    },
+    "newStart": "Crear un grupo",
+    "newName": "Nombre",
+    "newNameHint": "Como lo llamaría la gente que está en él.",
+    "newRegion": "Zona",
+    "newRegionHint": "Un condado o un pueblo. No una dirección.",
+    "newAbout": "Para qué es (opcional)",
+    "newSubmit": "Crearlo",
+    "newCancel": "Cancelar",
+    "noContactNote": "Sin teléfonos ni enlaces: esto lo ve cualquier miembro.",
+    "emptyTitle": "Todavía no hay grupos.",
+    "emptyBody": "Cree uno para su condado y la siguiente persona lo encontrará aquí.",
+    "emptyFiltered": "Ningún grupo coincide.",
+    "errors": {
+      "failed": "No funcionó. Inténtelo de nuevo.",
+      "not_signed_in": "Inicie sesión primero.",
+      "bad_slug": "Ese nombre no se puede usar. Pruebe otro.",
+      "slug_taken": "Ya existe un grupo con ese nombre.",
+      "bad_visibility": "No funcionó. Inténtelo de nuevo.",
+      "rate_limited": "Ya creó varios grupos hoy. Inténtelo mañana.",
+      "not_found": "Ese grupo ya no está.",
+      "not_open": "Ese grupo es solo por invitación."
+    }
   }
 }

@@ -2227,5 +2227,45 @@
       "last_method": "That is your only way in. Set a password or add your phone first.",
       "signout_failed": "We could not sign you out everywhere. Try again."
     }
+  },
+  "groups": {
+    "title": "Groups",
+    "subtitle": "Local crews inside the wider community. Open to join, run by whoever started them.",
+    "backToCommunity": "Back to community",
+    "searchPlaceholder": "Search by name or county…",
+    "searchLabel": "Search groups",
+    "loading": "Loading groups…",
+    "working": "Working…",
+    "join": "Join",
+    "leave": "Leave",
+    "yours": "Yours",
+    "members": "{count, plural, one {# member} other {# members}}",
+    "role": {
+      "owner": "You started it",
+      "organizer": "You organise",
+      "member": "You are in"
+    },
+    "newStart": "Start a group",
+    "newName": "Name",
+    "newNameHint": "What people in it would call it.",
+    "newRegion": "Area",
+    "newRegionHint": "A county or a town. Not an address.",
+    "newAbout": "What it is for (optional)",
+    "newSubmit": "Create it",
+    "newCancel": "Cancel",
+    "noContactNote": "No phone numbers or links — this is public to every member.",
+    "emptyTitle": "No groups yet.",
+    "emptyBody": "Start one for your county and the next person who joins will find it here.",
+    "emptyFiltered": "No groups match that.",
+    "errors": {
+      "failed": "That did not work. Try again.",
+      "not_signed_in": "Sign in first.",
+      "bad_slug": "That name cannot be used. Try a different one.",
+      "slug_taken": "A group with that name already exists.",
+      "bad_visibility": "That did not work. Try again.",
+      "rate_limited": "You have started a few groups today. Try again tomorrow.",
+      "not_found": "That group is gone.",
+      "not_open": "That group is invite-only."
+    }
   }
 }
