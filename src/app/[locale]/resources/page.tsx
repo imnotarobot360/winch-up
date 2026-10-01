@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { AdSlot } from "@/components/ads/ad-slot";
 import {
   IconAlert,
+  IconBell,
   IconCheck,
   IconChevronRight,
   IconCloud,
@@ -30,6 +31,7 @@ const ICONS = {
   before: IconCheck,
   etiquette: IconPeople,
   weather: IconCloud,
+  emergency: IconBell,
 } as const;
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {

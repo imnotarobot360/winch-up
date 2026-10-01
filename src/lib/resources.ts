@@ -10,7 +10,19 @@
  * Move it to a table if the owner wants to edit without deploying. Version it like the waiver if
  * that happens: safety text that can change silently is worse than safety text that cannot.
  */
-export const GUIDES = ["stuck", "safety", "gear", "before", "etiquette", "weather"] as const;
+// "emergency" is LAST in the list and first in importance, which is not a contradiction: the
+// index is read top to bottom by somebody browsing, and reached by somebody in trouble through
+// the 911 panel and the status page, not by scrolling. It is also one of the three slugs
+// app.ad_slot_allowed() refuses to put an advert beside -- see 20261001000100.
+export const GUIDES = [
+  "stuck",
+  "safety",
+  "gear",
+  "before",
+  "etiquette",
+  "weather",
+  "emergency",
+] as const;
 
 export type GuideSlug = (typeof GUIDES)[number];
 

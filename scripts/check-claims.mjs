@@ -51,6 +51,12 @@ const REVIEWED = new Map([
     "says we are NOT an emergency service, which is the sentence the rule exists to encourage",
   ],
   [
+    "resources.guides.emergency.sections.0.items.5",
+    "the emergency-contacts guide saying nobody here IS an emergency service and 911 is -- the " +
+      "same denial as the stuck guide, on the page most likely to be read by somebody deciding " +
+      "whether to wait for a volunteer",
+  ],
+  [
     "me.location.note",
     "says nothing tracks you and the position expires -- a denial, not a claim",
   ],

@@ -1749,6 +1749,56 @@
             ]
           }
         ]
+      },
+      "emergency": {
+        "title": "Contactos de emergencia",
+        "blurb": "A quién llamar cuando no es trabajo de voluntarios.",
+        "lede": "Winch Up son vecinos con camionetas. Hay situaciones que necesitan a alguien oficial, y otras que necesitan un operador pagado con la máquina correcta. Estos son los números, y el momento de dejar de esperar y usarlos.",
+        "sections": [
+          {
+            "heading": "Llame al 911 primero si pasa cualquiera de esto",
+            "items": [
+              "Hay alguien lastimado, o podría estarlo.",
+              "Un vehículo está en el agua, o el agua está subiendo.",
+              "Está en el tráfico o junto a él.",
+              "Hay combustible derramado, humo o fuego.",
+              "Alguien no puede salir del vehículo.",
+              "Nadie en esta aplicación es un servicio de emergencia. El 911 sí. Llame primero y avísenos después."
+            ]
+          },
+          {
+            "heading": "Varado en una carretera de Texas",
+            "items": [
+              "DPS de Texas: 1-800-525-5555. Según su propia página, llame si su vehículo está descompuesto o está varado a la orilla del camino, o para reportar a un conductor ebrio.",
+              "Diga la carretera, la dirección en la que iba y el último marcador de milla o salida que pasó. Eso es lo que necesitan primero.",
+              "Salga por el lado contrario al tráfico y párese detrás de una barrera si la hay. Pararse junto al vehículo en el acotamiento es como muere la gente esperando ayuda.",
+              "Luces intermitentes encendidas, aunque sea de día."
+            ]
+          },
+          {
+            "heading": "Condiciones del camino y del clima",
+            "items": [
+              "Información de viaje y condiciones de emergencia en los caminos de Texas: 1-800-452-9292, todos los días.",
+              "Vale la pena llamar antes de salir y otra vez si cambia el clima. Un cruce de agua que estaba bien en la mañana es la forma más común en que la gente de aquí termina necesitando un rescate."
+            ]
+          },
+          {
+            "heading": "Cuando necesita una grúa pagada",
+            "items": [
+              "Una grúa o un camión con winch a veces es la respuesta correcta: una volcadura, un vehículo muy fuera del camino, o cualquier cosa donde una correa en la defensa no va a alcanzar.",
+              "Si nadie ha tomado su solicitud después de unos 25 minutos, su página de estado muestra opciones pagadas que los administradores mantienen al día. Nadie en esta aplicación cobra, y nadie aquí recibe comisión por eso.",
+              "Acuerde el precio antes de que alguien enganche su vehículo."
+            ]
+          },
+          {
+            "heading": "En propiedad privada o en un parque",
+            "items": [
+              "Los números cambian según el lugar y no se listan aquí. Un número equivocado a las 11 de la noche es peor que ningún número.",
+              "Use la oficina del parque o al dueño que le dio permiso — y si la ruta está en nuestro directorio, su ficha nombra la fuente con la que se verificó el acceso."
+            ]
+          }
+        ],
+        "sourceNote": "Los números del DPS se tomaron de la página de consejos de viaje del Departamento de Seguridad Pública de Texas el 1 de octubre de 2026. Si alguno cambió, avise a un administrador y se corrige aquí."
       }
     },
     "noSuchGuide": "Esa guía no existe",

@@ -95,6 +95,23 @@ select ok(not app.ad_slot_allowed('resources', 'stuck'),
   'no ad beside "when the stuck one is you"');
 select ok(not app.ad_slot_allowed('resources', 'safety'),
   'no ad beside "doing a recovery without hurting anyone"');
+
+-- Added with the guide itself (20261001000100). A page of phone numbers for somebody deciding
+-- whether to keep waiting is the last place to sell space, and the rule names guides by slug --
+-- so a new one is allowed to carry ads until somebody remembers to add it. This is the
+-- remembering.
+select ok(not app.ad_slot_allowed('resources', 'emergency'),
+  'no ad beside the emergency contacts');
+
+select is(
+  (public.ads_for('resources', 'emergency') ->> 'blocked')::boolean,
+  true,
+  'and the feed itself refuses, not just the predicate'
+);
+
+-- The control: the rule is specific, not a blanket ban on the resources surface.
+select ok(app.ad_slot_allowed('resources', 'gear'),
+  'the gear guide can still carry one, so this is a named list and not an off switch');
 select ok(app.ad_slot_allowed('resources', 'gear'),
   'the gear checklist may carry one');
 select ok(app.ad_slot_allowed('community_feed', null),

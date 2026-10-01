@@ -117,6 +117,16 @@ export default async function GuidePage({
         <p className="mt-4 text-sm text-ink-faint">{t("externalNote")}</p>
       ) : null}
 
+      {/* WHERE THE FACTS CAME FROM, when a guide states something checkable.
+          Optional, so the six guides that are the group's own hard-won opinion do not need
+          one. The emergency contacts guide does: it prints phone numbers somebody may dial from
+          the side of a highway, and a number with no provenance and no date is the kind of
+          thing that quietly goes wrong. Same rule the trail directory already lives by -- a
+          claim about the world names its source. */}
+      {t.has(`guides.${slug}.sourceNote`) ? (
+        <p className="mt-4 text-sm text-ink-faint">{t(`guides.${slug}.sourceNote`)}</p>
+      ) : null}
+
       {/* Mounted on every guide, including the two that are emergency guidance. It asks the
           database and the database refuses those two by name, so there is exactly one place that
           decides -- no TypeScript copy of the rule to drift out of step with the SQL one. */}

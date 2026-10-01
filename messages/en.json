@@ -1749,6 +1749,56 @@
             ]
           }
         ]
+      },
+      "emergency": {
+        "title": "Emergency contacts",
+        "blurb": "Who to call when it is not a job for volunteers.",
+        "lede": "Winch Up is neighbours with trucks. Some situations need somebody official, and some need a paid operator with the right machine. These are the numbers, and the point at which to stop waiting and use them.",
+        "sections": [
+          {
+            "heading": "Call 911 first if any of this is true",
+            "items": [
+              "Somebody is hurt, or might be.",
+              "A vehicle is in water, or the water is rising.",
+              "You are in or near moving traffic.",
+              "There is fuel leaking, smoke, or fire.",
+              "Somebody cannot get out of the vehicle.",
+              "Nobody on this app is an emergency service. 911 is. Call them first and tell us after."
+            ]
+          },
+          {
+            "heading": "Stranded on a Texas highway",
+            "items": [
+              "Texas DPS: 1-800-525-5555. Their own wording is to call if your vehicle is disabled or you are stranded on the side of the road, or to report a drunk driver.",
+              "Say the road, the direction you were travelling, and the last mile marker or exit you passed. That is what they need first.",
+              "Get out on the side away from traffic and stand behind a barrier if there is one. Standing beside a vehicle on a shoulder is how people are killed waiting for help.",
+              "Hazard lights on, even in daylight."
+            ]
+          },
+          {
+            "heading": "Road and weather conditions",
+            "items": [
+              "Texas travel information and emergency road conditions: 1-800-452-9292, daily.",
+              "Worth a call before you leave and again if the weather turns. A low-water crossing that was fine this morning is the most common way people here end up needing a recovery."
+            ]
+          },
+          {
+            "heading": "When you need a paid recovery",
+            "items": [
+              "A wrecker or a winch truck is sometimes the right answer: a rollover, a vehicle well off a road, anything where a strap on a bumper is not going to do it.",
+              "If nobody has taken your request after about 25 minutes, your status page shows paid options the admins keep up to date. Nobody on this app is paid, and nobody here takes a cut of that.",
+              "Agree the price before anyone hooks up to your vehicle."
+            ]
+          },
+          {
+            "heading": "On private land or in a park",
+            "items": [
+              "Numbers vary by place and are not listed here. A wrong number at 11pm is worse than no number.",
+              "Use the park office or the landowner you got permission from — and if the trail is in our directory, its listing names the source the access was checked against."
+            ]
+          }
+        ],
+        "sourceNote": "The DPS numbers above were read from the Texas Department of Public Safety travel tips page on 1 October 2026. If one has changed, tell an admin and it will be corrected here."
       }
     },
     "noSuchGuide": "No such guide",

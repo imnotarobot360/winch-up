@@ -8,7 +8,7 @@
         "run",
         "dev"
       ],
-      "port": 3000,
+      "port": 3400,
       "autoPort": true
     },
     {
@@ -18,7 +18,7 @@
         "run",
         "start"
       ],
-      "port": 3000,
+      "port": 3401,
       "autoPort": true
     }
   ]
