@@ -141,7 +141,11 @@
     "menuSecurity": "Acceso y seguridad",
     "menuSecurityHint": "Contraseña, teléfono, cuentas conectadas",
     "menuSavedTrails": "Rutas guardadas",
-    "menuSavedTrailsHint": "Las que marcó"
+    "menuSavedTrailsHint": "Las que marcó",
+    "menuBlocked": "Miembros bloqueados",
+    "menuBlockedHint": "A quién bloqueó y cómo deshacerlo",
+    "menuModeration": "Cola de moderación",
+    "menuModerationHint": "Publicaciones y comentarios reportados"
   },
   "vehicles": {
     "title": "Sus vehículos",
@@ -2267,5 +2271,18 @@
       "not_found": "Ese grupo ya no está.",
       "not_open": "Ese grupo es solo por invitación."
     }
+  },
+  "blocked": {
+    "pageTitle": "Miembros bloqueados",
+    "pageBody": "Personas cuyas publicaciones y comentarios no ve. No se les avisa.",
+    "backToAccount": "Volver a la cuenta",
+    "loading": "Cargando…",
+    "working": "Un momento…",
+    "unblock": "Desbloquear",
+    "someone": "Un miembro",
+    "since": "Bloqueado el {date}",
+    "emptyTitle": "No ha bloqueado a nadie.",
+    "emptyBody": "Puede bloquear a alguien desde el menú de cualquiera de sus publicaciones.",
+    "failed": "No funcionó. Inténtelo de nuevo."
   }
 }

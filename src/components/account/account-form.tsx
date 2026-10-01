@@ -5,7 +5,9 @@ import { useTranslations } from "next-intl";
 
 import { deleteAccount } from "@/app/actions/account";
 import {
+  IconAlert,
   IconBoards,
+  IconCheck,
   IconDoc,
   IconHook,
   IconPin,
@@ -44,7 +46,14 @@ const EMPTY: Profile = {
  * server action would add except a hop. Deletion is a server action, because removing a row from
  * auth.users needs the service role.
  */
-export function AccountForm({ email }: { email: string }) {
+export function AccountForm({
+  email,
+  canModerate = false,
+}: {
+  email: string;
+  /** Resolved on the server. Hides a row; it does not grant anything -- /moderation gates itself. */
+  canModerate?: boolean;
+}) {
   const t = useTranslations("account");
   const router = useRouter();
 
@@ -250,6 +259,23 @@ export function AccountForm({ email }: { email: string }) {
               hint: t("menuSecurityHint"),
               icon: <IconShackle size={22} />,
             },
+            {
+              href: "/account/blocked",
+              label: t("menuBlocked"),
+              hint: t("menuBlockedHint"),
+              icon: <IconAlert size={22} />,
+            },
+            // Only for people who can act on it. The page refuses everybody else anyway.
+            ...(canModerate
+              ? [
+                  {
+                    href: "/moderation",
+                    label: t("menuModeration"),
+                    hint: t("menuModerationHint"),
+                    icon: <IconCheck size={22} />,
+                  },
+                ]
+              : []),
             {
               href: "/resources",
               label: t("menuResources"),

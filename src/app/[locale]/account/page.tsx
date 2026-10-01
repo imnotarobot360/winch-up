@@ -27,6 +27,26 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
   // still land on /signin. Test it in a browser, not with curl.
   if (!user) redirect({ href: "/signin", locale });
 
+  /**
+   * Can this member moderate?
+   *
+   * /moderation was linked from nowhere in the entire app -- a moderator had to know the URL
+   * and type it, which is a strange thing to require of the person who hides reported content.
+   * Found by the sweep in docs/built-but-unreachable.md.
+   *
+   * Decided here, on the server, rather than by asking the browser: the row simply is not
+   * rendered for anybody else. That is presentation, not permission -- /moderation checks
+   * app.is_moderator() itself, as it did before this row existed, so hiding a link is never
+   * what stops somebody getting in.
+   */
+  const { data: modRoles } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user!.id)
+    .in("role", ["moderator", "admin"]);
+
+  const canModerate = (modRoles?.length ?? 0) > 0;
+
   const t = await getTranslations("account");
 
   return (
@@ -34,7 +54,7 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
       <h1 className="text-3xl font-bold">{t("title")}</h1>
       <p className="mt-2 text-lg text-ink-soft">{t("body")}</p>
       <div className="mt-6">
-        <AccountForm email={user!.email ?? user!.phone ?? ""} />
+        <AccountForm email={user!.email ?? user!.phone ?? ""} canModerate={canModerate} />
       </div>
     </main>
   );

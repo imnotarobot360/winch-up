@@ -141,7 +141,11 @@
     "menuSecurity": "Sign-in & security",
     "menuSecurityHint": "Password, phone, connected accounts",
     "menuSavedTrails": "Saved trails",
-    "menuSavedTrailsHint": "The ones you starred"
+    "menuSavedTrailsHint": "The ones you starred",
+    "menuBlocked": "Blocked members",
+    "menuBlockedHint": "Who you have blocked, and how to undo it",
+    "menuModeration": "Moderation queue",
+    "menuModerationHint": "Reported posts and comments"
   },
   "vehicles": {
     "title": "Your rigs",
@@ -2267,5 +2271,18 @@
       "not_found": "That group is gone.",
       "not_open": "That group is invite-only."
     }
+  },
+  "blocked": {
+    "pageTitle": "Blocked members",
+    "pageBody": "People whose posts and comments you do not see. They are not told.",
+    "backToAccount": "Back to account",
+    "loading": "Loading…",
+    "working": "Working…",
+    "unblock": "Unblock",
+    "someone": "A member",
+    "since": "Blocked {date}",
+    "emptyTitle": "You have not blocked anybody.",
+    "emptyBody": "You can block somebody from the menu on any of their posts.",
+    "failed": "That did not work. Try again."
   }
 }
