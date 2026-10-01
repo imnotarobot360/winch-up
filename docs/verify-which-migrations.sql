@@ -90,8 +90,12 @@ with expected(kind, name, detail, migration, file) as (
     ('function', 'nearby_members',                        '', '000100', '20260924000100_nearby_members.sql'),
     ('function', 'member_profile',                        '', '000100', '20260924000100_nearby_members.sql'),
     ('function', 'coarse_miles',                          '', '000100', '20260924000100_nearby_members.sql'),
-    ('hasref',   'nearby_members',        'profile_public', '000100', '20260924000100_nearby_members.sql'),
-    ('hasref',   'nearby_members',      'available_to_help', '000100', '20260924000100_nearby_members.sql'),
+    -- The two rows that used to be here asserted that nearby_members READS profile_public and
+    -- available_to_help -- the double opt-in gate. 20261001001100 removed both, by the owner's
+    -- decision, so an expectation that they are still there would report the new file as missing
+    -- forever. They are replaced by the opposite check further down, which is the useful one now:
+    -- the gate must be GONE.
+    ('hasref',   'nearby_members',          'coarse_miles', '000100', '20260924000100_nearby_members.sql'),
     ('table',    'email_deliveries',                      '', '000200', '20260924000200_email_deliveries.sql'),
     ('function', 'admin_email_deliveries',                '', '000200', '20260924000200_email_deliveries.sql'),
     ('index',    'email_deliveries_idempotency_idx',      '', '000200', '20260924000200_email_deliveries.sql'),
@@ -153,7 +157,42 @@ with expected(kind, name, detail, migration, file) as (
     ('function', 'my_rig_photo_status', '', '000900', '20260928000900_vehicle_photos.sql'),
     ('privatebucket', 'vehicle-photos', '', '000900', '20260928000900_vehicle_photos.sql'),
     ('storagepolicy', 'vehicle_photos_owner_read', '', '000900', '20260928000900_vehicle_photos.sql'),
-    ('hasref',   'member_profile', 'rig_photo_path', '001000', '20260928001000_member_rig_photo.sql')
+    ('hasref',   'member_profile', 'rig_photo_path', '001000', '20260928001000_member_rig_photo.sql'),
+
+    -- 2026-10-01. Everything below was pushed on 1 October and was still absent from production
+    -- 75 minutes later, which is why this block exists: the GitHub integration applied a migration
+    -- in about 90 seconds on 30 September and applied none of these at all.
+    ('hasref',   'candidates',    'requester_user_id',  '000500', '20261001000500_exclude_requester.sql'),
+    ('ring10',   'dispatch.ring_radii_miles',      '',  '000600', '20261001000600_first_ring_ten_miles.sql'),
+    ('function', 'may_see_request_photos',         '',  '000700', '20261001000700_photos_for_ring.sql'),
+    ('function', 'request_photos_for_helper',      '',  '000700', '20261001000700_photos_for_ring.sql'),
+    ('column',   'profiles.suspended_at',          '',  '001000', '20261001001000_open_directory.sql'),
+    ('column',   'profiles.suspended_reason',      '',  '001000', '20261001001000_open_directory.sql'),
+    ('column',   'profiles.suspended_by',          '',  '001000', '20261001001000_open_directory.sql'),
+    ('index',    'profiles_suspended_idx',         '',  '001000', '20261001001000_open_directory.sql'),
+    ('index',    'profiles_suspended_by_idx',      '',  '001000', '20261001001000_open_directory.sql'),
+    ('function', 'member_is_listable',             '',  '001000', '20261001001000_open_directory.sql'),
+    ('function', 'like_contains',                  '',  '001000', '20261001001000_open_directory.sql'),
+    -- The ARGUMENT, not the function: nearby_members has existed since September. A member
+    -- directory calling it with p_query against the older signature is PGRST202 on every load.
+    ('arg',      'nearby_members',          'p_query',  '001100', '20261001001100_directory_open_rpcs.sql'),
+    ('noref',    'member_profile',   'profile_public',  '001100', '20261001001100_directory_open_rpcs.sql'),
+    ('noref',    'nearby_members',   'profile_public',  '001100', '20261001001100_directory_open_rpcs.sql'),
+    ('hasref',   'candidates',           'suspended_at', '001200', '20261001001200_dispatch_respects_suspension.sql'),
+    ('hasref',   'candidates',        'blocks_between', '001200', '20261001001200_dispatch_respects_suspension.sql'),
+    ('column',   'vehicles.show_in_community',     '',  '001300', '20261001001300_profile_rigs_and_activity.sql'),
+    ('function', 'member_rigs',                    '',  '001300', '20261001001300_profile_rigs_and_activity.sql'),
+    ('hasref',   'member_profile',          'rig_count', '001300', '20261001001300_profile_rigs_and_activity.sql'),
+    ('function', 'report_member',                  '',  '001400', '20261001001400_report_and_suspend_members.sql'),
+    ('function', 'admin_suspend_member',           '',  '001400', '20261001001400_report_and_suspend_members.sql'),
+    ('function', 'admin_restore_member',           '',  '001400', '20261001001400_report_and_suspend_members.sql'),
+    ('function', 'moderation_reported_members',    '',  '001400', '20261001001400_report_and_suspend_members.sql'),
+    ('reportkind', 'member',                       '',  '001400', '20261001001400_report_and_suspend_members.sql'),
+    ('hasref',   'moderation_queue',  'target_kind <> ', '001500', '20261001001500_content_queue_excludes_members.sql'),
+    ('hasref',   'moderation_reported_members', 'reports_open', '001600', '20261001001600_reported_members_by_member.sql'),
+    ('index',    'content_reports_one_open_per_reporter_member', '', '001700', '20261001001700_report_a_member_again.sql'),
+    ('index',    'content_reports_one_per_reporter_content',     '', '001700', '20261001001700_report_a_member_again.sql'),
+    ('hasref',   'community_report',   'target_kind <> ', '001800', '20261001001800_community_report_conflict_target.sql')
 ),
 checked as (
   select
@@ -195,9 +234,37 @@ checked as (
         select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
          where n.nspname in ('public', 'app') and p.proname = e.name
            and pg_get_functiondef(p.oid) like '%' || e.detail || '%')
+      -- An ARGUMENT, because adding one creates a new signature rather than changing the old one.
+      -- A frontend that passes it gets PGRST202 from PostgREST while the function plainly exists,
+      -- which reads as a missing function and is not one. This is the check that would have caught
+      -- the member directory being dead in production on 1 October.
+      when 'arg' then exists (
+        select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+         where n.nspname = 'public' and p.proname = e.name
+           and e.detail = any (p.proargnames))
+      -- A CHECK constraint that has to allow a new value. The constraint exists either way, so
+      -- 'does it exist' proves nothing -- what matters is whether the value is in it.
+      when 'reportkind' then exists (
+        select 1 from pg_constraint
+         where conname = 'content_reports_target_kind_check'
+           and pg_get_constraintdef(oid) like '%' || e.name || '%')
+      -- A SETTING's value. 20261001000600 changes data, not structure: the first dispatch ring
+      -- became 10 miles instead of 15, and nothing about the schema shows whether it ran.
+      when 'ring10' then exists (
+        select 1 from public.app_settings
+         where key = e.name and value::text like '%10%' and value::text not like '%15%')
       when 'nogate' then exists (
         select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
          where n.nspname = 'app' and p.proname = e.name
+           and pg_get_functiondef(p.oid) not like '%' || e.detail || '%')
+      -- Same question as nogate, for a function in `public`. nogate is pinned to schema app
+      -- because that is where app.candidates lives; a removal in a public RPC needs this one.
+      -- A check that something is ABSENT is the right shape for a migration whose whole job is a
+      -- removal: 'does member_profile exist' has been true since September and says nothing about
+      -- whether today's file ran.
+      when 'noref' then exists (
+        select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+         where n.nspname in ('public', 'app') and p.proname = e.name
            and pg_get_functiondef(p.oid) not like '%' || e.detail || '%')
       -- A trigger is the half of a producer that is easy to lose: the function survives a
       -- re-run of the file, and the CREATE TRIGGER is what a truncated paste drops.
