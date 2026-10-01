@@ -15,6 +15,10 @@ const PORT = 3101;
 
 export default defineConfig({
   testDir: "./e2e",
+
+  // Clears the rate-limit counters, because several of this app's guards are per-day and the
+  // suite is not a person. See e2e/global-setup.ts -- it reads as flake otherwise.
+  globalSetup: "./e2e/global-setup.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

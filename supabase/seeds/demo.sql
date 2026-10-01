@@ -350,3 +350,30 @@ select u.phone, u.id, 'phone', jsonb_build_object('sub', u.id::text, 'phone', u.
   from auth.users u
  where u.phone is not null and u.phone <> ''
 on conflict (provider_id, provider) do nothing;
+
+-- ---------------------------------------------------------------------------
+-- RAISE THE PER-CONNECTION REQUEST CEILING, for the demo database only.
+--
+-- Production allows five recoveries an hour from one IP address, which is a sane ceiling for
+-- a household and a nuisance barrier for someone hammering the form. A test run is neither:
+-- every browser Playwright drives arrives from 127.0.0.1, three specs file real recoveries,
+-- and the suite went over five in six minutes.
+--
+-- What that looks like when it happens is NOT an obvious refusal. create_request answers
+-- {"ok": false, "error": "rate_limited_ip"}, the wizard prints "Too many requests from this
+-- connection" exactly as it should, and the test fails thirty seconds later on
+-- page.waitForURL with no clue as to why -- in two different specs at once. The product was
+-- right both times.
+--
+-- The per-phone limit is deliberately LEFT ALONE: the specs already randomise the number, so
+-- three a day is never reached, and leaving it means the phone path stays covered.
+--
+-- This runs only against the demo/CI database. It must never run against production, which is
+-- true of this whole file.
+insert into public.app_settings (key, value, description)
+values (
+  'limits.max_requests_per_ip_per_hour',
+  '200'::jsonb,
+  'Demo/CI only: the whole suite shares one IP. Production value is 5.'
+)
+on conflict (key) do update set value = excluded.value, description = excluded.description;
