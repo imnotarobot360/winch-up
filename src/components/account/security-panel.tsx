@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Button, Callout, Card, Field, TextInput } from "@/components/ui/primitives";
 import { useRouter } from "@/i18n/navigation";
 import { confirmPhoneCode, sendPhoneCode } from "@/lib/auth/link-phone";
+import { RETURN_COOKIE, RETURN_COOKIE_MAX_AGE } from "@/lib/auth/return-path";
 import type { SocialProvider } from "@/lib/auth/social-providers";
 import { supabaseBrowser, supabaseThrowaway } from "@/lib/supabase/client";
 import { formatUsPhone, toE164Us } from "@/lib/utils";
@@ -231,6 +232,29 @@ export function SecurityPanel({ providers }: { providers: SocialProvider[] }) {
     setBusy(provider);
     setError(null);
     setDone(null);
+
+    /**
+     * Leave a note saying where to come back to.
+     *
+     * Connecting used to land on /me, because the callback sends everybody there and the
+     * obvious fix -- ?next=/account/security on the redirect -- is the one thing that cannot
+     * work: Supabase matches redirect_to against an exact allowlist, and the same URL with a
+     * query string silently falls back to the Site URL instead.
+     *
+     * The CURRENT path rather than a hard-coded one, so this returns to the right language's
+     * copy of the screen, and so any other screen that ever starts a link gets the behaviour
+     * for free. Secure only over https: setting it unconditionally would make it vanish on
+     * http://localhost and quietly stop working in development.
+     */
+    document.cookie = [
+      `${RETURN_COOKIE}=${encodeURIComponent(window.location.pathname)}`,
+      "path=/",
+      `max-age=${RETURN_COOKIE_MAX_AGE}`,
+      "samesite=lax",
+      window.location.protocol === "https:" ? "secure" : "",
+    ]
+      .filter(Boolean)
+      .join("; ");
 
     const { error: linkError } = await supabaseBrowser().auth.linkIdentity({
       provider,

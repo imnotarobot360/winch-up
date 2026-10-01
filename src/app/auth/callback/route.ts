@@ -1,5 +1,7 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+import { RETURN_COOKIE, safeReturnPath } from "@/lib/auth/return-path";
 import { supabaseServer } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -19,13 +21,35 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const next = url.searchParams.get("next") ?? "/me";
 
-  // Relative paths only, and no protocol-relative "//evil.com" either.
-  const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/me";
+  /**
+   * Where to go afterwards, in order: an explicit ?next, then the cookie, then /me.
+   *
+   * THE COOKIE EXISTS BECAUSE ?next CANNOT BE USED FOR OAUTH. Supabase matches redirect_to
+   * against an exact allowlist, and the bare callback carrying a query string does not match
+   * it -- Supabase then falls back to the Site URL without saying so, which looks like the app
+   * sending people to the wrong page. A cookie survives the round trip: the return from the
+   * provider is a top-level GET, which carries SameSite=Lax cookies.
+   *
+   * Both go through the same validator. The cookie is written by client JavaScript and is
+   * exactly as trustworthy as the query parameter, which is to say not at all, and either one
+   * ends up in a redirect from this domain.
+   */
+  const jar = await cookies();
+  const destination =
+    safeReturnPath(url.searchParams.get("next")) ??
+    safeReturnPath(jar.get(RETURN_COOKIE)?.value) ??
+    "/me";
+
+  /** Clear the cookie on every path out of here, including the failures. */
+  const leave = (to: string) => {
+    const res = NextResponse.redirect(new URL(to, url.origin));
+    res.cookies.delete(RETURN_COOKIE);
+    return res;
+  };
 
   if (!code) {
-    return NextResponse.redirect(new URL("/signin?error=missing_code", url.origin));
+    return leave("/signin?error=missing_code");
   }
 
   const supabase = await supabaseServer();
@@ -33,7 +57,7 @@ export async function GET(request: Request) {
 
   if (error) {
     console.error("[auth/callback] exchange failed", error.message);
-    return NextResponse.redirect(new URL("/signin?error=link_expired", url.origin));
+    return leave("/signin?error=link_expired");
   }
 
   /**
@@ -56,11 +80,14 @@ export async function GET(request: Request) {
     const state = (data as { state?: { needs_signature?: boolean } } | null)?.state;
 
     if (state?.needs_signature) {
-      return NextResponse.redirect(new URL("/agreement", url.origin));
+      // The agreement wins over the saved destination -- it is the one thing that must not
+      // be skipped -- and the cookie is dropped rather than held, so signing it later cannot
+      // bounce somebody somewhere they have forgotten asking for.
+      return leave("/agreement");
     }
   } catch (cause) {
     console.error("[auth/callback] membership check failed, continuing", cause);
   }
 
-  return NextResponse.redirect(new URL(safeNext, url.origin));
+  return leave(destination);
 }
