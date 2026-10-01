@@ -66,8 +66,20 @@ not render.
 
 **Connecting requires "Manual linking" to be ENABLED** in the Supabase dashboard
 (Authentication → Sign In / Providers). It is off by default. With it off, `linkIdentity()`
-returns an error naming manual linking and the screen says connecting is turned off rather than
-"try again", which somebody could retry forever.
+returns `manual_linking_disabled` and the screen says connecting is turned off rather than "try
+again", which somebody could retry forever. The branch keys on that error CODE, not on the
+wording of the message beside it.
+
+**Enabled in production on 2026-10-01, and the flow is verified end to end there**: the owner
+pressed Connect on Google, came back through the consent screen, and the row reads Connected
+with the ways-to-sign-in count one higher. That is the only proof available from outside --
+`/auth/v1/settings` does not publish the manual-linking flag, so nothing here can check it.
+
+**After connecting you land on `/me`, not back on this screen.** The callback sends everyone to
+`/me` because Supabase matches `redirect_to` against an exact allowlist and a `?next=` query
+string stops it matching, falling back to the Site URL. Fixable without touching the allowlist by
+setting a short-lived cookie before starting the link and reading it in the callback -- a cookie
+survives the round trip where a query string cannot. Not done yet.
 
 The cached provider list has a five-minute TTL, so turning a provider on in the dashboard takes
 up to five minutes to show up. That is deliberate — see the comment in `social-providers.ts`.
