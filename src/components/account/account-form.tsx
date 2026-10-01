@@ -18,20 +18,18 @@ import {
 } from "@/components/ui/icons";
 import { Avatar } from "@/components/ui/avatar";
 import { MenuList } from "@/components/ui/menu-list";
-import { Button, Callout, Card, Field, TextInput, Toggle } from "@/components/ui/primitives";
+import { Button, Callout, Card, Field, TextInput } from "@/components/ui/primitives";
 import { useRouter } from "@/i18n/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
 type Profile = {
   display_name: string | null;
   home_region: string | null;
-  profile_public: boolean;
 };
 
 const EMPTY: Profile = {
   display_name: "",
   home_region: "",
-  profile_public: false,
 };
 
 /**
@@ -71,7 +69,7 @@ export function AccountForm({
       try {
         const { data, error: loadError } = await supabaseBrowser()
           .from("profiles")
-          .select("display_name, home_region, profile_public")
+          .select("display_name, home_region")
           .maybeSingle();
 
         if (!alive) return;
@@ -110,7 +108,6 @@ export function AccountForm({
       .update({
         display_name: profile.display_name?.trim() || null,
         home_region: profile.home_region?.trim() || null,
-        profile_public: profile.profile_public,
       })
       .not("user_id", "is", null);
 
@@ -285,16 +282,18 @@ export function AccountForm({
           ]}
         />
 
-        <Card className="space-y-3">
-          <h2 className="text-xl font-semibold">{t("privacyTitle")}</h2>
-          <Toggle
-            checked={profile.profile_public}
-            onChange={(v) => set("profile_public", v)}
-            label={t("profilePublic")}
-            hint={t("profilePublicHint")}
-          />
-        </Card>
+        {/* THE PRIVACY CARD IS GONE, and so is profiles.profile_public with it.
 
+            It held one switch -- "Show my profile to other members" -- which the owner removed:
+            every active member is now in the directory. Nothing replaces it, because there is no
+            decision left to offer here, and a card headed Privacy containing nothing says the
+            opposite of the truth.
+
+            What a member still controls is on /account/notifications (whether they are called
+            out), /me (whether they share a live position) and /account/blocked (who cannot see
+            them). Being listed was never what protected anybody: their phone, their email and
+            their coordinates are kept out of the directory by what the RPC selects, not by a
+            switch. See docs/member-directory-audit.md. */}
         <Button type="submit" size="lg" disabled={busy}>
           {busy ? t("working") : t("save")}
         </Button>

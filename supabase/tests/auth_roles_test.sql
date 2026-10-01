@@ -97,11 +97,59 @@ select is(
   'marketing notifications default to off: a default-on box is not consent'
 );
 
+-- PROFILES ARE VISIBLE TO OTHER MEMBERS NOW, by the owner's decision, so the assertion that used
+-- to live here -- profile_public defaults to false, 'profiles are private until someone chooses
+-- otherwise' -- is no longer the rule. It is not replaced with nothing: it was here to protect a
+-- member's details, and that protection has to survive the policy reversing. What it becomes is
+-- the thing that actually does the protecting.
+--
+-- WHICH IS RLS, NOT COLUMN GRANTS. Worth writing down, because the first version of this
+-- assertion claimed authenticated could select only three columns of profiles and failed with
+-- ten extra ones: 20260923001800 ADDED three column grants to a table that already had a broad
+-- one. The column grants are not the fence. profiles_self_read is -- user_id = auth.uid() -- and
+-- an audit that names the wrong mechanism is worse than one that names none, because the next
+-- person tightens the part that was never holding the weight.
+
+-- Two accounts of its own, so this does not depend on the demo seed having been run: supabase
+-- test db builds from seed.sql alone, and a count assertion against whatever happens to be in
+-- the database is how a test starts passing on yesterday's clicking about.
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, recovery_token, email_change, email_change_token_new
+)
+select '00000000-0000-0000-0000-000000000000', v.id, 'authenticated', 'authenticated',
+       v.email, 'x', now(), '{}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', ''
+from (values
+  ('ab000000-0000-4000-8000-00000000000a'::uuid, 'roles-me@example.invalid'),
+  ('ac000000-0000-4000-8000-00000000000a'::uuid, 'roles-other@example.invalid')
+) as v(id, email)
+on conflict (id) do nothing;
+
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"ab000000-0000-4000-8000-00000000000a","role":"authenticated"}';
+
+select is(
+  (select count(*)::int from public.profiles),
+  1,
+  'a member selecting the whole profiles table gets exactly one row back: their own'
+);
+
+select is(
+  (select count(*)::int from public.profiles
+    where user_id <> 'ab000000-0000-4000-8000-00000000000a'),
+  0,
+  'and asking for somebody else by id returns nothing, whatever the directory shows'
+);
+
+reset role;
+-- Marketing consent is the one default that has not moved and must not.
 select is(
   (select column_default from information_schema.columns
-    where table_name = 'profiles' and column_name = 'profile_public'),
-  'false',
-  'profiles are private until someone chooses otherwise'
+    where table_name = 'profiles' and column_name = 'suspended_at'),
+  null,
+  'and nobody is born suspended'
 );
 
 -- ---------------------------------------------------------------------------

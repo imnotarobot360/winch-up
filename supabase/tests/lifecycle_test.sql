@@ -613,12 +613,20 @@ select is(
 reset role;
 
 -- Somebody who joined while it was optional.
+--
+-- IT HAS TO BE A RESPONDER WITH AN ACCOUNT. This picked the oldest responder outright, and on
+-- any database carrying the demo seed the oldest rows are LEGACY responders with user_id null --
+-- volunteers who predate accounts and cannot be signed in as. The claims below then came out as
+-- {"sub": null}, auth.uid() was null, and upsert_responder_profile refused for the one reason
+-- this pair of assertions is not about. The three oldest also share a created_at, so which one
+-- it picked was not even stable.
 update public.responders set phone = null
- where id = (select id from public.responders order by created_at limit 1);
+ where id = (select id from public.responders
+              where user_id is not null order by created_at, id limit 1);
 
 select set_config('request.jwt.claims',
   (select json_build_object('sub', user_id, 'role', 'authenticated')::text
-     from public.responders where phone is null limit 1), true) as _;
+     from public.responders where phone is null and user_id is not null limit 1), true) as _;
 set local role authenticated;
 
 select is(

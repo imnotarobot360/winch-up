@@ -167,42 +167,17 @@ test("a recovery reaches the member a few miles away and not the one in another 
     await stuck.page.waitForURL(/\/r\//, { timeout: 30_000 });
   }
 
-  // LEAVE THE REQUESTER WITH NO OPEN RECOVERY, deterministically.
+  // ONE FILING, because the account is already empty.
   //
-  // A member may hold exactly one, and create_request answers a second attempt by handing
-  // back the one that exists -- so a run that died earlier leaves this one filing nothing and
-  // hunting a note that was never written. Four runs of this spec went that way.
+  // This used to file a throwaway recovery and cancel it first, to be sure that what came back
+  // was ours: a member may hold exactly one open recovery, and create_request answers a second
+  // attempt by handing back the one that exists, so a run that died earlier left this one
+  // asserting against somebody else's note. Four runs went that way.
   //
-  // Reading /me to find the stale one did not work: the dashboard loads its list client-side
-  // and the links were not there yet. This uses only the two pages that are certain -- the
-  // wizard, and the status page it lands on, which always has Cancel while the recovery is
-  // open. File, cancel whatever came back, and the account is empty for the real attempt.
+  // That cost two of the five recoveries an IP is allowed in an hour, for a suite that files
+  // five. Clearing stale recoveries belongs in e2e/global-setup.ts with the other state reset,
+  // and once it is there this can simply file one and trust it.
   await fileIt();
-  stuck.page.once("dialog", (d) => void d.accept());
-  const firstCancel = stuck.page
-    .getByRole("button", { name: /cancel this request|cancelar/i })
-    .first();
-
-  // WAIT FOR IT TO EXIST BEFORE ASKING WHETHER IT EXISTS. The status page renders client-side,
-  // so count() immediately after the navigation is 0 on a page that is about to show the
-  // button -- the same mistake that made the /me cleanup a no-op, repeated one page along.
-  await firstCancel.waitFor({ state: "visible", timeout: 15_000 }).catch(() => {});
-
-  if ((await firstCancel.count()) > 0) {
-    await firstCancel.click();
-    await expect(stuck.page.getByText(/cancelled|cancelada/i).first()).toBeVisible({
-      timeout: 20_000,
-    });
-  }
-
-  // Now it is ours, because there is nothing else it could be.
-  await fileIt();
-
-  // The status page does NOT echo the note, so there is no way to tell from here whether
-  // this is our recovery or one create_request handed back. That is why the cleanup above
-  // runs first and has to actually work: a detection built on the note was checking for
-  // text the page never renders, and 'cancel and try again' then ran every single time.
-
   // ---- the near member sees it ------------------------------------------
   await near.page.goto("/help");
 

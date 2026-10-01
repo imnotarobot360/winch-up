@@ -51,7 +51,9 @@ insert into public.responders (
    60, '{winch}', 'approved', 'active', 'No Rig', 0, null)
 on conflict (id) do nothing;
 
-update public.profiles set profile_public = true, available_to_help = true,
+-- available_to_help is set because this member is a volunteer, not because it is needed to be
+-- seen: since 20261001001100 every active member is in the directory either way.
+update public.profiles set available_to_help = true,
                            display_name = 'Rigowner'
  where user_id = 'e1000000-0000-4000-8000-00000000000e';
 

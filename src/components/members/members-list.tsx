@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Avatar } from "@/components/ui/avatar";
@@ -8,20 +8,24 @@ import { Link } from "@/i18n/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
 /**
- * Screen 7 of the design reference: members near you who have said they are up for a call-out.
+ * Screen 7 of the design reference: the member directory.
  *
- * EVERYONE HERE CHOSE TO BE
+ * EVERYONE IS HERE NOW
  *
- * nearby_members() lists a member only if they set BOTH "show my profile to other members" AND
- * "available to help". Either alone is not consent to appear in a directory -- being available
- * means "ring me when somebody near me is stuck", which is a different thing from "let strangers
- * page through me". The server enforces that; this component could not widen it if it tried.
+ * This used to say the opposite, and it was true when it was written: nearby_members() listed a
+ * member only if they had set both "show my profile to other members" and "available to help",
+ * and the list started nearly empty as a result. The owner removed that gate -- every active
+ * member is in the directory, and 20261001001100 is where that is enforced.
  *
- * So the list starts nearly empty, and the empty state says why rather than implying the app is
- * broken. That is the honest state of a consent-based directory on its first day, and the
- * alternative -- seeding it with people who never agreed -- is not a trade worth making.
+ * Availability is still shown, as a chip, and only when the member enabled it. It stopped being
+ * the price of appearing and went back to meaning what it says: ring me when somebody near me is
+ * stuck. Being in this list does not put anybody on call -- app.candidates() reads the switch,
+ * not this list.
  *
- * Distances arrive already rounded, in whole miles under five and to the nearest five above. No
+ * Suspended accounts, deleted accounts, anybody you blocked and anybody who blocked you are all
+ * absent, and none of that is this component's doing: it could not widen what the server returns
+ * if it tried.
+ * * Distances arrive already rounded, in whole miles under five and to the nearest five above. No
  * coordinates reach the browser at all.
  */
 type Member = {
@@ -47,11 +51,30 @@ export function MembersList() {
   const [equipment, setEquipment] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
 
+  // SEARCH RUNS ON THE SERVER, debounced, and that is a change forced by opening the directory.
+  //
+  // It used to filter the fetched rows in the browser, with a reasonable argument: the list is
+  // capped at a hundred, so a round trip per keystroke cost more than it saved. That argument
+  // held while the directory was opt-in and nearly empty. With every member in it, a hundred
+  // rows is a page of the membership rather than all of it -- and searching a page while
+  // appearing to search the directory is the kind of wrong that looks like a missing member
+  // rather than a missing feature.
+  //
+  // The escaping lives in app.like_contains, so an underscore or a percent sign typed into the
+  // box is a character and not a wildcard.
+  const [debounced, setDebounced] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(query.trim()), 250);
+    return () => clearTimeout(timer);
+  }, [query]);
+
   useEffect(() => {
     let alive = true;
     (async () => {
       const { data, error } = await supabaseBrowser().rpc("nearby_members", {
         p_equipment: equipment,
+        p_query: debounced || null,
       });
       if (!alive) return;
       const result = data as { ok: boolean; members?: Member[] } | null;
@@ -66,17 +89,10 @@ export function MembersList() {
     return () => {
       alive = false;
     };
-  }, [equipment]);
-
-  // Filtering by name happens here rather than in the query: the list is capped at 100 rows, so
-  // a round trip per keystroke would cost more than it saves and would leak what is being typed.
-  const shown = useMemo(() => {
-    if (!members) return null;
-    const q = query.trim().toLowerCase();
-    if (!q) return members;
-    return members.filter((m) => (m.display_name ?? "").toLowerCase().includes(q));
-  }, [members, query]);
-
+  }, [equipment, debounced]);
+  // No second filter here. The rows that came back ARE the answer to what was typed, and
+  // filtering them again in the browser would quietly re-impose the limit this just removed.
+  const shown = members;
   return (
     <div className="space-y-4">
       <input

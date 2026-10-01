@@ -511,9 +511,13 @@ docs/                     decisions + runbooks
   fourth run of the day goes over. What you see is NOT a refusal: the RPC returns
   `{"ok": false, "error": "rate_limited_ip"}`, the UI prints the right sentence, and the spec
   dies thirty seconds later on `page.waitForURL` with nothing to explain it, in a different spec
-  each run -- whichever one tipped over the edge. `e2e/global-setup.ts` clears
-  `rate_limit_hits` before the run, and `supabase/seeds/demo.sql` raises only the per-IP ceiling
-  (production stays at 5). If a request-filing spec starts failing at the submit, check
+  each run -- whichever one tipped over the edge. `e2e/global-setup.ts` clears `rate_limit_hits`
+  and cancels stale open recoveries before the run, which is what
+  `scripts/local-stack/README.md` already prescribes doing by hand. **Do not raise the setting
+  instead** -- that README says why, and it is right: the suites are the only place the limiter
+  is ever exercised against a real browser, so raising it retires the test along with the
+  obstacle. I raised it in the demo seed on 2026-10-01 before reading that, and reverted it.
+  If a request-filing spec starts failing at the submit, check
   `select bucket_key, count(*) from rate_limit_hits group by 1` before reading any product code.
 - **`count()` right after a navigation is 0 on a page that is about to render the thing.** Most
   of this app renders client-side, so a cleanup written as "if the Cancel button is there, click
