@@ -16,6 +16,38 @@
 
 set search_path = public, extensions;
 
+-- ---------------------------------------------------------------------------
+-- GUARDED, because this file is SUPERSEDED and replaying it out of order would revert a
+-- security condition.
+-- ---------------------------------------------------------------------------
+--
+-- app.candidates() is replaced WHOLE here. 20261001001200 later replaces it again and adds three
+-- conditions -- suspension, deletion and blocking all reach the dispatcher -- while keeping the
+-- self-dispatch exclusion this file introduced. So 001200 contains everything in this file, and
+-- this file contains none of 001200.
+--
+-- In a clean replay the order is fine: this runs, then 001200 runs, and the result is correct. The
+-- hazard is applying migrations BY HAND, which is how 1 October's reached production after the
+-- GitHub integration stopped. Pasting this one after 001200 would quietly put a suspended member
+-- back on the dispatch ring and let somebody be called out to a recovery filed by a person who
+-- blocked them -- with no error, and nothing on any screen to show it had happened.
+--
+-- So it checks first. If the live definition already mentions suspended_at, the later file is in
+-- place and this one does nothing but say so.
+
+do $guard$
+begin
+  if exists (
+    select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'app' and p.proname = 'candidates'
+       and pg_get_functiondef(p.oid) like '%suspended_at%'
+  ) then
+    raise notice
+      'skipped: app.candidates already carries 20261001001200''s conditions, which include this file''s';
+    return;
+  end if;
+
+  execute $defn$
 CREATE OR REPLACE FUNCTION app.candidates(p_request_id uuid, p_radius_miles integer, p_limit integer)
  RETURNS TABLE(responder_id uuid, distance_miles numeric)
  LANGUAGE sql
@@ -109,5 +141,6 @@ AS $function$
   order by extensions.st_distance(r.effective_location, req.location)
   limit greatest(1, p_limit);
 $function$
-
-
+  $defn$;
+end
+$guard$;
