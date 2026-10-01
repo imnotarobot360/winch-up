@@ -51,6 +51,11 @@ export default function globalSetup() {
     `update public.profiles
         set suspended_at = null, suspended_reason = null, suspended_by = null
       where suspended_at is not null`,
+    // AND NO CONVERSATIONS FROM LAST TIME. direct-messages.spec starts one between two demo
+    // members every run. Left alone they stack up, the inbox assertions start matching an older
+    // run's thread, and dm_start's ten-new-conversations-a-day ceiling eventually refuses -- which
+    // would present as the send button doing nothing. Cascades to dm_messages.
+    `delete from public.dm_threads`,
   ];
 
   for (const statement of sql) {

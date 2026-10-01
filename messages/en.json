@@ -142,7 +142,9 @@
     "menuBlocked": "Blocked members",
     "menuBlockedHint": "Who you have blocked, and how to undo it",
     "menuModeration": "Moderation queue",
-    "menuModerationHint": "Reported posts and comments"
+    "menuModerationHint": "Reported posts and comments",
+    "menuMessages": "Messages",
+    "menuMessagesHint": "Conversations with other members"
   },
   "vehicles": {
     "title": "Your rigs",
@@ -1987,7 +1989,12 @@
     "communityLabel": "Community replies and reactions",
     "marketingLabel": "News and offers",
     "marketingHint": "Off unless you turn it on. Nothing about a live recovery is ever sent this way.",
-    "osNote": "Your phone or browser has its own notification setting, and it wins over all of these. If nothing arrives, check there too."
+    "osNote": "Your phone or browser has its own notification setting, and it wins over all of these. If nothing arrives, check there too.",
+    "dmTitle": "Direct messages",
+    "allowDmLabel": "Let other members message me",
+    "allowDmHint": "Turning this off stops new conversations. Conversations you already have keep working — block someone to stop them.",
+    "notifyDmLabel": "Tell me about direct messages",
+    "notifyDmHint": "Separate from recovery messages, so turning this off won't silence a volunteer on their way to you."
   },
   "push": {
     "title": "Alerts on this device",
@@ -2071,7 +2078,6 @@
     "equipment": "What they carry",
     "recoveries": "Recoveries they came out to",
     "milesAway": "About {miles} mi away",
-    "howToReach": "There is no direct messaging here. If they offer on your recovery, or you offer on theirs, the conversation opens with it.",
     "rigPhotoAlt": "{name}'s rig",
     "years": "{count, plural, one {Year} other {Years}}",
     "underOneYear": "<1",
@@ -2341,5 +2347,33 @@
     "emptyTitle": "You have not blocked anybody.",
     "emptyBody": "You can block somebody from the menu on any of their posts.",
     "failed": "That did not work. Try again."
+  },
+  "dm": {
+    "pageTitle": "Messages",
+    "pageBody": "Conversations with other members. Private between the two of you.",
+    "backToAccount": "Back to your account",
+    "backToInbox": "Back to messages",
+    "loading": "Looking…",
+    "loadFailed": "Could not load this. Try again.",
+    "someone": "A member",
+    "emptyTitle": "No conversations yet.",
+    "emptyBody": "Open somebody's profile and send them a message.",
+    "emptyLink": "Browse members",
+    "previewMine": "You: {body}",
+    "noMessagesYet": "No messages yet.",
+    "composeLabel": "Write a message",
+    "composePlaceholder": "Write a message…",
+    "send": "Send",
+    "sending": "Sending…",
+    "cancel": "Cancel",
+    "seen": "Seen",
+    "sendFailed": "That did not send. Try again.",
+    "cannotReply": "You can't send to this conversation any more. You can still read it.",
+    "threadGone": "That conversation isn't there.",
+    "otherSuspended": "This account is suspended.",
+    "messageMember": "Message {name}",
+    "openConversation": "Open the conversation",
+    "firstMessageLabel": "What would you like to say to {name}?",
+    "theirMessagesOff": "{name} has direct messages turned off."
   }
 }

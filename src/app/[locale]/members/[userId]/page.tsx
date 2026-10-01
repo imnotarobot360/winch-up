@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { MemberActions } from "@/components/members/member-actions";
+import { MessageMember } from "@/components/members/message-member";
 import { supabaseServer } from "@/lib/supabase/server";
 import { signVehiclePhoto, signVehiclePhotos } from "@/lib/vehicle-photos";
 
@@ -266,13 +267,17 @@ export default async function MemberProfilePage({
         </section>
       ) : null}
 
-      {/* No Message button. The reference has one, and there is no member-to-member messaging in
-          this product -- the only conversation that exists is the one attached to a recovery, which
-          is gated on being a participant in it. The spec says "send messages where messaging is
-          enabled", and it is not enabled, so this says where a conversation does open instead. A
-          button that opened nothing, or worse opened a channel to a stranger, is not the thing to
-          add on the way past. */}
-      <p className="mt-6 text-sm text-ink-faint">{t("howToReach")}</p>
+      {/* THE MESSAGE BUTTON, which this page spent its whole life explaining the absence of.
+
+          What used to be here was a comment saying the reference has one and this product does not,
+          because the only conversation that existed was attached to a recovery. The owner asked for
+          member-to-member messaging on 2026-10-01 and 20261001002300 is the access rule.
+
+          The component decides for itself whether to render: it asks dm_can_message() first, which
+          answers from the same predicate dm_send() will use, so the button cannot appear and then
+          refuse. It renders nothing when the answer is no -- and the server deliberately gives the
+          same no for blocked and for suspended, so this page cannot be used to tell those apart. */}
+      <MessageMember userId={m.user_id} name={m.display_name ?? t("someone")} />
 
       {/* Report, and block (§6). Last on the page on purpose: it is what somebody reaches for when
           the rest of the profile has already gone wrong for them. */}

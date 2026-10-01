@@ -12,6 +12,7 @@ import {
   IconHook,
   IconPin,
   IconRing,
+  IconSent,
   IconShackle,
   IconTruck,
   IconWinch,
@@ -243,6 +244,12 @@ export function AccountForm({
               label: t("menuSavedTrails"),
               hint: t("menuSavedTrailsHint"),
               icon: <IconBoards size={22} />,
+            },
+            {
+              href: "/messages",
+              label: t("menuMessages"),
+              hint: t("menuMessagesHint"),
+              icon: <IconSent size={22} />,
             },
             {
               href: "/account/notifications",

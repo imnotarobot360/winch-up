@@ -142,7 +142,9 @@
     "menuBlocked": "Miembros bloqueados",
     "menuBlockedHint": "A quién bloqueó y cómo deshacerlo",
     "menuModeration": "Cola de moderación",
-    "menuModerationHint": "Publicaciones y comentarios reportados"
+    "menuModerationHint": "Publicaciones y comentarios reportados",
+    "menuMessages": "Mensajes",
+    "menuMessagesHint": "Conversaciones con otros miembros"
   },
   "vehicles": {
     "title": "Sus vehículos",
@@ -1987,7 +1989,12 @@
     "communityLabel": "Respuestas y reacciones de la comunidad",
     "marketingLabel": "Novedades y ofertas",
     "marketingHint": "Apagado salvo que lo actives. Nunca se envía nada de un rescate en curso por aquí.",
-    "osNote": "Tu teléfono o navegador tiene su propia configuración de avisos, y manda sobre todas estas. Si no te llega nada, revísala también."
+    "osNote": "Tu teléfono o navegador tiene su propia configuración de avisos, y manda sobre todas estas. Si no te llega nada, revísala también.",
+    "dmTitle": "Mensajes directos",
+    "allowDmLabel": "Permitir que otros miembros me escriban",
+    "allowDmHint": "Al apagarlo no se inician conversaciones nuevas. Las que ya tiene siguen funcionando: bloquee a alguien para detenerlo.",
+    "notifyDmLabel": "Avisarme de los mensajes directos",
+    "notifyDmHint": "Aparte de los mensajes de un rescate, para que apagarlo no silencie al voluntario que va en camino."
   },
   "push": {
     "title": "Avisos en este dispositivo",
@@ -2071,7 +2078,6 @@
     "equipment": "Lo que lleva",
     "recoveries": "Rescates a los que salió",
     "milesAway": "A unas {miles} mi",
-    "howToReach": "Aquí no hay mensajes directos. Si se ofrece en su rescate, o usted en el suyo, la conversación se abre con él.",
     "rigPhotoAlt": "El vehículo de {name}",
     "years": "{count, plural, one {Año} other {Años}}",
     "underOneYear": "<1",
@@ -2341,5 +2347,33 @@
     "emptyTitle": "No ha bloqueado a nadie.",
     "emptyBody": "Puede bloquear a alguien desde el menú de cualquiera de sus publicaciones.",
     "failed": "No funcionó. Inténtelo de nuevo."
+  },
+  "dm": {
+    "pageTitle": "Mensajes",
+    "pageBody": "Conversaciones con otros miembros. Privadas entre ustedes dos.",
+    "backToAccount": "Volver a su cuenta",
+    "backToInbox": "Volver a mensajes",
+    "loading": "Buscando…",
+    "loadFailed": "No se pudo cargar. Intente de nuevo.",
+    "someone": "Un miembro",
+    "emptyTitle": "Todavía no hay conversaciones.",
+    "emptyBody": "Abra el perfil de alguien y envíele un mensaje.",
+    "emptyLink": "Ver miembros",
+    "previewMine": "Usted: {body}",
+    "noMessagesYet": "Todavía no hay mensajes.",
+    "composeLabel": "Escriba un mensaje",
+    "composePlaceholder": "Escriba un mensaje…",
+    "send": "Enviar",
+    "sending": "Enviando…",
+    "cancel": "Cancelar",
+    "seen": "Visto",
+    "sendFailed": "No se envió. Intente de nuevo.",
+    "cannotReply": "Ya no puede escribir en esta conversación. Todavía puede leerla.",
+    "threadGone": "Esa conversación no existe.",
+    "otherSuspended": "Esta cuenta está suspendida.",
+    "messageMember": "Enviar mensaje a {name}",
+    "openConversation": "Abrir la conversación",
+    "firstMessageLabel": "¿Qué le quiere decir a {name}?",
+    "theirMessagesOff": "{name} tiene los mensajes directos desactivados."
   }
 }

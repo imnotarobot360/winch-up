@@ -414,5 +414,59 @@ select throws_ok(
 
 reset role;
 
+-- ---------------------------------------------------------------------------
+-- 11. Every preference column is actually reachable by its owner
+-- ---------------------------------------------------------------------------
+--
+-- A PROPERTY, not two assertions about two columns, because the failure this guards against is one
+-- somebody repeats rather than one they make twice.
+--
+-- public.profiles has no blanket grant to authenticated -- it has an enumerated column list, and a
+-- column added later is in none of it. When allow_direct_messages and notify_direct_messages were
+-- added without grants, the notification screen's select was refused in full, the component fell
+-- back to DEFAULTS, and every switch showed its default instead of the member's real preference.
+-- Nothing errored. A read failure presenting as a confident wrong answer, on the one screen whose
+-- entire job is to tell somebody what they chose.
+--
+-- So: anything on profiles named like a member-facing preference must be selectable AND updatable
+-- by its owner. If a future column is neither of those on purpose, it does not belong to this
+-- naming pattern -- suspended_at is the example, and it is excluded by being named for a thing done
+-- TO a member rather than chosen BY one.
+
+select is(
+  (select coalesce(string_agg(c.column_name, ', ' order by c.column_name), '(none)')
+     from information_schema.columns c
+    where c.table_schema = 'public' and c.table_name = 'profiles'
+      and (c.column_name like 'notify\_%' or c.column_name like 'allow\_%')
+      and not exists (
+        select 1 from information_schema.column_privileges g
+         where g.table_name = 'profiles' and g.grantee = 'authenticated'
+           and g.column_name = c.column_name and g.privilege_type = 'SELECT')),
+  '(none)',
+  'every notify_* and allow_* column on profiles can be READ by the member it belongs to'
+);
+
+select is(
+  (select coalesce(string_agg(c.column_name, ', ' order by c.column_name), '(none)')
+     from information_schema.columns c
+    where c.table_schema = 'public' and c.table_name = 'profiles'
+      and (c.column_name like 'notify\_%' or c.column_name like 'allow\_%')
+      and not exists (
+        select 1 from information_schema.column_privileges g
+         where g.table_name = 'profiles' and g.grantee = 'authenticated'
+           and g.column_name = c.column_name and g.privilege_type = 'UPDATE')),
+  '(none)',
+  'and CHANGED by them, which is what a preference is'
+);
+
+-- The other direction, so the assertion above cannot be satisfied by granting everything: a member
+-- must not be able to read or lift their own suspension.
+select is(
+  (select count(*)::int from information_schema.column_privileges
+    where table_name = 'profiles' and grantee = 'authenticated'
+      and column_name in ('suspended_at', 'suspended_reason', 'suspended_by')),
+  0,
+  'while suspension is granted neither way, because it is done TO a member, not chosen by one'
+);
 select * from finish();
 rollback;

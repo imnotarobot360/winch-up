@@ -1655,6 +1655,26 @@ docs/                     decisions + runbooks
   it exists but `anon` cannot read the table -- which makes column existence probeable from outside
   with no credentials at all. Control it with a name that certainly does not exist, as the only thing
   separating "present" from "the endpoint always says that".
+- **NEVER NAME AN i18n NAMESPACE `messages`.** A top-level namespace called `messages` renders
+  perfectly on the server through `getTranslations` and then kills the CLIENT subtree: the component
+  never hydrates, its effects never run, no request is made, and NOTHING appears in the console or
+  the server log. The direct-messages inbox sat on "Looking…" forever. Renaming it to `dm` fixed it,
+  and renaming it back broke it again on the same server -- controlled in both directions, because
+  one observation here would have been a guess. Presumably it collides with next-intl's own
+  top-level `messages`; the mechanism is unconfirmed, the behaviour is not.
+- **Two debugging instruments lie on this app, and both lied in the same hour.**
+  `get_page_text` returns a stale snapshot -- it showed a profile with no Message button while a
+  screenshot of the same page showed one. And checking for `__react*` keys on a DOM node is NOT a
+  hydration test here: the Report button reported zero keys and clicked fine. Screenshots are ground
+  truth for "is it on the screen", and clicking it is ground truth for "is it alive". I spent a long
+  time chasing a hydration failure that only the first instrument believed in.
+- **`Button` in the design system is unconditionally `w-full`.** Putting one in a horizontal flex row
+  beside an input squashes the input to a sliver. Everything in this app stacks, which is also right
+  for a phone held one-handed -- compose boxes go above the button, not beside it.
+- **A flex child needs `min-w-0` or it will push past the viewport.** The thread page is a flex
+  column, and `max-w-[85%]` on a message bubble does nothing while the parent's default
+  `min-width:auto` lets it grow. The bubbles ran off the right edge on a phone and the DOM text read
+  perfectly; only a screenshot showed it.
 - **`npm run build` runs the i18n check first** (`prebuild`). A missing Spanish key fails the
   build rather than silently falling back to English.
 
@@ -1700,7 +1720,7 @@ Four layers. Run all of them before claiming anything works.
 npm run verify      typecheck + lint + unit tests + build. Run this before pushing.
 npm test            171 unit + component tests (vitest)
 npm run test:e2e    213 Playwright tests — android, iphone, tablet, desktop
-supabase test db    964 pgTAP assertions across twenty-three suites
+supabase test db    1002 pgTAP assertions across twenty-four suites
 ```
 
 `prebuild` runs four guards -- the i18n check, the contact-info parity check, the claims check

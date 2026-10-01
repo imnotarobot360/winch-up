@@ -97,6 +97,11 @@ async function signOut(page: Page) {
 }
 
 test.describe("the membership agreement", () => {
+  // The longest test in this suite by a distance: two roles, a published agreement version, a
+  // signature and an admin reading the record back. test.slow() triples the per-test budget rather
+  // than pretending 60s is comfortable for it.
+  test.slow();
+
   test("an admin publishes it, a member signs it, and the admin can read the record", async ({
     page,
   }) => {
@@ -138,7 +143,19 @@ test.describe("the membership agreement", () => {
 
     // ------------------------------------------------------------------- read
     // Requirement 5: the risk summary is its own thing, above the document, not clause fourteen.
-    await expect(page.getByRole("heading", { name: /read this part carefully/i })).toBeVisible();
+    // THIRTY SECONDS, and only here. This is the first CONTENT assertion after landing on
+    // /agreement, so it is really a page-load assertion wearing an assertion's clothes -- and
+    // /agreement is heavy: force-dynamic, a full agreement body in two languages, behind a
+    // loading boundary. When it loses, the snapshot is the splash shell with no <main> at all,
+    // which is a page that has not arrived rather than one that rendered wrongly.
+    //
+    // Targeted rather than global on purpose. The suite default went 5s -> 15s today and that was
+    // the right fix for a class of failures; raising it again for one spec would be fixing one
+    // test by loosening two hundred. This spec is the heaviest in the suite -- 21.7s in isolation,
+    // two roles, a published version and a signature -- and it is the only one that needs this.
+    await expect(
+      page.getByRole("heading", { name: /read this part carefully/i }),
+    ).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText(/winches, straps and chains fail under load/i)).toBeVisible();
 
     // Requirement 3: the full text is on the page.

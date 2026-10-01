@@ -15,6 +15,10 @@ type Prefs = {
   notify_chat: boolean;
   notify_community: boolean;
   notify_marketing: boolean;
+  // Added 20261001002000. allow_direct_messages is who may START a conversation; notifying about
+  // one is a separate switch, because being reachable and being interrupted are different things.
+  allow_direct_messages: boolean;
+  notify_direct_messages: boolean;
 };
 
 type Device = {
@@ -30,6 +34,8 @@ const DEFAULTS: Prefs = {
   notify_chat: true,
   notify_community: true,
   notify_marketing: false,
+  allow_direct_messages: true,
+  notify_direct_messages: true,
 };
 
 /**
@@ -64,8 +70,11 @@ export function NotificationSettings() {
     const [{ data: profile }, { data: subs }] = await Promise.all([
       supabase
         .from("profiles")
+        // ONE STRING LITERAL, not a concatenation. supabase-js infers the row type from the select
+        // text, and a `+` joined expression is not literal enough for it -- the result degrades to
+        // GenericStringError and the destructure below stops compiling. Long line, working types.
         .select(
-          "notify_recovery, notify_recovery_status, notify_chat, notify_community, notify_marketing, available_to_help",
+          "notify_recovery, notify_recovery_status, notify_chat, notify_community, notify_marketing, available_to_help, allow_direct_messages, notify_direct_messages",
         )
         .maybeSingle(),
       // RLS on push_subscriptions is owner-only, so this returns this member's devices and
@@ -193,6 +202,26 @@ export function NotificationSettings() {
           onChange={(v) => void setPref("notify_recovery", v)}
           label={t("nearbyLabel")}
           hint={t("nearbyHint")}
+        />
+      </Card>
+
+      <Card className="space-y-3">
+        <h2 className="text-xl font-semibold">{t("dmTitle")}</h2>
+        {/* WHO MAY REACH YOU comes before WHAT BUZZES, because it is the bigger decision and the
+            one somebody comes to this screen looking for. Turning it off stops NEW conversations;
+            the hint says so, because a member who expects it to silence an existing thread would
+            be surprised by the next message. Blocking is what stops one person. */}
+        <Toggle
+          checked={prefs.allow_direct_messages}
+          onChange={(v) => void setPref("allow_direct_messages", v)}
+          label={t("allowDmLabel")}
+          hint={t("allowDmHint")}
+        />
+        <Toggle
+          checked={prefs.notify_direct_messages}
+          onChange={(v) => void setPref("notify_direct_messages", v)}
+          label={t("notifyDmLabel")}
+          hint={t("notifyDmHint")}
         />
       </Card>
 

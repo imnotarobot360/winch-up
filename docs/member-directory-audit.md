@@ -150,3 +150,26 @@ The run said "928 passed, 0 failed" with two whole suites unfinished.
 - **Search by username.** There is no handle or username column anywhere in `profiles`. Searching
   by one would mean inventing handles for the whole membership, which is a product decision and not
   a directory change. Search is by display name.
+
+## Correction: there are TWO fences on `profiles`, not one
+
+This document said the thing stopping a member reading another member's row is RLS, not the column
+grants — and treated the grants as a detail that was never holding the weight. For **rows** that is
+right: `profiles_self_read` is `user_id = auth.uid() OR app.is_admin()`, and that is what makes the
+directory safe.
+
+For **columns** it is wrong, and the mistake cost a real regression on 1 October. `public.profiles`
+has no blanket grant to `authenticated`; it has an **enumerated column list** of twenty entries, some
+select-only and some select-and-update. A column added later is in none of it.
+
+So when `allow_direct_messages` and `notify_direct_messages` were added for direct messaging and the
+notification screen selected them, PostgREST refused the whole statement. Nothing errored: the select
+returned no row, the component fell back to its defaults, and every switch on `/account/notifications`
+rendered its default instead of the member's real preference. A read failure presenting as a confident
+wrong answer, on the screen whose entire job is to report what somebody chose.
+
+**Adding a preference column to `profiles` is two steps: the column, and the grant.**
+`supabase/tests/direct_messages_test.sql` now asserts that as a property — every `notify_*` and
+`allow_*` column must be selectable and updatable by `authenticated`, with the inverse asserted for
+`suspended_*`, which is granted neither way because suspension is done *to* a member rather than
+chosen *by* one.
