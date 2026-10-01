@@ -12,16 +12,20 @@ import { cn } from "@/lib/utils";
 /**
  * The feed's tabs.
  *
- * NOT the design reference's Recent / Trails / Events / Tips. Events and Tips are not features
- * of this product -- groups and events were deferred, and there is no such thing as a tip -- and
- * a tab that opens an empty list reads as a broken feature rather than an absent one. These are
- * the things CLAUDE.md already says the feed is for: trail conditions, gate closures, gear.
+ * Closer to the design reference's Recent / Trails / Events / Tips than it was, and still not
+ * the same list. TIPS arrived on 2026-10-01 (20261001000200) because a tip is just a post with
+ * a label -- no table, no dates, nothing to build -- and it fills the same way Gear and
+ * Recoveries did: with whatever the first person files under it.
+ *
+ * EVENTS IS STILL ABSENT, and that is a feature rather than a tab: a date, a place, who is
+ * coming, and someone able to cancel it. A tab that opens an empty list reads as broken rather
+ * than absent, which is the rule these tabs have always followed.
  */
-const TOPICS = ["all", "trail_conditions", "gear", "recoveries"] as const;
+const TOPICS = ["all", "trail_conditions", "gear", "recoveries", "tips"] as const;
 type Topic = (typeof TOPICS)[number];
 
 /** What the composer can file a post under. "all" is a filter, not a topic. */
-const POST_TOPICS = ["general", "trail_conditions", "gear", "recoveries"] as const;
+const POST_TOPICS = ["general", "trail_conditions", "gear", "recoveries", "tips"] as const;
 
 type Post = {
   id: string;
