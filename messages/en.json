@@ -1299,7 +1299,10 @@
       "bad_kind": "That didn't work. Try again.",
       "bad_target": "That didn't work. Try again.",
       "bad_reason": "Pick a reason first.",
-      "failed": "That didn't work. Try again."
+      "failed": "That didn't work. Try again.",
+      "no_start": "Pick a date and time.",
+      "not_an_organizer": "Only an organiser can post for that group.",
+      "no_such_trail": "That trail is not listed."
     },
     "topicsLabel": "Filter the feed",
     "emptyTopic": "Nothing under this one yet. Try another tab, or post the first.",
@@ -1309,8 +1312,19 @@
       "trail_conditions": "Trail conditions",
       "gear": "Gear",
       "recoveries": "Recoveries",
-      "tips": "Tips"
-    }
+      "tips": "Tips",
+      "events": "Events"
+    },
+    "eventAdd": "Post an event",
+    "eventTitle": "What is it",
+    "eventWhen": "When",
+    "eventPlace": "Where to meet",
+    "eventPlaceHint": "A place people can find. No phone numbers or links.",
+    "eventAbout": "Anything else (optional)",
+    "eventPost": "Post it",
+    "eventCancel": "Cancel",
+    "eventMeet": "Meet: {place}",
+    "eventsEmpty": "Nothing coming up yet. Post the next trail day or work party."
   },
   "moderation": {
     "title": "Moderation",

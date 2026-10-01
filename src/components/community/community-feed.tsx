@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 
 import { AdSlot } from "@/components/ads/ad-slot";
-import { Button, Callout, Card, ChoiceList, TextArea } from "@/components/ui/primitives";
+import { Button, Callout, Card, ChoiceList, Field, TextArea, TextInput } from "@/components/ui/primitives";
 import { IconCheck } from "@/components/ui/icons";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -17,15 +17,36 @@ import { cn } from "@/lib/utils";
  * a label -- no table, no dates, nothing to build -- and it fills the same way Gear and
  * Recoveries did: with whatever the first person files under it.
  *
- * EVENTS IS STILL ABSENT, and that is a feature rather than a tab: a date, a place, who is
- * coming, and someone able to cancel it. A tab that opens an empty list reads as broken rather
- * than absent, which is the rule these tabs have always followed.
+ * EVENTS IS NOT A POST TOPIC. It is a tab over a different table.
+ *
+ * The events feature was built in phase 12 -- a table with a start, a meeting note, an optional
+ * trail or group, capacity and RSVPs, plus create_event, events_upcoming and event_rsvp -- and
+ * never got a screen, which is why CLAUDE.md called events "deferred" and why this tab did not
+ * exist. "Deferred" meant the UI.
+ *
+ * So the Events tab reads events_upcoming() rather than the feed: published only, soonest
+ * first, and nothing that finished more than six hours ago. It is not a filter over posts and
+ * cannot be made into one.
+ *
+ * NO RSVP CONTROLS, by the owner's decision (2026-10-01). event_rsvp exists and is left alone;
+ * create_event still marks the organiser as going, which is the table's own behaviour and not
+ * something this screen asks for or shows.
  */
-const TOPICS = ["all", "trail_conditions", "gear", "recoveries", "tips"] as const;
+const TOPICS = ["all", "trail_conditions", "gear", "recoveries", "tips", "events"] as const;
 type Topic = (typeof TOPICS)[number];
 
 /** What the composer can file a post under. "all" is a filter, not a topic. */
 const POST_TOPICS = ["general", "trail_conditions", "gear", "recoveries", "tips"] as const;
+
+/** What events_upcoming() returns. Fields this screen does not show are left out. */
+type EventRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  starts_at: string;
+  meet_note: string | null;
+  trail_name: string | null;
+};
 
 type Post = {
   id: string;
@@ -98,8 +119,43 @@ export function CommunityFeed() {
   const [topic, setTopic] = useState<Topic>("all");
   const [postTopic, setPostTopic] = useState<string>("general");
 
+  // The Events tab: its own list, and its own small form. Deliberately separate from the post
+  // composer -- an event has a title, a time and a meeting point, and folding four fields into
+  // the box people use for "gate is locked" would make the common case worse.
+  const [events, setEvents] = useState<EventRow[] | null>(null);
+  const [evTitle, setEvTitle] = useState("");
+  const [evWhen, setEvWhen] = useState("");
+  const [evPlace, setEvPlace] = useState("");
+  const [evAbout, setEvAbout] = useState("");
+  const [evOpen, setEvOpen] = useState(false);
+
+  const loadEvents = useCallback(async () => {
+    const { data, error: rpcError } = await supabaseBrowser().rpc("events_upcoming", {});
+
+    if (rpcError) {
+      setError("failed");
+      return;
+    }
+
+    const result = data as { ok: boolean; error?: string; events?: EventRow[] };
+    if (!result.ok) {
+      setError(result.error ?? "failed");
+      return;
+    }
+
+    setError(null);
+    // ?? [] because a build can reach production before its migration does, and a tab that
+    // renders empty beats one that throws on .length.
+    setEvents(result.events ?? []);
+  }, []);
+
   const load = useCallback(async (before?: string, forTopic?: Topic) => {
     const active = forTopic ?? topic;
+
+    if (active === "events") {
+      await loadEvents();
+      return;
+    }
     const { data, error: rpcError } = await supabaseBrowser().rpc("community_feed", {
       p_before: before ?? null,
       p_limit: PAGE,
@@ -122,7 +178,7 @@ export function CommunityFeed() {
     setError(null);
     setMore(page.length === PAGE);
     setPosts((prev) => (before ? [...(prev ?? []), ...page] : page));
-  }, [topic]);
+  }, [topic, loadEvents]);
 
   useEffect(() => {
     void load();
@@ -151,6 +207,41 @@ export function CommunityFeed() {
     await load();
   }
 
+  async function submitEvent(event: React.FormEvent) {
+    event.preventDefault();
+    if (posting || !evTitle.trim() || !evWhen || !evPlace.trim()) return;
+
+    setPosting(true);
+    const result = await call("create_event", {
+      p_payload: {
+        title: evTitle.trim(),
+        description: evAbout.trim() || null,
+        meet_note: evPlace.trim(),
+        // datetime-local carries no zone, so the browser's own is the right reading: somebody
+        // typing 9am means 9am where the trail is, which is where they are.
+        starts_at: new Date(evWhen).toISOString(),
+        // Published, by the owner's decision (2026-10-01). create_event defaults to 'draft'
+        // and events_upcoming only lists published ones, so without this every event posted
+        // from here would vanish into a queue nothing in this app can see.
+        status: "published",
+      },
+    });
+    setPosting(false);
+
+    if (!result.ok) {
+      setError(result.error ?? "failed");
+      return;
+    }
+
+    setEvTitle("");
+    setEvWhen("");
+    setEvPlace("");
+    setEvAbout("");
+    setEvOpen(false);
+    setError(null);
+    await loadEvents();
+  }
+
   return (
     <div className="space-y-4">
       <div>
@@ -160,6 +251,10 @@ export function CommunityFeed() {
 
       {error ? <Callout tone="danger">{t(`errors.${error}`)}</Callout> : null}
 
+      {/* The post composer belongs to the post tabs. On Events it would be a box that files
+          something the Events tab cannot show, which is the same trap as a tab with nothing
+          behind it, one level in. */}
+      {topic === "events" ? null : (
       <Card className="space-y-3">
         <form onSubmit={submit} className="space-y-3">
           <TextArea
@@ -197,6 +292,7 @@ export function CommunityFeed() {
           </Button>
         </form>
       </Card>
+      )}
 
       {/* Screen 9's tabs. A tablist rather than a row of buttons, so a screen reader announces
           it as one control with a selected item and arrow keys move between them. */}
@@ -224,7 +320,106 @@ export function CommunityFeed() {
         ))}
       </div>
 
-      {posts === null ? (
+      {topic === "events" ? (
+        <>
+          {/* Folded away until asked for: most people open this tab to read what is coming
+              up, not to organise something. */}
+          {evOpen ? (
+            <Card className="space-y-3">
+              <form onSubmit={submitEvent} className="space-y-3">
+                <Field label={t("eventTitle")}>
+                  <TextInput
+                    value={evTitle}
+                    onChange={(e) => setEvTitle(e.target.value)}
+                    maxLength={120}
+                  />
+                </Field>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label={t("eventWhen")}>
+                    <input
+                      type="datetime-local"
+                      value={evWhen}
+                      onChange={(e) => setEvWhen(e.target.value)}
+                      className="tap-target w-full rounded-field border-2 border-line bg-surface-sunk px-4 text-base text-ink"
+                    />
+                  </Field>
+                  <Field label={t("eventPlace")} hint={t("eventPlaceHint")}>
+                    <TextInput
+                      value={evPlace}
+                      onChange={(e) => setEvPlace(e.target.value)}
+                      maxLength={300}
+                    />
+                  </Field>
+                </div>
+
+                <Field label={t("eventAbout")}>
+                  <TextArea
+                    value={evAbout}
+                    onChange={(e) => setEvAbout(e.target.value)}
+                    maxLength={2000}
+                    rows={3}
+                  />
+                </Field>
+
+                <p className="text-sm text-ink-faint">{t("noContactNote")}</p>
+
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="submit"
+                    disabled={posting || !evTitle.trim() || !evWhen || !evPlace.trim()}
+                  >
+                    {posting ? t("posting") : t("eventPost")}
+                  </Button>
+                  <Button type="button" variant="secondary" onClick={() => setEvOpen(false)}>
+                    {t("eventCancel")}
+                  </Button>
+                </div>
+              </form>
+            </Card>
+          ) : (
+            <Button variant="secondary" onClick={() => setEvOpen(true)}>
+              {t("eventAdd")}
+            </Button>
+          )}
+
+          {events === null ? (
+            <p className="text-base text-ink-soft">{t("loading")}</p>
+          ) : events.length === 0 ? (
+            <Card>
+              <p className="text-base text-ink-soft">{t("eventsEmpty")}</p>
+            </Card>
+          ) : (
+            <ul className="space-y-3">
+              {events.map((e) => (
+                <li key={e.id}>
+                  <Card className="space-y-2">
+                    <p className="text-sm font-semibold uppercase tracking-wide text-brand">
+                      {format.dateTime(new Date(e.starts_at), {
+                        weekday: "short",
+                        day: "numeric",
+                        month: "short",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                    <h2 className="text-xl font-semibold text-ink">{e.title}</h2>
+                    {e.meet_note ? (
+                      <p className="text-base text-ink">{t("eventMeet", { place: e.meet_note })}</p>
+                    ) : null}
+                    {e.trail_name ? (
+                      <p className="text-sm text-ink-soft">{e.trail_name}</p>
+                    ) : null}
+                    {e.description ? (
+                      <p className="whitespace-pre-wrap text-base text-ink-soft">{e.description}</p>
+                    ) : null}
+                  </Card>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      ) : posts === null ? (
         <p className="text-base text-ink-soft">{t("loading")}</p>
       ) : posts.length === 0 ? (
         <Card>

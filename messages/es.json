@@ -1299,7 +1299,10 @@
       "bad_kind": "No funcionó. Inténtalo otra vez.",
       "bad_target": "No funcionó. Inténtalo otra vez.",
       "bad_reason": "Elige un motivo primero.",
-      "failed": "No funcionó. Inténtalo otra vez."
+      "failed": "No funcionó. Inténtalo otra vez.",
+      "no_start": "Elija la fecha y la hora.",
+      "not_an_organizer": "Solo un organizador puede publicar para ese grupo.",
+      "no_such_trail": "Esa ruta no está listada."
     },
     "topicsLabel": "Filtrar el muro",
     "emptyTopic": "Todavía no hay nada aquí. Pruebe otra pestaña, o sea el primero en publicar.",
@@ -1309,8 +1312,19 @@
       "trail_conditions": "Estado de rutas",
       "gear": "Equipo",
       "recoveries": "Rescates",
-      "tips": "Consejos"
-    }
+      "tips": "Consejos",
+      "events": "Eventos"
+    },
+    "eventAdd": "Publicar un evento",
+    "eventTitle": "Qué es",
+    "eventWhen": "Cuándo",
+    "eventPlace": "Dónde encontrarse",
+    "eventPlaceHint": "Un lugar que la gente pueda encontrar. Sin teléfonos ni enlaces.",
+    "eventAbout": "Algo más (opcional)",
+    "eventPost": "Publicar",
+    "eventCancel": "Cancelar",
+    "eventMeet": "Punto de encuentro: {place}",
+    "eventsEmpty": "Todavía no hay nada próximo. Publique el siguiente día de ruta o jornada de trabajo."
   },
   "moderation": {
     "title": "Moderación",
