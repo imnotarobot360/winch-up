@@ -504,6 +504,29 @@ docs/                     decisions + runbooks
   the signature has to match -- calling `member_profile` with `{}` when it takes `p_user_id`
   returns PGRST202 and reads exactly like an unapplied migration. Anything in schema `app`
   (`app.coarse_miles`) is invisible to PostgREST by design and can never be probed this way.
+- **The rate limits make the browser suite look flaky, and it is not flaky.** Three new groups a
+  day per member, ten events, twenty posts an hour, five recoveries an hour from one IP. Those
+  are human ceilings and they are correct. The suite files real recoveries, starts real groups
+  and posts real events on every run, from 127.0.0.1, as the same four demo members -- so the
+  fourth run of the day goes over. What you see is NOT a refusal: the RPC returns
+  `{"ok": false, "error": "rate_limited_ip"}`, the UI prints the right sentence, and the spec
+  dies thirty seconds later on `page.waitForURL` with nothing to explain it, in a different spec
+  each run -- whichever one tipped over the edge. `e2e/global-setup.ts` clears
+  `rate_limit_hits` before the run, and `supabase/seeds/demo.sql` raises only the per-IP ceiling
+  (production stays at 5). If a request-filing spec starts failing at the submit, check
+  `select bucket_key, count(*) from rate_limit_hits group by 1` before reading any product code.
+- **`count()` right after a navigation is 0 on a page that is about to render the thing.** Most
+  of this app renders client-side, so a cleanup written as "if the Cancel button is there, click
+  it" silently does nothing and the state it was meant to clear survives into the next run. It
+  cost four runs of `nearby-alerts.spec.ts`, presenting as a broken matcher. Always
+  `await locator.waitFor({ state: "visible" })` before `count()`. A conditional cleanup that
+  cannot fail is a cleanup you cannot trust.
+- **An e2e spec that changes shared demo state must put it back, and say so where it does not.**
+  The whole suite drives the same four accounts. `nearby-alerts.spec.ts` moved Rosa 145 miles to
+  Austin and left her there, and `membership.spec.ts` then failed with "the request should be
+  visible to another member" on a run where the location spec passed. The product was fine. The
+  restore is asserted, not hoped for: a `.catch(() => {})` round a cleanup means the test goes
+  green while restoring nothing.
 - **`npm run build` runs the i18n check first** (`prebuild`). A missing Spanish key fails the
   build rather than silently falling back to English.
 
