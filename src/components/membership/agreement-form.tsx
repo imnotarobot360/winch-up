@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { signMembershipAction } from "@/app/actions/membership";
 import { Button, Callout, Checkbox, Field, TextInput } from "@/components/ui/primitives";
-import { Link, useRouter } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 
 /**
  * Reading the agreement and signing it.
@@ -40,7 +40,6 @@ export function AgreementForm({
 }) {
   const t = useTranslations("membership");
   const locale = useLocale();
-  const router = useRouter();
 
   const [riskAck, setRiskAck] = useState(false);
   const [accepted, setAccepted] = useState(false);
@@ -99,7 +98,24 @@ export function AgreementForm({
       return;
     }
 
-    router.refresh();
+    // A FULL NAVIGATION, not router.refresh().
+    //
+    // The confirmation -- the date, the legal name, the document reference -- is rendered by
+    // the server component on this page, so the member only learns their signature was
+    // recorded when the page re-renders. On WebKit router.refresh() did not produce it: the
+    // row was written, the action returned ok, and the form sat there unchanged with no error.
+    // Somebody signing a legal document on an iPhone was shown nothing at all, and the
+    // reasonable response to that is to sign it again.
+    //
+    // It cost a reproducible [iphone] failure in membership-agreement.spec.ts that looked for
+    // all the world like a broken write, and was only settled by reading the table: the
+    // signature for version 33 was there, timestamped, while the screen still asked for it.
+    //
+    // A reload is the right instrument rather than a fallback. This happens once per version of
+    // one document, and signing changes the home banner and what /request will let you do --
+    // all of it server-rendered, all of it needing to be re-evaluated. There is nothing on this
+    // page worth preserving across it.
+    window.location.reload();
   }
 
   if (declining) {
