@@ -1958,6 +1958,9 @@
     },
     "event": {
       "soon": "{title} ya viene."
+    },
+    "direct_message": {
+      "new": "{name} le envió un mensaje"
     }
   },
   "notifySettings": {
@@ -2012,7 +2015,8 @@
       "community": "Comunidad",
       "event_reminder": "Evento",
       "safety": "Seguridad",
-      "marketing": "Novedades"
+      "marketing": "Novedades",
+      "direct_message": "Mensaje"
     },
     "preferencesTitle": "¿Demasiadas, o muy pocas?",
     "preferencesBody": "Avisos de rescate, actividad de la comunidad y novedades son tres interruptores distintos. El de rescates es el que conviene dejar prendido.",

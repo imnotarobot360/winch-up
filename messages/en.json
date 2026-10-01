@@ -1958,6 +1958,9 @@
     },
     "event": {
       "soon": "{title} is coming up."
+    },
+    "direct_message": {
+      "new": "{name} sent you a message"
     }
   },
   "notifySettings": {
@@ -2012,7 +2015,8 @@
       "community": "Community",
       "event_reminder": "Event",
       "safety": "Safety",
-      "marketing": "News"
+      "marketing": "News",
+      "direct_message": "Message"
     },
     "preferencesTitle": "Too many, or not enough?",
     "preferencesBody": "Recovery alerts, community activity and news are three separate switches. Recovery is the one you probably want to leave on.",
