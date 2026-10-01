@@ -420,7 +420,12 @@
       "not_found": "That request no longer exists.",
       "server_error": "Something went wrong. Try again.",
       "membership_agreement_required": "You need to sign the membership agreement before you can do this. It only takes a minute."
-    }
+    },
+    "photosShow": "Show photos",
+    "photosLoading": "Loading photos…",
+    "photosNone": "No photos on this one.",
+    "photosUnavailable": "Photos are not available for this request.",
+    "photoAlt": "Photo of the stuck vehicle"
   },
   "post": {
     "title": "Post this to the group",

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 
 import { offerAssistanceAction, withdrawOfferAction } from "@/app/actions/offers";
+import { RequestPhotos } from "@/components/help/request-photos";
 import { Button, Callout, Card, Checkbox, TextArea, TextInput } from "@/components/ui/primitives";
 import { Link } from "@/i18n/navigation";
 import { mapAppUrl } from "@/lib/geo";
@@ -182,6 +183,11 @@ export function HelpList({ initial }: { initial: HelpRow[] }) {
                     winch job or a tractor job, and it was missing from this screen while the
                     public board had shown it since the first week. */}
                 {row.notes ? <p className="mt-2 text-base">{row.notes}</p> : null}
+
+                {/* The photographs, for somebody deciding whether to hitch up. Loaded on demand:
+                    the links are signed and short-lived, and this feed is read on one bar of
+                    signal. See the component for the rest. */}
+                <RequestPhotos requestId={row.request_id} />
 
                 {row.required_equipment && row.required_equipment.length > 0 ? (
                   <p className="mt-1 text-sm text-ink-soft">

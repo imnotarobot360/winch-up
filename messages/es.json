@@ -420,7 +420,12 @@
       "not_found": "Esa solicitud ya no existe.",
       "server_error": "Algo salió mal. Inténtalo de nuevo.",
       "membership_agreement_required": "Debe firmar el acuerdo de membresía antes de hacer esto. Solo toma un minuto."
-    }
+    },
+    "photosShow": "Ver fotos",
+    "photosLoading": "Cargando fotos…",
+    "photosNone": "Esta no tiene fotos.",
+    "photosUnavailable": "Las fotos no están disponibles para esta solicitud.",
+    "photoAlt": "Foto del vehículo atascado"
   },
   "post": {
     "title": "Publicar esto en el grupo",
