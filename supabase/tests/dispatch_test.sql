@@ -1153,5 +1153,77 @@ select matches(
 
 update app_settings set value = 'false'::jsonb where key = 'sms.outbound_enabled';
 
+-- ---------------------------------------------------------------------------
+-- Nobody is dispatched to their own recovery
+-- ---------------------------------------------------------------------------
+--
+-- Not an edge case since universal membership: the member who offers help is the member who
+-- needs it next, and a stuck member who is still marked available with a recent position is
+-- the CLOSEST match to their own request -- top of the list at 0.0 miles.
+--
+-- app.candidates() had no such exclusion until 20261001000500. Both directions are asserted,
+-- because an exclusion that also drops everybody else would pass a one-sided test.
+
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, recovery_token, email_change, email_change_token_new
+)
+select '00000000-0000-0000-0000-000000000000', v.id, 'authenticated', 'authenticated',
+       v.email, 'x', now(), '{}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', ''
+from (values
+  ('5e1f0001-0000-4000-8000-00000000005e'::uuid, 'self-dispatch@example.invalid'),
+  ('5e1f0002-0000-4000-8000-00000000005e'::uuid, 'other-helper@example.invalid')
+) as v(id, email)
+on conflict (id) do nothing;
+
+update profiles set available_to_help = true, notify_recovery = true
+ where user_id in ('5e1f0001-0000-4000-8000-00000000005e', '5e1f0002-0000-4000-8000-00000000005e');
+
+-- Both sitting on the same point, so distance cannot be what separates them.
+insert into responders (
+  id, user_id, phone, first_name, home_location, last_location, last_location_at,
+  radius_miles, equipment, approval, availability, recoveries_count
+)
+select v.id, v.user_id, v.phone, v.name,
+       extensions.st_setsrid(extensions.st_point(-97.7431, 30.2672), 4326)::extensions.geography,
+       extensions.st_setsrid(extensions.st_point(-97.7431, 30.2672), 4326)::extensions.geography,
+       now(), 60, '{winch}', 'approved', 'active', 0
+from (values
+  ('5e2f0001-0000-4000-8000-00000000005e'::uuid, '5e1f0001-0000-4000-8000-00000000005e'::uuid, '+15125550199', 'Selfy'),
+  ('5e2f0002-0000-4000-8000-00000000005e'::uuid, '5e1f0002-0000-4000-8000-00000000005e'::uuid, '+15125550198', 'Helper')
+) as v(id, user_id, phone, name)
+on conflict (id) do nothing;
+
+insert into requests (
+  requester_user_id, requester_name, requester_phone, location, vehicle_class, stuck_type,
+  land_type, needs_tractor, status, emergency_ack_at, rules_accepted, waiver_id, waiver_accepted_at
+) values (
+  '5e1f0001-0000-4000-8000-00000000005e', 'Selfy', '+15125550199',
+  extensions.st_setsrid(extensions.st_point(-97.7431, 30.2672), 4326)::extensions.geography,
+  'truck', 'mud', 'public', false, 'dispatching', now(), true,
+  (select id from waivers where slug = 'requester_waiver' and is_current), now()
+);
+
+select ok(
+  not exists (
+    select 1 from app.candidates(
+      (select id from requests where requester_user_id = '5e1f0001-0000-4000-8000-00000000005e'),
+      60, 50) c
+     where c.responder_id = '5e2f0001-0000-4000-8000-00000000005e'
+  ),
+  'the requester is not a candidate for their own recovery'
+);
+
+select ok(
+  exists (
+    select 1 from app.candidates(
+      (select id from requests where requester_user_id = '5e1f0001-0000-4000-8000-00000000005e'),
+      60, 50) c
+     where c.responder_id = '5e2f0002-0000-4000-8000-00000000005e'
+  ),
+  'another available member at the same point is still matched, so it excludes one person and not the set'
+);
+
 select * from finish();
 rollback;
