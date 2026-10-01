@@ -82,6 +82,11 @@ comment on column public.profiles.suspended_at is
 -- r is LEFT JOINed by the callers, so every test here has to be true of a NULL responder row.
 -- `r.redacted_at is null` is true when r is absent, which is what we want: a member who never
 -- volunteered has nothing to redact.
+--
+-- NOT IN HERE: "you are not yourself". That belongs to the LIST -- a directory of other members --
+-- and putting it in this shared predicate made every member's OWN profile page 404, because
+-- member_profile() asks the same question about the member being viewed. rig_photos_test caught it,
+-- by reading a profile as its owner on purpose. The list adds the condition itself.
 
 create or replace function app.member_is_listable(
   p_profile   public.profiles,
@@ -97,12 +102,6 @@ as $$
      and p_profile.suspended_at is null          -- §6: suspended accounts are not community members
      and p_responder.redacted_at is null         -- deleted account, or aged past retention
      and not app.blocks_between(p_viewer, p_profile.user_id);
-
--- NOT IN HERE: "you are not yourself". That belongs to the LIST -- a directory of other
--- members -- and putting it in the shared predicate made your OWN profile page 404, because
--- member_profile() asks the same question about the member being viewed. rig_photos_test
--- caught it, by calling member_profile() for the signed-in member on purpose. The list adds
--- the condition itself.
 $$;
 
 revoke all on function app.member_is_listable(public.profiles, public.responders, uuid)
@@ -119,6 +118,15 @@ revoke all on function app.member_is_listable(public.profiles, public.responders
 -- The escaping is the part that matters. A member typing _ or % into a search box is typing
 -- characters, not wildcards; without this, "_" matches every name of any length and the box
 -- quietly becomes a way to enumerate the membership one pattern at a time.
+--
+-- THE BACKSLASH GOES FIRST, and it has to be doubled. Postgres LIKE uses \ as its own escape
+-- character, so a backslash in the needle has to become two before anything else is escaped --
+-- otherwise the \ this function inserts in front of % and _ could be read as escaping a character
+-- the member actually typed. The first version of this line shipped as replace(p_needle, '\', '\'),
+-- which is a no-op: a shell heredoc ate one of the backslashes on the way into the file, and the
+-- loss is invisible in review because both forms are valid SQL. The cost was small and real --
+-- searching for `back\slash` matched `backslash` -- and the tests did not catch it because they
+-- only ever asked about _ and %.
 
 create or replace function app.like_contains(p_needle text)
 returns text
@@ -126,7 +134,9 @@ language sql
 immutable
 set search_path = pg_catalog
 as $$
-  select '%' || replace(replace(replace(p_needle, '\', '\'), '%', '\%'), '_', '\_') || '%';
+  select '%' ||
+         replace(replace(replace(p_needle, '\', '\\'), '%', '\%'), '_', '\_')
+         || '%';
 $$;
 
 revoke all on function app.like_contains(text) from public, anon, authenticated;

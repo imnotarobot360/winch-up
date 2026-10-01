@@ -403,6 +403,44 @@ select ok(
   'a blank search is not a filter at all'
 );
 
+-- The role is RESET for the three below. app.like_contains is revoked from authenticated -- it is
+-- an internal helper and nothing outside the schema should reach it -- so calling it from a
+-- member's seat is permission denied, which is the function being right.
+reset role;
+
+-- AND THE BACKSLASH, which is the one the first version got wrong and no test noticed.
+--
+-- Postgres LIKE uses \ as its own escape character, so a backslash in the needle has to be doubled
+-- BEFORE % and _ are escaped -- otherwise the escape this function inserts can be read as escaping
+-- a character the member actually typed. It shipped as replace(p_needle, '\', '\'), a no-op: a
+-- shell heredoc ate one backslash on the way into the migration, and both forms are valid SQL so
+-- there was nothing to see in review. Searching for `back\slash` matched `backslash`.
+--
+-- Asserted on the escaper directly rather than through a member name, because a name containing a
+-- backslash cannot exist: display_name is checked by contains_contact_info and would be an odd
+-- fixture to defend. The pattern is the thing that was wrong.
+select is(
+  app.like_contains('back\slash'),
+  '%back\\slash%',
+  'a backslash in a search is doubled, so it matches a backslash and not the next character'
+);
+
+select is(
+  app.like_contains('a_b'),
+  '%a\_b%',
+  'an underscore is escaped'
+);
+
+select is(
+  app.like_contains('50%'),
+  '%50\%%',
+  'and so is a percent sign'
+);
+
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"d1000000-0000-4000-8000-00000000000d","role":"authenticated"}';
+
 -- ---------------------------------------------------------------------------
 -- 7. The profile obeys the same rule as the list
 -- ---------------------------------------------------------------------------
