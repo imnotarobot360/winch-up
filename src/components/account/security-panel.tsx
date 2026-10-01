@@ -252,9 +252,17 @@ export function SecurityPanel({ providers }: { providers: SocialProvider[] }) {
       // Manual linking is OFF by default on a Supabase project and is a dashboard setting, not
       // anything this repo can turn on. Saying "try again" to somebody hitting that would be a
       // lie they could repeat forever.
-      setError(
-        /manual linking/i.test(linkError.message ?? "") ? "linking_disabled" : "link_failed",
-      );
+      //
+      // Matched on the error CODE first and the message only as a fallback. GoTrue sends
+      // `manual_linking_disabled`, which is stable; the human-readable string beside it is not,
+      // and a reworded message would silently downgrade this to "that did not connect. Try
+      // again" -- the exact wrong advice, since trying again cannot work until somebody
+      // changes a setting in the dashboard.
+      const disabled =
+        linkError.code === "manual_linking_disabled" ||
+        /manual linking/i.test(linkError.message ?? "");
+
+      setError(disabled ? "linking_disabled" : "link_failed");
       return;
     }
     // On success the browser is already navigating to the provider.
