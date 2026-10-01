@@ -52,12 +52,19 @@ export default async function MemberProfilePage({
   const t = await getTranslations("memberProfile");
   const tEquip = await getTranslations("enum.equipment");
 
+
   const supabase = await supabaseServer();
   const { data } = await supabase.rpc("member_profile", { p_user_id: userId });
   const result = data as { ok: boolean; member?: Member } | null;
 
   if (!result?.ok || !result.member) notFound();
   const m = result.member;
+  // Whole years since joining. 365.25 so a leap year cannot tip somebody back under the line on
+  // their own anniversary.
+  const years = m.member_since
+    ? Math.floor((Date.now() - new Date(m.member_since).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+    : 0;
+
 
   // Signed here rather than in the RPC: the bucket is private and the URL expires, so minting
   // it any earlier would hand out a link that is already stale.
@@ -125,9 +132,29 @@ export default async function MemberProfilePage({
         </section>
       ) : null}
 
-      <section className="mt-6 rounded-field border-2 border-line bg-surface-sunk p-4">
-        <p className="text-2xl font-bold text-ink">{m.recoveries ?? 0}</p>
-        <p className="text-sm text-ink-soft">{t("recoveries")}</p>
+      {/* Two stats, not the reference three.
+          The reference has Recoveries / Rating / Years. There is no rating in this product --
+          nobody is scored, and inventing a 5.0 to fill a tile would be a number the database
+          cannot produce. Years is real: member_since has been in member_profile() since
+          20260924000100 and was simply never rendered.
+
+          Under a year reads "<1" rather than rounding to 0. A volunteer who joined last month
+          has not been here zero years, and a profile that says so undersells the one thing a
+          stranger deciding whether to trust them can check. */}
+      <section className="mt-6 grid grid-cols-2 gap-3">
+        <div className="rounded-field border-2 border-line bg-surface-sunk p-4">
+          <p className="text-2xl font-bold text-ink">{m.recoveries ?? 0}</p>
+          <p className="text-sm text-ink-soft">{t("recoveries")}</p>
+        </div>
+
+        {m.member_since ? (
+          <div className="rounded-field border-2 border-line bg-surface-sunk p-4">
+            <p className="text-2xl font-bold text-ink">
+              {years >= 1 ? years : t("underOneYear")}
+            </p>
+            <p className="text-sm text-ink-soft">{t("years", { count: years })}</p>
+          </div>
+        ) : null}
       </section>
 
       {/* No Message button. The reference has one, and there is no member-to-member messaging in

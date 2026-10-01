@@ -129,7 +129,7 @@
     "menuRecoveries": "Mis rescates",
     "menuRecoveriesHint": "Trabajos a los que salió y el actual",
     "menuTrails": "Rutas",
-    "menuTrailsHint": "Explore rutas y las que guardó",
+    "menuTrailsHint": "Explore rutas y lo que reportan",
     "menuNotifications": "Notificaciones",
     "menuNotificationsHint": "Qué llega a su teléfono y en qué dispositivos",
     "menuResources": "Guías de rescate",
@@ -139,7 +139,9 @@
     "noName": "Todavía sin nombre",
     "noRegion": "Sin zona de origen",
     "menuSecurity": "Acceso y seguridad",
-    "menuSecurityHint": "Contraseña, teléfono, cuentas conectadas"
+    "menuSecurityHint": "Contraseña, teléfono, cuentas conectadas",
+    "menuSavedTrails": "Rutas guardadas",
+    "menuSavedTrailsHint": "Las que marcó"
   },
   "vehicles": {
     "title": "Sus vehículos",
@@ -1972,7 +1974,9 @@
     "recoveries": "Rescates a los que salió",
     "milesAway": "A unas {miles} mi",
     "howToReach": "Aquí no hay mensajes directos. Si se ofrece en su rescate, o usted en el suyo, la conversación se abre con él.",
-    "rigPhotoAlt": "El vehículo de {name}"
+    "rigPhotoAlt": "El vehículo de {name}",
+    "years": "{count, plural, one {Año} other {Años}}",
+    "underOneYear": "<1"
   },
   "membership": {
     "title": "Acuerdo de Membresía",

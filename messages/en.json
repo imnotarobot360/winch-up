@@ -129,7 +129,7 @@
     "menuRecoveries": "My recoveries",
     "menuRecoveriesHint": "Jobs you came out to, and your current one",
     "menuTrails": "Trails",
-    "menuTrailsHint": "Browse trails and the ones you saved",
+    "menuTrailsHint": "Browse trails and what people report",
     "menuNotifications": "Notifications",
     "menuNotificationsHint": "What reaches your phone, and which devices",
     "menuResources": "Recovery guides",
@@ -139,7 +139,9 @@
     "noName": "No name set yet",
     "noRegion": "No home area set",
     "menuSecurity": "Sign-in & security",
-    "menuSecurityHint": "Password, phone, connected accounts"
+    "menuSecurityHint": "Password, phone, connected accounts",
+    "menuSavedTrails": "Saved trails",
+    "menuSavedTrailsHint": "The ones you starred"
   },
   "vehicles": {
     "title": "Your rigs",
@@ -1972,7 +1974,9 @@
     "recoveries": "Recoveries they came out to",
     "milesAway": "About {miles} mi away",
     "howToReach": "There is no direct messaging here. If they offer on your recovery, or you offer on theirs, the conversation opens with it.",
-    "rigPhotoAlt": "{name}'s rig"
+    "rigPhotoAlt": "{name}'s rig",
+    "years": "{count, plural, one {Year} other {Years}}",
+    "underOneYear": "<1"
   },
   "membership": {
     "title": "Membership Agreement",

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { deleteAccount } from "@/app/actions/account";
 import {
+  IconBoards,
   IconDoc,
   IconHook,
   IconPin,
@@ -230,6 +231,12 @@ export function AccountForm({ email }: { email: string }) {
               label: t("menuTrails"),
               hint: t("menuTrailsHint"),
               icon: <IconPin size={22} />,
+            },
+            {
+              href: "/trails?saved=1",
+              label: t("menuSavedTrails"),
+              hint: t("menuSavedTrailsHint"),
+              icon: <IconBoards size={22} />,
             },
             {
               href: "/account/notifications",

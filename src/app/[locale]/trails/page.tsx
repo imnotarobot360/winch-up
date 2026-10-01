@@ -14,8 +14,18 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return { title: t("title"), robots: { index: false, follow: false } };
 }
 
-export default async function TrailsPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function TrailsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ saved?: string }>;
+}) {
   const { locale } = await params;
+  // "Saved trails" on the account menu is this page with its saved filter already on, rather
+  // than a second page listing the same rows. One screen, one set of filters, one thing to keep
+  // working -- and the chip stays visible, so it is obvious why the list is short.
+  const { saved } = await searchParams;
   setRequestLocale(locale);
 
   const supabase = await supabaseServer();
@@ -27,7 +37,7 @@ export default async function TrailsPage({ params }: { params: Promise<{ locale:
 
   return (
     <main className="mx-auto w-full max-w-xl px-4 py-8">
-      <TrailList />
+      <TrailList savedOnly={saved === "1"} />
     </main>
   );
 }

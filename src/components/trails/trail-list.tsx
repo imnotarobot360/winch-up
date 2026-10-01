@@ -41,7 +41,14 @@ const DIFFICULTY = ["easy", "moderate", "difficult", "extreme"];
  * date, and the database drops them off the page after 45 days rather than letting March read as
  * September.
  */
-export function TrailList() {
+/**
+ * `savedOnly` arrives as a prop from the server rather than being read here with
+ * useSearchParams, which would drag this component into a Suspense boundary for a boolean the
+ * page already knows. It is the starting state of a filter the member can still toggle, not a
+ * mode -- arriving from "Saved trails" and then pressing All should show everything, because
+ * the chip is right there saying what is on.
+ */
+export function TrailList({ savedOnly: initialSavedOnly = false }: { savedOnly?: boolean }) {
   const t = useTranslations("trails");
   const tEnum = useTranslations("enum");
   const format = useFormatter();
@@ -58,7 +65,7 @@ export function TrailList() {
   const [query, setQuery] = useState("");
   const [access, setAccess] = useState<string | null>(null);
   const [difficulty, setDifficulty] = useState<string | null>(null);
-  const [savedOnly, setSavedOnly] = useState(false);
+  const [savedOnly, setSavedOnly] = useState(initialSavedOnly);
   const [near, setNear] = useState<{ lng: number; lat: number } | null>(null);
   const [locating, setLocating] = useState(false);
 
