@@ -37,7 +37,10 @@ export const DISPLAY_TIME_ZONE = "America/Chicago";
  * to assert against without a database.
  */
 export const DISPATCH_DEFAULTS = {
-  ringRadiiMiles: [15, 30, 60] as const,
+  // 10 first, per the owner s location-alerts spec (20261001000600 moved the setting).
+  // This mirror is only for first paint and for tests that run without a database; the
+  // database row is the truth and an admin can change it at /admin/settings.
+  ringRadiiMiles: [10, 30, 60] as const,
   ringWaitMinutes: 7,
   maxPerRing: 10,
   unmatchedAfterMinutes: 25,
