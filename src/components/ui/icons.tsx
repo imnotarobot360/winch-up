@@ -99,6 +99,16 @@ export const IconRing = (p: IconProps) => (
   <Svg {...p}><circle cx="12" cy="12" r="3" /><path d="M6.5 6.5a8 8 0 0 0 0 11M17.5 17.5a8 8 0 0 0 0-11" /></Svg>
 );
 
+// A cog, for the way into /account from the Profile screen. The settings list lived behind two
+// small underlined text links and the owner went looking for it and did not find it -- the same
+// failure /welcome had, one layer in. A cog beside the greeting is where people look.
+export const IconCog = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="3.2" />
+    <path d="M12 3.5v2M12 18.5v2M20.5 12h-2M5.5 12h-2M18 6l-1.4 1.4M7.4 16.6 6 18M18 18l-1.4-1.4M7.4 7.4 6 6" />
+  </Svg>
+);
+
 // A bell, for the header's way into /notifications. Not IconRing, which is a broadcast glyph and
 // means "how we reach you" on the settings screen -- the same shape for the inbox and for its
 // preferences would say the two are the same thing.

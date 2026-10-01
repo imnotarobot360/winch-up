@@ -353,7 +353,8 @@
     "myRequestsTitle": "Mis rescates",
     "myRequestHelper": "{name} viene en camino",
     "myRequestOffers": "{count, plural, one {# voluntario se ofreció — elige a alguien} other {# voluntarios se ofrecieron — elige a alguien}}",
-    "accountSettings": "Configuración de la cuenta"
+    "accountSettings": "Configuración de la cuenta",
+    "accountSettingsHint": "Sus vehículos, avisos, contraseña y teléfono"
   },
   "board": {
     "title": "Tablero abierto",

@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { IconCog } from "@/components/ui/icons";
+import { MenuList } from "@/components/ui/menu-list";
 import { Button, Callout, Card, Checkbox, Field, TextInput } from "@/components/ui/primitives";
 import { ReportForm } from "@/components/incident/report-form";
 import { RequestThread } from "@/components/messages/request-thread";
@@ -237,6 +239,29 @@ export function MeDashboard() {
           {t("helpSomeone")}
         </Link>
       </div>
+
+      {/* THE WAY INTO SETTINGS, where somebody tapping "Profile" actually looks.
+          /account holds the rigs, notification preferences, sign-in methods and the delete
+          button, and it was reachable only from two small underlined text links -- one of them
+          below the fold on this page. The owner went looking for the sign-in screen on
+          2026-10-01 and could not find it. That is the second time this precise failure has
+          been found by somebody using the app rather than by a test: every page rendered, every
+          link resolved, and the route in was not where anyone would look.
+
+          A labelled row rather than a cog in the corner, and deliberately so after trying the
+          cog: this app is used one-handed in bright sun, and a 20px glyph is exactly the thing
+          that was missed the first time. Same MenuList the settings screen itself uses, so it
+          reads as part of the same furniture. */}
+      <MenuList
+        items={[
+          {
+            href: "/account",
+            label: t("accountSettings"),
+            hint: t("accountSettingsHint"),
+            icon: <IconCog size={22} />,
+          },
+        ]}
+      />
 
       {/* My Active Requests (spec section 2). The open ones first, because a live recovery is
           the only thing on this screen that might be happening right now. */}

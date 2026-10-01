@@ -353,7 +353,8 @@
     "myRequestsTitle": "My recoveries",
     "myRequestHelper": "{name} is coming",
     "myRequestOffers": "{count, plural, one {# volunteer has offered — pick one} other {# volunteers have offered — pick one}}",
-    "accountSettings": "Account settings"
+    "accountSettings": "Account settings",
+    "accountSettingsHint": "Your rigs, alerts, password and phone"
   },
   "board": {
     "title": "Open board",
