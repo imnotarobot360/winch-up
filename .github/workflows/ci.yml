@@ -346,6 +346,11 @@ jobs:
   #
   # docs/apply-2026-10-01.md has the longer version.
   #
+  # THE PROJECT REF IS NOT A SECRET and is written in below rather than stored as one. It is the
+  # subdomain of the project URL -- https://icpwyepfwkguaocbkawe.supabase.co -- which every request the browser
+  # makes already carries. Keeping it in a secret would only add a third way for this job to skip
+  # quietly. The access token and the database password are the real secrets, and they are not here.
+  #
   # ORDER AGAINST VERCEL is not controlled from here. Both start on the same push; this job is
   # short and Vercel's build is not, so schema usually lands first, which is the safe direction.
   # It is not guaranteed, which is why CLAUDE.md's rule stands: a field an RPC has only just started
@@ -381,12 +386,10 @@ jobs:
         id: secrets
         env:
           TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          REF: ${{ secrets.SUPABASE_PROJECT_REF }}
           DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
           missing=""
           [ -n "$TOKEN" ]       || missing="$missing SUPABASE_ACCESS_TOKEN"
-          [ -n "$REF" ]         || missing="$missing SUPABASE_PROJECT_REF"
           [ -n "$DB_PASSWORD" ] || missing="$missing SUPABASE_DB_PASSWORD"
           if [ -n "$missing" ]; then
             echo "ready=false" >> "$GITHUB_OUTPUT"
@@ -405,7 +408,7 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
-          supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
+          supabase link --project-ref icpwyepfwkguaocbkawe
           supabase migration list --linked
 
       - name: Apply what is missing
