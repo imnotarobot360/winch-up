@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { AnnouncementBanner } from "@/components/announcements/announcement-banner";
 import { CommunityFeed } from "@/components/community/community-feed";
 import { IconBoards, IconPeople } from "@/components/ui/icons";
 import { MenuList } from "@/components/ui/menu-list";
@@ -44,6 +45,9 @@ export default async function CommunityPage({ params }: { params: Promise<{ loca
           On /community because that is the members-only, people-shaped part of the app, and
           because the bottom nav is full: five tabs that each lead somewhere, which is the rule
           that keeps it honest. */}
+      {/* Section 1. Renders nothing when there is nothing, so this is free on most visits. */}
+      <AnnouncementBanner />
+
       <MenuList
         items={[
           {

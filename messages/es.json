@@ -2407,5 +2407,11 @@
     "saveFailed": "No se pudo guardar. Inténtalo de nuevo en un momento.",
     "readFailed": "No pudimos cargar tu zona. Recarga la página.",
     "notRecovery": "Esto solo se usa para eventos y ofertas de tu zona. No es la forma en que un rescate te encuentra: cuando pides ayuda, tu ubicación viene de tu teléfono en ese momento, y los voluntarios se eligen según la zona de su perfil de voluntario."
+  },
+  "announcements": {
+    "sponsored": "Patrocinado",
+    "readMore": "Leer más",
+    "dismiss": "Descartar",
+    "none": "No hay anuncios en este momento."
   }
 }

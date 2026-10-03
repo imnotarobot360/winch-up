@@ -2407,5 +2407,11 @@
     "saveFailed": "That did not save. Try again in a moment.",
     "readFailed": "We could not load your area. Reload the page.",
     "notRecovery": "This is only used for local events and offers. It is not how a recovery finds you — when you ask for help, your location comes from your phone at the time, and volunteers are matched from the home area on their volunteer profile."
+  },
+  "announcements": {
+    "sponsored": "Sponsored",
+    "readMore": "Read more",
+    "dismiss": "Dismiss",
+    "none": "No announcements right now."
   }
 }
