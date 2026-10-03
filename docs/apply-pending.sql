@@ -1,179 +1,157 @@
--- Winch Up :: apply every migration this phase added, in order, stopping at the first error
+-- Winch Up :: apply the 2026-10-03 geo-targeting migrations, in order, stopping at the first error
 --
--- Thirty files reach production by hand. Nine of them went across the Supabase SQL editor last
--- time and most silently did not land: the editor shows only the LAST result set, and a large
--- paste appears to truncate. That cost a session, took app.candidates() down, and was only
--- noticed because a verification query was rewritten to put its verdict first.
+-- Fifteen files. They are committed and pushed, CI reported success, and NONE of them reached
+-- production: the `apply migrations to production` job skipped its two working steps because
+-- `secrets.SUPABASE_DB_URL` arrives empty at the workflow. The job going green while applying
+-- nothing is the exact failure this repo keeps re-learning, so it is worth saying plainly at the
+-- top of the file that exists to work around it.
 --
--- This removes the whole class of failure. psql reads the files off disk, so nothing is truncated;
--- ON_ERROR_STOP means it halts at the first problem instead of carrying on into a half-applied
--- schema; and the order is written down once here rather than reassembled by hand each time.
+-- Verified absent by probe, not assumed: every new function answered PGRST202 and every new table
+-- PGRST205, with two pre-existing names answering 42501 as controls. docs/probe-2026-10-03.sh.
+--
+-- ---------------------------------------------------------------------------------------------
+-- WHY THIS FILE RATHER THAN THE SQL EDITOR
+--
+-- The Supabase editor shows only the LAST result set, and a large paste truncates silently. The
+-- symptom is always the same and always misleading: the last object in a file is missing while
+-- everything above it landed, so a verification query reports "1 of 6 missing" and reads like a
+-- logic bug. Nine files went that way on 2026-09-23 and app.candidates() was down unnoticed.
+--
+-- psql reads the files off disk, so nothing is truncated, and ON_ERROR_STOP=1 halts at the first
+-- problem instead of carrying on into a half-applied schema.
 --
 -- ---------------------------------------------------------------------------------------------
 -- HOW TO RUN IT
 --
--- Run it from the REPO ROOT, in any terminal. The \i paths below are relative to it.
+-- From the REPO ROOT -- the \i paths below are relative to it.
 --
--- Get the connection string from the Supabase dashboard: Connect -> Session pooler -> URI. Use
--- the session pooler or the direct connection, NOT the transaction pooler -- this runs
--- multi-statement files and creates types, which the transaction pooler cannot do.
+-- Get the connection string from the Supabase dashboard: Connect -> Session pooler -> URI.
+-- SESSION pooler, port 5432. Not the transaction pooler (6543): this runs multi-statement files
+-- and creates types, which a transaction-mode pooler cannot do. Not the direct connection either
+-- if you can avoid it -- it is IPv6-only.
 --
 -- Then DELETE THE PASSWORD out of it, leaving the colon off too:
 --
 --     postgresql://postgres.abcdef:MyPassword@aws-0-us-east-1.pooler.supabase.com:5432/postgres
 --     postgresql://postgres.abcdef@aws-0-us-east-1.pooler.supabase.com:5432/postgres
 --
--- psql then prompts for it, reads it without echoing, and the password never reaches your shell
--- history, your scrollback or a screenshot. This is simpler and safer than juggling an
--- environment variable, and it avoids the fact that the obvious PowerShell incantation for
--- reading a secret (ConvertFrom-SecureString -AsPlainText) only exists in PowerShell 7.
+-- psql prompts for it and reads it without echoing, so the password never reaches your shell
+-- history, your scrollback or a screenshot.
 --
---   PowerShell:
---     & "C:\\Users\\jjser\\tools\\pgsql\\bin\\psql.exe" "<URI-without-password>" -v ON_ERROR_STOP=1 -f docs/apply-pending.sql
+-- NOTE THE USERNAME IS `postgres.<project-ref>`, with the dot. "password authentication failed
+-- for user postgres" -- the error that stopped psql working here on 2026-09-30 -- is what a BARE
+-- `postgres` username gets at the pooler. It reads like a wrong password and is a wrong username.
 --
---   Bash / Git Bash:
---     "/c/Users/jjser/tools/pgsql/bin/psql.exe" "<URI-without-password>" -v ON_ERROR_STOP=1 -f docs/apply-pending.sql
+--     cd "C:\Users\jjser\New folder\txrecover"; $U = Read-Host "URI"; & "C:\Users\jjser\tools\pgsql\bin\psql.exe" $U -v ON_ERROR_STOP=1 -f docs/apply-pending.sql
 --
--- psql is not on PATH on this machine; it lives under tools/pgsql/bin. Any psql 14 or newer works.
---
--- Then confirm, which is the part that is not optional:
---
---     psql "<URI-without-password>" -f docs/verify-which-migrations.sql
---
--- Every row should read `done`. Any `>>> RE-RUN` names the file to look at.
+-- One self-contained line on purpose: nothing depends on a variable surviving between windows.
+-- When that was assumed, psql fell back to localhost:5432 and the error looked like the server
+-- being down.
 --
 -- ---------------------------------------------------------------------------------------------
--- WHY THERE IS NO SINGLE TRANSACTION AROUND THIS
+-- JUDGE THE RUN BY THE BANNER AT THE BOTTOM, NEVER BY THE ABSENCE OF RED
 --
--- Two of these files are ALTER TYPE ... ADD VALUE, and Postgres will not let a label be USED in
--- the transaction that adds it. Wrapping everything in one BEGIN would fail on the next file.
--- So each statement commits as it goes and ON_ERROR_STOP is what protects you: it stops on the
--- first error, and the fix is another migration rather than a rollback.
+-- With ON_ERROR_STOP=1 psql cannot reach the final banner unless every file applied. On
+-- 2026-09-28 this driver had silently applied nothing for days because eight lines had lost their
+-- backslashes -- `\i` had become `i`, which is bare SQL and a syntax error. Every run halted
+-- there, and each looked like one stray error in a wall of success.
 --
--- Every file is written to be safe to run twice (create or replace, if not exists, on conflict
--- do nothing), so re-running after a fix is fine.
-
+--     grep -cE "^(i|echo) " docs/apply-pending.sql     must print 0
+--
 -- ---------------------------------------------------------------------------------------------
-
--- OUT OF TIMESTAMP ORDER, ON PURPOSE.
+-- ORDER MATTERS IN TWO PLACES, and both are why these are separate files
 --
--- 20260923001700 ends with a create-or-replace of claim_push_deliveries that changes its return
--- type, which Postgres refuses outright on any database that already has the 20260923000400
--- version. 002600 does the drop that makes it possible. Run in filename order, 001700 fails and
--- ON_ERROR_STOP halts the whole run before reaching the file that fixes it.
+--   000500 creates the `event_type` enum; 000600 uses it as a column default.
+--   001200 creates the announcement enums; 001300 uses them.
 --
--- Run first, 002600 puts the function in its final shape, and 001700's version of the same
--- statement then has a matching signature and goes through as an ordinary no-op replace. One
--- clean pass instead of a documented manual workaround.
+-- A new enum label cannot be USED in the transaction that adds it. psql is autocommit, so each
+-- statement commits as it goes and the split works -- which is exactly what `supabase db push`
+-- would NOT give you if these were one file, because it wraps each migration in a transaction.
 --
--- Safe to hoist because it depends on nothing above it: the function reads notifications,
--- notification_deliveries, push_subscriptions and responders, all of which exist from 000400.
-\echo ''
-\echo '=== First: the one statement in 001700 that cannot succeed without this ==='
-\i supabase/migrations/20260923002600_claim_push_url.sql
+-- 000800 adds four `ad_surface` labels for the same reason.
+
+\set ON_ERROR_STOP on
+\timing off
 
 \echo ''
-\echo '=== Recovery teams: the labels, the table, and who can read a conversation ==='
-\i supabase/migrations/20260923001000_team_chat_enums.sql
-\i supabase/migrations/20260923001100_recovery_participants.sql
-\i supabase/migrations/20260923001200_thread_access.sql
-\i supabase/migrations/20260923001300_team_membership_sync.sql
-\i supabase/migrations/20260923001400_participant_actions.sql
-\i supabase/migrations/20260923001500_participants_policy_fix.sql
-\i supabase/migrations/20260923001600_status_team.sql
-
+\echo '=== Winch Up :: 2026-10-03 geo-targeting, 15 files ==='
 \echo ''
-\echo '=== Notifications for a team, and the two columns nobody could read ==='
-\i supabase/migrations/20260923001700_chat_notifications.sql
-\i supabase/migrations/20260923001800_notify_column_grants.sql
 
-\echo ''
-\echo '=== Recovery SMS off, and the outbox stops keeping what it carried ==='
-\i supabase/migrations/20260923001900_sms_suppressed.sql
-\i supabase/migrations/20260923002000_sms_off.sql
+\echo '--- 1/15  member location on profiles (spec 11) ---'
+\i supabase/migrations/20261003000100_member_location.sql
 
-\echo ''
-\echo '=== Messages that cannot be sent twice, and a socket that opens no tables ==='
-\i supabase/migrations/20260923002100_message_client_id.sql
-\i supabase/migrations/20260923002200_realtime_broadcast.sql
+\echo '--- 2/15  the shared targeting model (spec 2, 6, 10) ---'
+\i supabase/migrations/20261003000200_targeting.sql
 
-\echo ''
-\echo '=== The second helper: accepting them, showing them, and their way back ==='
-\i supabase/migrations/20260923002300_second_helper.sql
-\i supabase/migrations/20260923002400_offers_after_accept.sql
-\i supabase/migrations/20260923002500_second_helper_dashboard.sql
+\echo '--- 3/15  server-side postal centroid writer ---'
+\i supabase/migrations/20261003000300_member_postal_center.sql
 
--- ---------------------------------------------------------------------------------------------
--- THE EIGHT LINES BELOW HAD LOST THEIR BACKSLASHES, AND THAT IS WHY THIS KEPT HALF-WORKING
---
--- `\echo` had become `echo` and `\i` had become `i`, from here to the end of the file. Those
--- are not psql meta-commands, they are bare SQL, and `echo ''` is a syntax error -- so with
--- ON_ERROR_STOP=1 every run stopped dead at this line and NOTHING from 20260923002700 onward
--- was ever applied by this driver.
---
--- It fails in the most expensive possible way: the files above it apply perfectly, psql prints
--- one error among a lot of successful output, and the database is left part-way. That is
--- exactly the history in the notes -- "20260923002700 was missing and 20260924000100 had never
--- been applied, so /members was live in production calling functions that did not exist" -- and
--- those are precisely the first two files below this line. Confirmed again on 2026-09-28:
--- community_feed's p_topic overload from 20260927000200 is still absent from production.
---
--- If you are adding files here: they are `\i`, with a backslash. Check the run's output ends
--- with the "Applied." banner, which only prints if psql reached the bottom of this file.
--- ---------------------------------------------------------------------------------------------
+\echo '--- 4/15  ads_for() ENFORCES targeting (spec 6) ---'
+\i supabase/migrations/20261003000400_ads_enforce_targeting.sql
 
-\echo ''
-\echo '=== The team can see where they are driving to ==='
-\i supabase/migrations/20260923002700_thread_location.sql
+\echo '--- 5/15  event_type enum (its own file: a label cannot be used where it is added) ---'
+\i supabase/migrations/20261003000500_event_type_enum.sql
 
-\echo ''
-\echo '=== A directory of members who chose to be in one ==='
-\i supabase/migrations/20260924000100_nearby_members.sql
-\i supabase/migrations/20260924000200_email_deliveries.sql
-\i supabase/migrations/20260924000300_welcome_email.sql
-\i supabase/migrations/20260925000100_dispatch_sms_on.sql
-\i supabase/migrations/20260927000100_signup_name.sql
-\i supabase/migrations/20260927000200_post_topics.sql
-\i supabase/migrations/20260928000100_phone_optional.sql
+\echo '--- 6/15  event detail columns (spec 2) ---'
+\i supabase/migrations/20261003000600_event_details.sql
 
-\echo ''
-\echo '=== The membership agreement: versions, signatures, and the gate (shipped OFF) ==='
--- 000600 opens with a guard that refuses to run if create_request is not the version the gate
--- was spliced into. If it raises, stop and re-splice rather than editing the file to pass.
-\i supabase/migrations/20260928000200_membership_agreement.sql
-\i supabase/migrations/20260928000300_membership_rpc.sql
-\i supabase/migrations/20260928000400_membership_admin.sql
-\i supabase/migrations/20260928000500_membership_signed_email.sql
-\i supabase/migrations/20260928000600_membership_gate.sql
+\echo '--- 7/15  event admin RPCs; REPLACES events_upcoming(integer) ---'
+\i supabase/migrations/20261003000700_event_admin_rpcs.sql
 
-\echo ''
-\echo '=== /terms stops saying PLACEHOLDER at A2P reviewers ==='
--- Prints a NOTICE saying whether it published or found the text already current. Safe to re-run:
--- it compares the text rather than the version number.
-\i supabase/migrations/20260928000700_rules_v2.sql
+\echo '--- 8/15  four more ad surfaces (spec 8) ---'
+\i supabase/migrations/20261003000800_ad_surface_labels.sql
 
-\echo ''
-\echo '=== Phone required to join again, and a photo of your rig ==='
-\i supabase/migrations/20260928000800_phone_required_again.sql
-\i supabase/migrations/20260928000900_vehicle_photos.sql
-\i supabase/migrations/20260928001000_member_rig_photo.sql
+\echo '--- 9/15  campaign lifecycle; ads_for() switches to app.campaign_phase() (spec 9) ---'
+\i supabase/migrations/20261003000900_campaign_lifecycle.sql
 
--- PostgREST caches the schema at startup and does not notice new functions or columns. Without
--- this the app calls request_thread() and gets "function not found" against a database that
--- plainly has it -- which reads as the migration not having applied.
+\echo '--- 10/15  geographic ad stats + event views (spec 12) ---'
+\i supabase/migrations/20261003001000_ad_geo_analytics.sql
+
+\echo '--- 11/15  the report, with the agreed suppression (spec 12) ---'
+\i supabase/migrations/20261003001100_ad_report.sql
+
+\echo '--- 12/15  announcement enums (own file, same enum rule) ---'
+\i supabase/migrations/20261003001200_announcement_enums.sql
+
+\echo '--- 13/15  announcements + dismissals (spec 1) ---'
+\i supabase/migrations/20261003001300_announcements.sql
+
+\echo '--- 14/15  announcement RPCs (spec 1, 14) ---'
+\i supabase/migrations/20261003001400_announcement_rpcs.sql
+
+\echo '--- 15/15  targeting round-trip + admin_events (spec 14, 16) ---'
+\i supabase/migrations/20261003001500_targets_round_trip.sql
+
 \echo ''
 \echo '=== Telling PostgREST the schema changed ==='
 notify pgrst, 'reload schema';
+
+-- RECORD THEM IN THE LEDGER, so `supabase db push` does not try to run them again.
+--
+-- This is the step that is easy to skip and expensive to skip. The CLI tracks what it has applied
+-- in supabase_migrations.schema_migrations; applying by hand leaves that table behind, and the
+-- next successful CI run then re-runs all fifteen and fails on "already exists" -- which reads as
+-- a broken migration rather than a bookkeeping gap. `on conflict do nothing` makes this a no-op if
+-- some other path already recorded them.
+\echo ''
+\echo '=== Recording them in the migration ledger ==='
+
+create schema if not exists supabase_migrations;
+create table if not exists supabase_migrations.schema_migrations (version text primary key);
+
+insert into supabase_migrations.schema_migrations (version) values
+  ('20261003000100'), ('20261003000200'), ('20261003000300'), ('20261003000400'),
+  ('20261003000500'), ('20261003000600'), ('20261003000700'), ('20261003000800'),
+  ('20261003000900'), ('20261003001000'), ('20261003001100'), ('20261003001200'),
+  ('20261003001300'), ('20261003001400'), ('20261003001500')
+on conflict (version) do nothing;
 
 -- This banner is the proof the run finished. With ON_ERROR_STOP=1 psql cannot reach it unless
 -- every file above applied -- so if you do not see it, the run stopped somewhere and the last
 -- error printed is where. Do not judge a run by the absence of red.
 \echo ''
 \echo '================================================================'
-\echo ' REACHED THE END. Every file above applied.'
+\echo ' REACHED THE END. All fifteen files applied and recorded.'
 \echo ' If you cannot see this line, the run halted -- scroll up.'
 \echo '================================================================'
-\echo ''
-\echo 'Now run the same psql command with -f docs/verify-which-migrations.sql'
-\echo 'Every row should say done.'
 \echo ''
