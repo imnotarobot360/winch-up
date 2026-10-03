@@ -167,9 +167,14 @@ refuses demo data unless explicitly marked non-production, which covers the clas
 where a test seed lands somewhere real.
 
 Until there is a staging project, the honest position is that `main` deploys to production --
-**and so do the migrations.** The Supabase GitHub integration applies everything in
-`supabase/migrations` on a push to main, within about ninety seconds, before Vercel has
-finished building the frontend.
+**and the migrations do NOT follow automatically.** The Supabase GitHub integration applied them
+for one day (2026-09-30), stopped on 2026-10-01, and was removed on 2026-10-03. The CI `migrate`
+job that replaced it reported success three times while applying nothing, because
+`secrets.SUPABASE_DB_URL` was arriving empty and both of its working steps were gated on that; it
+fails loudly now rather than skipping. Until a push is OBSERVED applying a migration, assume the
+frontend deploys ahead of the schema, apply with `docs/apply-pending.sql`, and verify with
+`docs/probe-2026-10-03.sh` -- which asks production directly with the publishable key and pairs
+every check with a control, so it cannot quietly start answering "applied" to everything.
 
 **That removes the human gate this section used to call a safety net, and the paragraph said
 otherwise until 2026-09-30.** A migration merged is a migration in production; there is no
