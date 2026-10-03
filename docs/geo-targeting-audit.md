@@ -219,3 +219,49 @@ believes they are doing.
 Events extension (§2), announcements (§1), the four new ad surfaces (§8), campaign lifecycle (§9),
 analytics with the agreed suppression (§12), and the admin Content & Marketing screens (§1, §14, §16).
 `target_counties` on `ad_campaigns` is dead in the serving path and was dead before this change.
+
+## Phases 5 to 9, built 2026-10-03
+
+Spec sections 2, 8, 9, 12, 1, 14 and 16. Migrations `20261003000500` through `20261003001500`, six
+new pgTAP suites, and the Content & Marketing screen.
+
+### Decisions a reviewer should disagree with if they want to
+
+**Event targeting does not hide events; announcement targeting does.** An event is browsed, and a
+Dallas member who would happily drive to a Houston clinic should be able to find it — hiding it loses
+the thing this product replaces. An announcement is pushed at somebody who did not ask for it, with no
+directory to browse, so one about a gate four hundred miles away is noise. `events_upcoming()` returns
+everything and carries `matches_my_area`; `my_announcements()` filters. Both are asserted.
+
+**The §9 lifecycle labels are derived, not stored.** `scheduled`, `active` and `expired` are a
+function of `status`, `starts_on` and `ends_on`. Storing them needs a nightly job, and the morning it
+fails a campaign reads "active" while the serving query has already stopped showing it. `ads_for()`
+now calls `app.campaign_phase()` rather than repeating the date comparisons, so the word on the screen
+and the advert being served cannot disagree.
+
+**Unique reach is not built.** §12 asks for it; counting distinct people needs a row per person per
+creative, which is the column the statistics tables must never grow. The report returns
+`estimated_reach` — how many members the targeting matches — and the payload says in words that it is
+not a count of viewers.
+
+**Promotional event fields are keyed to `is_official` by a CHECK.** `create_event` is open to every
+member and takes `status` from its payload, so an organiser, website, registration link and phone
+number on an unguarded row is "put my towing company's number in front of six thousand people".
+
+**Three of §8's four surfaces have no page.** `/business` is the advertiser's own dashboard, not a
+directory members browse; the only map is in `/admin`; and `page.tsx` is the signed-out marketing
+page. Only `events` is mounted. The labels exist as the permission to sell space there and are inert.
+
+### What is still not done
+
+- **`record_event_view()` has no caller.** There is no event detail page, and counting a view for
+  every event in a list is not a view. `admin_event_report` will read `views: 0` until a page exists.
+- **Announcements send no notifications.** Deliberate, and the reasoning is in `20261003001400`:
+  `notify_marketing` ships false, SMS is an allowlist nothing would be added to, and a producer must
+  be a trigger rather than a call bolted into a function. The `category` column records the
+  operational/marketing distinction now so that work is already decided.
+- **A map picker for radius targeting.** Coordinates are typed. There is no member-facing map to
+  reuse, and ZIP or city is what an admin actually reaches for.
+- **Campaign creation from the admin screen.** That is the advertiser's job on `/business`; a second
+  form writing the same row with different validation is how review gets bypassed.
+  `admin_save_campaign_targets()` is narrow on purpose.

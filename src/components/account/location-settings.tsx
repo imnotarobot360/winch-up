@@ -35,7 +35,12 @@ export function LocationSettings() {
   const [saved, setSaved] = useState<Location>(EMPTY);
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // AN ERROR CODE, TRANSLATED AT RENDER, not a translated string in state. Keeping `t` out of the
+  // load callback is what lets its dependency list be empty: next-intl does not promise a stable
+  // identity for `t`, so a callback depending on it can be rebuilt every render, and an effect keyed
+  // on that callback then re-runs every render. The sibling notification screen is written this way
+  // for the same reason.
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
   const load = useCallback(async () => {
@@ -53,7 +58,7 @@ export function LocationSettings() {
       // `profiles` has an enumerated column grant list, so a column added by a later migration
       // than the one the database has makes the WHOLE select fail rather than just that column.
       // Showing defaults silently is how a whole settings screen lied for a day.
-      setError(t("readFailed"));
+      setErrorCode("readFailed");
       setLoaded(true);
       return;
     }
@@ -67,7 +72,7 @@ export function LocationSettings() {
     setValue(next);
     setSaved(next);
     setLoaded(true);
-  }, [t]);
+  }, []);
 
   useEffect(() => {
     void load();
@@ -80,7 +85,7 @@ export function LocationSettings() {
 
   async function save() {
     setBusy(true);
-    setError(null);
+    setErrorCode(null);
     setDone(false);
 
     const result = await setMyLocationAction({
@@ -92,16 +97,15 @@ export function LocationSettings() {
     setBusy(false);
 
     if (!result.ok) {
-      // The database names which field it refused, and saying which one is the difference between
-      // a form somebody can fix and a form they abandon.
-      setError(
-        result.error === "bad_postal_code"
-          ? t("badPostalCode")
-          : result.error === "bad_state"
-            ? t("badState")
-            : result.error === "contact_info"
-              ? t("contactInfo")
-              : t("saveFailed"),
+      // The database names which field it refused, and saying which one is the difference between a
+      // form somebody can fix and a form they abandon. An unrecognised code falls back rather than
+      // asking for a message that does not exist.
+      setErrorCode(
+        result.error === "bad_postal_code" ||
+          result.error === "bad_state" ||
+          result.error === "contact_info"
+          ? result.error
+          : "saveFailed",
       );
       return;
     }
@@ -112,7 +116,7 @@ export function LocationSettings() {
 
   async function clear() {
     setBusy(true);
-    setError(null);
+    setErrorCode(null);
     setDone(false);
 
     const result = await setMyLocationAction({ city: null, state: null, postalCode: null });
@@ -120,7 +124,7 @@ export function LocationSettings() {
     setBusy(false);
 
     if (!result.ok) {
-      setError(t("saveFailed"));
+      setErrorCode("saveFailed");
       return;
     }
 
@@ -141,7 +145,7 @@ export function LocationSettings() {
 
   return (
     <div className="space-y-4">
-      {error ? <Callout tone="danger">{error}</Callout> : null}
+      {errorCode ? <Callout tone="danger">{errorMessage(t, errorCode)}</Callout> : null}
       {done && !dirty ? <Callout tone="good">{t("saved")}</Callout> : null}
 
       <Card className="space-y-4 p-4">
@@ -200,4 +204,27 @@ export function LocationSettings() {
       <Callout tone="neutral">{t("notRecovery")}</Callout>
     </div>
   );
+}
+
+/**
+ * An error code to a sentence.
+ *
+ * Explicit keys rather than a template string: next-intl types `t` to the literal keys in the
+ * namespace, and a code this file has never heard of -- from a server that is ahead of this bundle --
+ * would otherwise ask for a message that does not exist and throw on a form somebody is in the middle
+ * of using. Unknown falls back to the generic failure.
+ */
+function errorMessage(t: ReturnType<typeof useTranslations<"locationSettings">>, code: string) {
+  switch (code) {
+    case "bad_postal_code":
+      return t("badPostalCode");
+    case "bad_state":
+      return t("badState");
+    case "contact_info":
+      return t("contactInfo");
+    case "readFailed":
+      return t("readFailed");
+    default:
+      return t("saveFailed");
+  }
 }

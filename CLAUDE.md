@@ -1728,6 +1728,76 @@ docs/                     decisions + runbooks
   out would otherwise match no radius campaign until they next edited their profile. And Mapbox
   answers a bad five-digit string with a confident point somewhere else rather than nothing, so
   `forwardGeocodePostalCode()` checks the answer is about the postcode it asked for.
+- **TARGETING HIDES AN ANNOUNCEMENT AND DOES NOT HIDE AN EVENT.** Same table, same matching rule,
+  opposite answer, and the asymmetry is deliberate rather than an oversight. An event is BROWSED: a
+  Dallas member who would happily drive to a Houston clinic has to be able to find it, and hiding
+  community events is losing the thing this product replaces. An announcement is PUSHED at somebody
+  who did not ask for it with no directory to browse, so one about a gate four hundred miles away is
+  pure noise. `events_upcoming()` returns everything and carries `matches_my_area` for badging;
+  `my_announcements()` filters. Both halves are asserted in both suites, because a filter that hides
+  everything passes every "does not see it" test on its own.
+- **Campaign lifecycle labels are DERIVED, and `ads_for()` calls the same function that prints them.**
+  scheduled / active / expired are a function of status, starts_on and ends_on. Storing them needs a
+  nightly job, and the morning it fails a campaign reads "active" while the serving query -- which
+  reads the dates -- has already stopped showing it. `app.campaign_phase()` is the single answer and
+  replaced four conditions in the serving WHERE; without that the derived-not-stored argument would
+  have been aspirational and the two copies would have drifted. Archive is the one state nothing else
+  implies, so it IS stored -- and it is not a status, because an archived campaign that was approved
+  and ran for a month is still that and the reports have to say so.
+- **A POSIX REPETITION COUNT ABOVE 255 IS INVALID, AND A CHECK COMPILES ITS PATTERN ON THE FIRST ROW.**
+  `check (url ~* '^https?://[^[:space:]]{3,500}$')` creates cleanly, looks applied, and then refuses
+  every insert with "invalid repetition count(s)" -- an error naming nothing that would help. Length
+  belongs in `length()`, never in the pattern. Hit on 2026-10-03 and caught only because a test
+  inserted a URL.
+- **`app.require_admin()` RETURNS VOID.** `v_me uuid := app.require_admin();` compiles, because
+  plpgsql does not check a body until it runs, and then fails on the first call. It is
+  `perform app.require_admin();` and `auth.uid()` separately.
+- **A SOURCE-READING GUARD CANNOT TELL A COMMENT FROM A REFERENCE.** `targeting_test.sql` fails if any
+  advertising function names `responders` or `home_location` -- the dispatch-path guard pointed the
+  other way -- and it failed first on a COMMENT inside `ads_for()` saying which column it deliberately
+  does not read. The comment is reworded and says why; do not "improve" it back. The same guard also
+  caught `app.target_audience_count()` joining `responders` for `redacted_at`, which marks a
+  retention-scrubbed VOLUNTEER RECORD rather than a deleted account -- those members still sign in and
+  still see adverts, so the join was under-counting every audience estimate as well as being a §7
+  smell. When a privacy smell and a correctness bug point the same way, that is usually not a
+  coincidence.
+- **An assertion can pin a bug as intended behaviour, and the wording tells you which.**
+  `advertising_test.sql` asserted "a reader whose browser gave no position still sees it, rather than
+  targeting quietly meaning nobody" -- and passed for weeks while every radius-targeted campaign went
+  to everybody. The fear in that sentence was right; the cure was a hole the size of the feature. An
+  assertion whose name argues for itself ("rather than...") is one to re-read.
+- **A LISTING THAT OMITS A FIELD MAKES THE EDITOR THAT USES IT SILENTLY DESTRUCTIVE.** The admin
+  listings returned a radius target's distance and not its centre, which is sensible for a list. The
+  editor loads targets, the admin adds a ZIP, the save sends the whole array, and the writer replaces
+  targeting wholesale -- so a radius the editor could not represent is simply absent from what it
+  sends back, and is deleted. Nothing errors; the campaign stops reaching the area it was bought for
+  and the only evidence is a report getting smaller. Same shape for `events.meet_point`. Both now
+  round-trip, and `targets_round_trip_test.sql` asserts it by reading and re-sending.
+- **`ad_geo_daily_stats` uses `''` rather than NULL for "no stated area", and it is part of the key.**
+  A key treats nulls as DISTINCT, so every anonymous impression would insert a new row instead of
+  incrementing one -- the table growing per page view while the report read correctly. A unique index
+  over `coalesce()` expressions cannot be the target of a plain `on conflict (columns)` (the same
+  inference trap that stopped posts being reportable), and a primary key cannot hold an expression at
+  all.
+- **The geographic ad report suppresses small buckets and ROLLS THEM UP rather than dropping them.**
+  Below `analytics.min_cohort` (default 5) a city or ZIP is folded into one labelled row with a
+  bucket count. Dropping them would make the parts not add up to the total, and somebody reconciling
+  a report by hand asks for the raw table -- which is the thing the suppression exists to avoid
+  handing out. Totals come from `ad_daily_stats`, never by summing the geographic rows, so the
+  headline number never depends on a privacy threshold. "No stated area" is its own row, not a
+  suppressed one: it is usually the biggest row on the page and calling it suppressed is a lie about
+  why. There is no unique-viewer count and there must not be one.
+- **`/api/ads/event` has a HARDCODED surface set that goes stale silently.** Mounting an AdSlot on a
+  new surface while that set still had three entries meant the slot rendered, a real advert was
+  served, and every impression came back 400 bad_surface -- a working advert counting nothing, visible
+  only as a report stuck at zero. If `ad_surface` grows, grow that set. The route also reads the
+  member's stated area from the SESSION and passes it to the RPC: it holds the service-role key, so
+  `auth.uid()` is null in the database, and a city taken from the request body would let anybody write
+  into an advertiser's report.
+- **`useCallback` for a loader must not depend on `t`.** next-intl does not promise a stable identity
+  for the translator, so a callback depending on it can be rebuilt every render and an effect keyed on
+  that callback re-runs every render. Store an error CODE in state and translate at render; the
+  notification settings screen was already written this way and the location screen now matches.
 - **`npm run build` runs the i18n check first** (`prebuild`). A missing Spanish key fails the
   build rather than silently falling back to English.
 
