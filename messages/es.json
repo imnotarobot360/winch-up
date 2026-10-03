@@ -1336,7 +1336,15 @@
     "eventPost": "Publicar",
     "eventCancel": "Cancelar",
     "eventMeet": "Punto de encuentro: {place}",
-    "eventsEmpty": "Todavía no hay nada próximo. Publique el siguiente día de ruta o jornada de trabajo."
+    "eventsEmpty": "Todavía no hay nada próximo. Publique el siguiente día de ruta o jornada de trabajo.",
+    "eventOrganizer": "Organizado por {name}",
+    "eventRegister": "Inscríbete en este evento",
+    "eventType_trail_ride": "Salida al campo",
+    "eventType_training": "Capacitación",
+    "eventType_meetup": "Encuentro",
+    "eventType_cleanup": "Limpieza de senderos",
+    "eventType_fundraiser": "Recaudación de fondos",
+    "eventType_show": "Exhibición"
   },
   "moderation": {
     "title": "Moderación",

@@ -38,7 +38,14 @@ type Topic = (typeof TOPICS)[number];
 /** What the composer can file a post under. "all" is a filter, not a topic. */
 const POST_TOPICS = ["general", "trail_conditions", "gear", "recoveries", "tips"] as const;
 
-/** What events_upcoming() returns. Fields this screen does not show are left out. */
+/**
+ * What events_upcoming() returns. Fields this screen does not show are left out.
+ *
+ * EVERYTHING ADDED BY SECTION 2 IS OPTIONAL, and that is the house rule rather than caution: the app
+ * deploys on a push to main and the schema goes across separately, so there is a window in which this
+ * RPC has not started returning these yet. Read through `??` and the window costs a missing line;
+ * typed as required, it is a TypeError on the community page.
+ */
 type EventRow = {
   id: string;
   title: string;
@@ -46,7 +53,45 @@ type EventRow = {
   starts_at: string;
   meet_note: string | null;
   trail_name: string | null;
+  event_type?: string | null;
+  city?: string | null;
+  state?: string | null;
+  address_line?: string | null;
+  organizer_name?: string | null;
+  registration_url?: string | null;
+  is_official?: boolean | null;
+  // Whether the event was aimed at this member's stated area. Deliberately NOT used to hide
+  // anything -- see 20261003000700. It badges what is nearby; the list is always complete.
+  matches_my_area?: boolean | null;
 };
+
+/**
+ * The i18n key for an event type, or null when there is nothing to show.
+ *
+ * AN EXPLICIT MAP RATHER THAN A TEMPLATE STRING, for two reasons that point the same way. next-intl
+ * types `t` to the literal keys in the namespace, so `t(`eventType_${x}`)` does not compile. And a
+ * value this file has never heard of -- a label added to the enum by a migration that is live while
+ * this bundle is not -- would otherwise ask for a message that does not exist and throw on the
+ * community page. An unknown type simply shows no type line, which is the same way an unknown post
+ * topic falls back here.
+ *
+ * 'other' is deliberately absent: it is the default, and "Other" above an event title is noise.
+ */
+const EVENT_TYPE_KEYS = {
+  trail_ride: "eventType_trail_ride",
+  training: "eventType_training",
+  meetup: "eventType_meetup",
+  cleanup: "eventType_cleanup",
+  fundraiser: "eventType_fundraiser",
+  show: "eventType_show",
+} as const;
+
+function eventTypeKey(
+  value: string | null | undefined,
+): (typeof EVENT_TYPE_KEYS)[keyof typeof EVENT_TYPE_KEYS] | null {
+  if (!value) return null;
+  return EVENT_TYPE_KEYS[value as keyof typeof EVENT_TYPE_KEYS] ?? null;
+}
 
 type Post = {
   id: string;
@@ -404,6 +449,21 @@ export function CommunityFeed() {
                       })}
                     </p>
                     <h2 className="text-xl font-semibold text-ink">{e.title}</h2>
+                    {/* Type and place on one line: both are short, and an event card on a phone has
+                        room for one more line, not four. */}
+                    {eventTypeKey(e.event_type) ? (
+                      <p className="text-sm text-ink-soft">
+                        {t(eventTypeKey(e.event_type)!)}
+                        {e.city && e.state ? ` · ${e.city}, ${e.state}` : ""}
+                      </p>
+                    ) : e.city && e.state ? (
+                      <p className="text-sm text-ink-soft">{`${e.city}, ${e.state}`}</p>
+                    ) : null}
+                    {e.organizer_name ? (
+                      <p className="text-sm text-ink-soft">
+                        {t("eventOrganizer", { name: e.organizer_name })}
+                      </p>
+                    ) : null}
                     {e.meet_note ? (
                       <p className="text-base text-ink">{t("eventMeet", { place: e.meet_note })}</p>
                     ) : null}
@@ -412,6 +472,20 @@ export function CommunityFeed() {
                     ) : null}
                     {e.description ? (
                       <p className="whitespace-pre-wrap text-base text-ink-soft">{e.description}</p>
+                    ) : null}
+                    {/* Last, and only for an official event -- the CHECK on the table means a
+                        member-created row cannot carry one, so this link is always something an
+                        admin wrote. rel includes noopener because target _blank without it hands
+                        the opened page a handle on this one. */}
+                    {e.registration_url ? (
+                      <a
+                        href={e.registration_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block text-base font-semibold text-brand underline underline-offset-4"
+                      >
+                        {t("eventRegister")}
+                      </a>
                     ) : null}
                   </Card>
                 </li>

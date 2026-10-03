@@ -1336,7 +1336,15 @@
     "eventPost": "Post it",
     "eventCancel": "Cancel",
     "eventMeet": "Meet: {place}",
-    "eventsEmpty": "Nothing coming up yet. Post the next trail day or work party."
+    "eventsEmpty": "Nothing coming up yet. Post the next trail day or work party.",
+    "eventOrganizer": "Organised by {name}",
+    "eventRegister": "Register for this event",
+    "eventType_trail_ride": "Trail ride",
+    "eventType_training": "Training",
+    "eventType_meetup": "Meetup",
+    "eventType_cleanup": "Trail clean-up",
+    "eventType_fundraiser": "Fundraiser",
+    "eventType_show": "Show"
   },
   "moderation": {
     "title": "Moderation",
