@@ -1,11 +1,29 @@
 import { NextResponse } from "next/server";
 
 import { clientIpFrom, supabaseAdmin } from "@/lib/supabase/admin";
+import { supabaseServer } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const SURFACES = new Set(["community_feed", "trails", "resources"]);
+/**
+ * Every value of ad_surface, as of 20261003000800.
+ *
+ * THIS LIST GOING STALE IS SILENT, which is why it is worth a comment. Mounting an AdSlot on a new
+ * surface while this set still had three entries meant the slot rendered, the advert was served, and
+ * every impression came back 400 bad_surface -- a working advert that counts nothing, visible only in
+ * a report that stays at zero. Found by reading this file after adding the events slot, not by anything
+ * failing. If ad_surface grows again, grow this too.
+ */
+const SURFACES = new Set([
+  "community_feed",
+  "trails",
+  "resources",
+  "home_feed",
+  "map",
+  "events",
+  "directory",
+]);
 const KINDS = new Set(["impression", "click"]);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -72,10 +90,58 @@ export async function POST(request: Request) {
     }
   }
 
-  const { data, error } = await db.rpc("ad_record_event", {
+  /**
+   * The reader's stated area, read HERE and never accepted from the browser.
+   *
+   * This route holds the service-role key, so auth.uid() is null inside the RPC and the database
+   * cannot look the reader up itself. The session client can: reading `profiles` as the member
+   * returns their own row and nothing else, which is also a live check that the column grants from
+   * 20261003000100 are in place.
+   *
+   * A city in the request body would let anybody write whatever they liked into an advertiser's
+   * report, which is the one number on this page that is about money.
+   *
+   * A failure here is not a failure of the request. An impression with no area is recorded as
+   * "unknown area", which is an honest row and the majority of them; losing the impression entirely
+   * to protect a breakdown would be the wrong trade.
+   */
+  let area: { state: string | null; city: string | null; postal_code: string | null } = {
+    state: null,
+    city: null,
+    postal_code: null,
+  };
+
+  try {
+    const session = await supabaseServer();
+    const {
+      data: { user },
+    } = await session.auth.getUser();
+
+    if (user) {
+      const { data: profile } = await session
+        .from("profiles")
+        .select("state, city, postal_code")
+        .maybeSingle();
+
+      if (profile) {
+        area = {
+          state: profile.state ?? null,
+          city: profile.city ?? null,
+          postal_code: profile.postal_code ?? null,
+        };
+      }
+    }
+  } catch (locationError) {
+    console.error("[ads/event] could not read the reader's area", locationError);
+  }
+
+  const { data, error } = await db.rpc("ad_record_event_at", {
     p_creative_id: creativeId,
     p_surface: surface,
     p_kind: kind,
+    p_state: area.state,
+    p_city: area.city,
+    p_postal_code: area.postal_code,
   });
 
   if (error) {
