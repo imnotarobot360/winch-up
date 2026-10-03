@@ -346,6 +346,25 @@ jobs:
   #
   # docs/apply-2026-10-01.md has the longer version.
   #
+  # ONE SECRET, AND IT MUST BE THE SESSION POOLER, NOT THE DIRECT CONNECTION.
+  #
+  # This is measured, not a preference. The direct host resolves IPv6-only:
+  #
+  #   db.icpwyepfwkguaocbkawe.supabase.co   AAAA 2600:1f18:...   A (none)
+  #   aws-0-<region>.pooler.supabase.com    A 44.208.221.186, ...
+  #
+  # GitHub's hosted runners have no IPv6, so a direct connection string fails here every time --
+  # and it fails as a connection timeout, which reads like Supabase being down rather than like a
+  # wrong address. The pooler is IPv4 and is what the dashboard labels "Session pooler".
+  #
+  # SESSION mode (port 5432), not transaction mode (6543). Migrations take advisory locks and run
+  # multi-statement transactions; a transaction-mode pooler hands out a different backend per
+  # statement and the lock is lost.
+  #
+  # The whole URL is the secret rather than just the password, because the dashboard prints the
+  # exact host and username for this project and guessing a region into a workflow is how this
+  # fails confusingly a month from now.
+  #
   # THE PROJECT REF IS NOT A SECRET and is written in below rather than stored as one. It is the
   # subdomain of the project URL -- https://icpwyepfwkguaocbkawe.supabase.co -- which every request the browser
   # makes already carries. Keeping it in a secret would only add a third way for this job to skip
@@ -385,12 +404,10 @@ jobs:
       - name: Are the secrets here?
         id: secrets
         env:
-          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           missing=""
-          [ -n "$TOKEN" ]       || missing="$missing SUPABASE_ACCESS_TOKEN"
-          [ -n "$DB_PASSWORD" ] || missing="$missing SUPABASE_DB_PASSWORD"
+          [ -n "$DB_URL" ] || missing="$missing SUPABASE_DB_URL"
           if [ -n "$missing" ]; then
             echo "ready=false" >> "$GITHUB_OUTPUT"
             echo "::notice title=Migrations not applied::Missing repository secrets:$missing."
@@ -405,18 +422,14 @@ jobs:
       - name: What does production already have?
         if: steps.secrets.outputs.ready == 'true'
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-        run: |
-          supabase link --project-ref icpwyepfwkguaocbkawe
-          supabase migration list --linked
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: supabase migration list --db-url "$DB_URL"
 
       - name: Apply what is missing
         if: steps.secrets.outputs.ready == 'true'
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-        run: supabase db push --linked
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: supabase db push --db-url "$DB_URL"
 
       # Read this when it goes red. The most likely cause is the ledger, not the SQL.
       - name: Why a failure here is usually not the migration
