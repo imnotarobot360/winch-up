@@ -325,5 +325,208 @@ select is(
   0,
   'and deleting the campaign takes it with them');
 
+-- ---------------------------------------------------------------------------
+-- 11. The centroid is written by the server, from the ZIP it was asked about
+-- ---------------------------------------------------------------------------
+--
+-- set_my_location() CLEARS postal_center, and set_member_postal_center() refills it after the
+-- server has geocoded. The gap between those two is the whole reason this function takes a postal
+-- code it could have looked up itself.
+
+update public.profiles
+   set postal_code = '77429', postal_center = null
+ where user_id = 'a1000000-0000-4000-8000-00000000000a';
+
+select ok(
+  (public.set_member_postal_center('a1000000-0000-4000-8000-00000000000a', '77429',
+                                   -95.6972, 29.9691) ->> 'ok')::boolean,
+  'the server can fill in a centroid for the ZIP the member actually saved');
+
+select isnt(
+  (select postal_center from public.profiles
+    where user_id = 'a1000000-0000-4000-8000-00000000000a'),
+  null,
+  'and it lands');
+
+-- A LATE ANSWER ABOUT AN OLD ZIP IS DISCARDED. Geocoding happens after the member's save has
+-- returned, so by the time Mapbox answers they may have saved a different postal code from another
+-- tab. Writing it anyway would pin a stale point onto a current ZIP -- which is exactly the failure
+-- clearing the column was meant to prevent, reintroduced one step later, and nothing on any screen
+-- would look wrong.
+update public.profiles
+   set postal_code = '77494', postal_center = null
+ where user_id = 'a1000000-0000-4000-8000-00000000000a';
+
+select is(
+  public.set_member_postal_center('a1000000-0000-4000-8000-00000000000a', '77429',
+                                  -95.6972, 29.9691) ->> 'error',
+  'stale',
+  'a geocode of the PREVIOUS postal code is refused, not applied');
+
+select is(
+  (select postal_center from public.profiles
+    where user_id = 'a1000000-0000-4000-8000-00000000000a'),
+  null,
+  'and the member is left with no centroid rather than the wrong one');
+
+-- A geocoder answering with nonsense must not put a member in the ocean: radius targeting would
+-- then measure from the wrong continent, and campaigns reaching nobody is a symptom nobody reads
+-- as a bad coordinate.
+select is(
+  public.set_member_postal_center('a1000000-0000-4000-8000-00000000000a', '77494',
+                                  -400, 29.9691) ->> 'error',
+  'bad_coordinate',
+  'an impossible longitude is refused');
+
+-- Control for the row above: the SAME call with a real coordinate works, so the refusal is about
+-- the coordinate and not about the function having stopped working.
+select ok(
+  (public.set_member_postal_center('a1000000-0000-4000-8000-00000000000a', '77494',
+                                   -95.8244, 29.7633) ->> 'ok')::boolean,
+  'and the same call with a real coordinate succeeds');
+
+select ok(
+  not has_function_privilege('authenticated',
+    'public.set_member_postal_center(uuid, text, double precision, double precision)', 'execute'),
+  'a member cannot write their own centroid -- it follows from the ZIP, not from a claim');
+
+select ok(
+  not has_function_privilege('authenticated',
+    'public.members_missing_postal_center(integer)', 'execute'),
+  'nor read the queue of members whose location has not been resolved');
+
+-- The retry queue exists at all, which is what stops a failed geocode being a member who silently
+-- matches no radius campaign until they next happen to edit their profile.
+update public.profiles
+   set postal_code = '75201', postal_center = null
+ where user_id = 'a4000000-0000-4000-8000-00000000000a';
+
+select ok(
+  (select count(*) from public.members_missing_postal_center(50)
+    where user_id = 'a4000000-0000-4000-8000-00000000000a') = 1,
+  'a member with a ZIP and no centroid is queued for the drain to resolve');
+
+select ok(
+  (select count(*) from public.members_missing_postal_center(50)
+    where user_id = 'a6000000-0000-4000-8000-00000000000a') = 0,
+  'and a suspended member is not, because nothing will be shown to them anyway');
+
+-- ---------------------------------------------------------------------------
+-- 12. Targeting is enforced where an advert is actually SERVED
+-- ---------------------------------------------------------------------------
+--
+-- app.member_matches_target() being right proves nothing about whether ads_for() uses it. That is
+-- the lesson from the recovery-team phase, which shipped with 686 passing assertions and a feature
+-- that did not work because three layers each had to allow it and only two did. These assertions go
+-- through the function the page actually calls.
+
+insert into public.businesses (id, name, slug, category, status, verification_note)
+values ('b2000000-0000-4000-8000-00000000000b', 'Cypress Offroad', 'cypress-offroad-targeting',
+        'parts', 'approved', 'checked for the test')
+on conflict (id) do nothing;
+
+-- Two campaigns on the same surface: one aimed at Cypress and Katy, one at nobody in particular.
+-- The untargeted one is the CONTROL. Without it, "Houston sees nothing" would also be true of a
+-- database where ads_for() had simply stopped returning anything at all.
+insert into public.ad_campaigns (id, business_id, name, status, surfaces, starts_on)
+values
+  ('ca000000-0000-4000-8000-00000000000c', 'b2000000-0000-4000-8000-00000000000b',
+   'Targeted', 'approved', array['community_feed']::ad_surface[], current_date),
+  ('cb000000-0000-4000-8000-00000000000c', 'b2000000-0000-4000-8000-00000000000b',
+   'Everybody', 'approved', array['community_feed']::ad_surface[], current_date);
+
+insert into public.ad_creatives (id, campaign_id, headline, body, cta_url, status, is_active)
+values
+  ('da000000-0000-4000-8000-00000000000d', 'ca000000-0000-4000-8000-00000000000c',
+   'Cypress and Katy only', 'Targeted creative', 'https://example.invalid/a', 'approved', true),
+  ('db000000-0000-4000-8000-00000000000d', 'cb000000-0000-4000-8000-00000000000c',
+   'Anyone at all', 'Untargeted creative', 'https://example.invalid/b', 'approved', true);
+
+insert into public.target_locations (scope, target_id, kind, postal_code) values
+  ('campaign', 'ca000000-0000-4000-8000-00000000000c', 'postal_code', '77429'),
+  ('campaign', 'ca000000-0000-4000-8000-00000000000c', 'postal_code', '77494');
+
+-- Restore the two members section 11 moved about, so this section tests what it says it does.
+update public.profiles set postal_code = '77429',
+       postal_center = extensions.st_setsrid(extensions.st_point(-95.6972, 29.9691), 4326)::extensions.geography
+ where user_id = 'a1000000-0000-4000-8000-00000000000a';
+update public.profiles set postal_code = '75201',
+       postal_center = extensions.st_setsrid(extensions.st_point(-96.7970, 32.7831), 4326)::extensions.geography
+ where user_id = 'a4000000-0000-4000-8000-00000000000a';
+
+create or replace function pg_temp.served(p_headline text)
+returns boolean
+language sql
+stable
+as $$
+  select exists (
+    select 1
+      from jsonb_array_elements(public.ads_for('community_feed', null, null, null, 5) -> 'ads') x
+     where x ->> 'headline' = p_headline
+  );
+$$;
+
+set local role authenticated;
+
+-- The member in Cypress 77429.
+set local request.jwt.claims =
+  '{"sub":"a1000000-0000-4000-8000-00000000000a","role":"authenticated"}';
+
+select ok(pg_temp.served('Cypress and Katy only'),
+  'a member in a targeted ZIP is SERVED the targeted advert by ads_for()');
+select ok(pg_temp.served('Anyone at all'),
+  'and the untargeted one as well');
+
+-- The member in Dallas.
+set local request.jwt.claims =
+  '{"sub":"a4000000-0000-4000-8000-00000000000a","role":"authenticated"}';
+
+select ok(not pg_temp.served('Cypress and Katy only'),
+  'a member in Dallas is NOT served it -- this is the line that was false until today');
+select ok(pg_temp.served('Anyone at all'),
+  'but is still served the untargeted one, which is what proves the refusal above is targeting '
+  'and not a broken query');
+
+-- The member who has never said where they are. THE BEHAVIOUR CHANGE, through the serving path.
+set local request.jwt.claims =
+  '{"sub":"a5000000-0000-4000-8000-00000000000a","role":"authenticated"}';
+
+select ok(not pg_temp.served('Cypress and Katy only'),
+  'a member with no stated location is not served a targeted advert');
+select ok(pg_temp.served('Anyone at all'),
+  'and still sees untargeted adverts, so the cost of the change is bounded');
+
+reset role;
+
+-- ---------------------------------------------------------------------------
+-- 13. The advertising path still cannot read recovery data
+-- ---------------------------------------------------------------------------
+--
+-- Section 7. Until today ads_for() could not read a member's recovery location because it did not
+-- know who the reader was; it looks up auth.uid() now, so the property has to be asserted rather
+-- than inherited. This is the guard that stops the dispatch path reading an advertising table,
+-- pointed the other way.
+--
+-- Word boundaries, not LIKE: `%home_location%` would match other identifiers because `_` is a
+-- single-character wildcard, and that mistake has twice reported the opposite of the truth here.
+
+select is(
+  (select count(*)::int from pg_proc p
+     join pg_namespace n on n.oid = p.pronamespace
+    where (n.nspname, p.proname) in (('public', 'ads_for'), ('app', 'member_matches_target'),
+                                     ('app', 'target_audience_count'))
+      and (p.prosrc ~* '\mhome_location\M' or p.prosrc ~* '\mresponders\M')),
+  0,
+  'no function in the advertising path names responders or home_location');
+
+-- Control: the same query DOES find the dispatch function that legitimately reads it, so a zero
+-- above means "it is not there" rather than "this query finds nothing anywhere".
+select ok(
+  (select count(*) from pg_proc p
+     join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'app' and p.proname = 'candidates'
+      and (p.prosrc ~* '\mhome_location\M' or p.prosrc ~* '\mresponders\M')) > 0,
+  'and the same check finds it in app.candidates(), where recovery location belongs');
+
 select * from finish();
 rollback;

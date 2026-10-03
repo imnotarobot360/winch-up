@@ -144,7 +144,9 @@
     "menuModeration": "Cola de moderación",
     "menuModerationHint": "Publicaciones y comentarios reportados",
     "menuMessages": "Mensajes",
-    "menuMessagesHint": "Conversaciones con otros miembros"
+    "menuMessagesHint": "Conversaciones con otros miembros",
+    "menuLocation": "Tu zona",
+    "menuLocationHint": "Pueblo, estado y código postal, para eventos y ofertas de tu zona"
   },
   "vehicles": {
     "title": "Sus vehículos",
@@ -2375,5 +2377,27 @@
     "openConversation": "Abrir la conversación",
     "firstMessageLabel": "¿Qué le quiere decir a {name}?",
     "theirMessagesOff": "{name} tiene los mensajes directos desactivados."
+  },
+  "locationSettings": {
+    "pageTitle": "Tu zona",
+    "pageBody": "Dinos más o menos dónde estás para que te lleguen eventos y ofertas de tu zona.",
+    "backToAccount": "Volver a la cuenta",
+    "loading": "Cargando…",
+    "cityLabel": "Pueblo o ciudad",
+    "cityHint": "Cypress, Katy, Houston — lo que le dirías a alguien por teléfono.",
+    "stateLabel": "Estado",
+    "stateHint": "Dos letras, como TX.",
+    "postalLabel": "Código postal",
+    "postalHint": "Cinco dígitos. Es lo que se usa para encontrar eventos y ofertas de tu zona.",
+    "save": "Guardar mi zona",
+    "saving": "Guardando…",
+    "saved": "Guardado.",
+    "clear": "Quitar mi zona",
+    "badPostalCode": "El código postal debe tener cinco dígitos.",
+    "badState": "Usa el código de dos letras del estado, como TX.",
+    "contactInfo": "Por favor, no pongas números de teléfono ni enlaces en el nombre del pueblo.",
+    "saveFailed": "No se pudo guardar. Inténtalo de nuevo en un momento.",
+    "readFailed": "No pudimos cargar tu zona. Recarga la página.",
+    "notRecovery": "Esto solo se usa para eventos y ofertas de tu zona. No es la forma en que un rescate te encuentra: cuando pides ayuda, tu ubicación viene de tu teléfono en ese momento, y los voluntarios se eligen según la zona de su perfil de voluntario."
   }
 }

@@ -179,8 +179,21 @@ revoke all on function app.member_matches_target(
 -- ---------------------------------------------------------------------------
 --
 -- Section 14's "Estimated Audience: XXX members", and the number an admin needs BEFORE publishing.
--- Suspended and deleted members are excluded, because an audience estimate that counts people who
--- cannot see anything is a lie that makes a campaign look better than it is.
+-- Suspended members are excluded, because an audience estimate that counts people who cannot see
+-- anything is a lie that makes a campaign look better than it is.
+--
+-- IT COUNTS FROM `profiles` ALONE, AND DELIBERATELY DOES NOT JOIN `responders`.
+--
+-- The first draft joined it to skip volunteers with `redacted_at` set, and targeting_test.sql's
+-- section 7 guard -- "no function in the advertising path names responders or home_location" --
+-- failed on this function the moment it was written. Reading what the column actually means settled
+-- it in favour of the guard rather than against it: `redacted_at` marks a volunteer RECORD scrubbed
+-- by retention, not a deleted account. Those members still sign in and still see adverts, so
+-- excluding them under-counted the audience. The join was both a section 7 smell and wrong.
+--
+-- A genuinely deleted account has no `profiles` row to count, because the cascade from auth.users
+-- takes it. So one table is enough, and the advertising path now names no recovery table at all --
+-- a property held structurally rather than by anybody remembering it.
 
 create or replace function app.target_audience_count(p_scope target_scope, p_target_id uuid)
 returns integer
@@ -191,9 +204,7 @@ set search_path = public, extensions, pg_temp
 as $fn$
   select count(*)::integer
     from public.profiles p
-    left join public.responders r on r.user_id = p.user_id
    where p.suspended_at is null
-     and r.redacted_at is null
      and app.member_matches_target(p_scope, p_target_id, p.state, p.city,
                                    p.postal_code, p.postal_center);
 $fn$;

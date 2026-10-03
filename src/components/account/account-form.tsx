@@ -252,6 +252,12 @@ export function AccountForm({
               icon: <IconSent size={22} />,
             },
             {
+              href: "/account/location",
+              label: t("menuLocation"),
+              hint: t("menuLocationHint"),
+              icon: <IconPin size={22} />,
+            },
+            {
               href: "/account/notifications",
               label: t("menuNotifications"),
               hint: t("menuNotificationsHint"),

@@ -1701,6 +1701,33 @@ docs/                     decisions + runbooks
   then silently dead while the suite reads green -- which is exactly how radius targeting survived
   weeks of green suites. `targeting_test.sql` pairs them throughout, and tests two radii rather than
   one so a radius that happened to catch everything cannot pass as a radius.
+- **A SOURCE-READING GUARD CANNOT TELL A COMMENT FROM A REFERENCE.** `targeting_test.sql` fails if
+  any advertising function names `responders` or `home_location`, which is the dispatch-path guard
+  pointed the other way -- and it failed first on a COMMENT inside `ads_for()` saying which column it
+  deliberately does not read. The comment is reworded and says why; do not "improve" it back. A guard
+  this blunt is what survives, and the cost of bluntness is a confusing failure message that gets the
+  guard deleted rather than understood.
+- **The same guard caught a join that was also simply wrong, which is the more useful half.**
+  `app.target_audience_count()` joined `responders` to skip `redacted_at` rows. `redacted_at` marks a
+  volunteer record scrubbed by RETENTION, not a deleted account -- those members still sign in and
+  still see adverts, so the join under-counted every audience estimate. A genuinely deleted account
+  has no `profiles` row to count, because the cascade from auth.users takes it. When a §7 smell and a
+  correctness bug point the same way, that is usually not a coincidence.
+- **An assertion can pin a bug as intended behaviour, and the wording tells you when.**
+  `advertising_test.sql` asserted "a reader whose browser gave no position still sees it, rather than
+  targeting quietly meaning nobody" -- and passed, for weeks, while every radius-targeted campaign
+  went to everybody. The fear in that sentence was correct; the cure was a hole the size of the
+  feature. An assertion whose name argues for itself ("rather than...") is one to re-read. It is
+  inverted now, with the other half beside it: the same reader is served the campaign once they have
+  STATED an area, and stops when that area moves.
+- **`profiles.postal_center` is written only by the server, and only for the ZIP it was geocoded
+  from.** `set_my_location()` clears it; `set_member_postal_center()` refills it afterwards and takes
+  the postal code as an argument so a slow geocoder cannot pin a stale point onto a newer ZIP -- the
+  exact failure clearing the column prevents, reintroduced one step later, with nothing wrong on any
+  screen. `members_missing_postal_center()` is the retry queue, because a member whose geocode timed
+  out would otherwise match no radius campaign until they next edited their profile. And Mapbox
+  answers a bad five-digit string with a confident point somewhere else rather than nothing, so
+  `forwardGeocodePostalCode()` checks the answer is about the postcode it asked for.
 - **`npm run build` runs the i18n check first** (`prebuild`). A missing Spanish key fails the
   build rather than silently falling back to English.
 

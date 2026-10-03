@@ -144,7 +144,9 @@
     "menuModeration": "Moderation queue",
     "menuModerationHint": "Reported posts and comments",
     "menuMessages": "Messages",
-    "menuMessagesHint": "Conversations with other members"
+    "menuMessagesHint": "Conversations with other members",
+    "menuLocation": "Your area",
+    "menuLocationHint": "Town, state and ZIP, for local events and offers"
   },
   "vehicles": {
     "title": "Your rigs",
@@ -2375,5 +2377,27 @@
     "openConversation": "Open the conversation",
     "firstMessageLabel": "What would you like to say to {name}?",
     "theirMessagesOff": "{name} has direct messages turned off."
+  },
+  "locationSettings": {
+    "pageTitle": "Your area",
+    "pageBody": "Tell us roughly where you are so local events and offers reach you.",
+    "backToAccount": "Back to account",
+    "loading": "Loading…",
+    "cityLabel": "Town or city",
+    "cityHint": "Cypress, Katy, Houston — whatever you would tell somebody over the phone.",
+    "stateLabel": "State",
+    "stateHint": "Two letters, like TX.",
+    "postalLabel": "ZIP code",
+    "postalHint": "Five digits. This is what local events and offers are matched on.",
+    "save": "Save my area",
+    "saving": "Saving…",
+    "saved": "Saved.",
+    "clear": "Remove my area",
+    "badPostalCode": "That ZIP code needs to be five digits.",
+    "badState": "Use the two-letter state code, like TX.",
+    "contactInfo": "Please leave phone numbers and links out of the town name.",
+    "saveFailed": "That did not save. Try again in a moment.",
+    "readFailed": "We could not load your area. Reload the page.",
+    "notRecovery": "This is only used for local events and offers. It is not how a recovery finds you — when you ask for help, your location comes from your phone at the time, and volunteers are matched from the home area on their volunteer profile."
   }
 }

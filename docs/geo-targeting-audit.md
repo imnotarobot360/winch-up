@@ -154,3 +154,68 @@ the §7 boundary visible at every call site.
 
 `postal_center` has no grant to `authenticated` and is cleared by `set_my_location()` on every write,
 so radius targeting can never measure from where a member used to live.
+
+## Phases 3 and 4, built 2026-10-03
+
+`20261003000300_member_postal_center.sql` and `20261003000400_ads_enforce_targeting.sql`, the
+`/account/location` screen, and `forwardGeocodePostalCode()`. Suite: 1057 assertions, 24 suites, all
+exit 0, from a database rebuilt out of the whole migration history.
+
+### Order mattered more than scope
+
+Enforcing targeting first and capturing location second would have taken every targeted campaign
+dark for everybody, because no member has a location until there is a screen to set one. So the
+screen, the geocoder and the server-side writer shipped in the same change as the enforcement.
+
+### The centroid is written by the server, from the ZIP it was asked about
+
+`set_my_location()` clears `postal_center`; `set_member_postal_center()` refills it after the server
+has geocoded, and it takes the postal code as an argument so it can refuse a late answer about a ZIP
+the member has since changed. Writing it unconditionally would pin a stale point onto a current
+postal code — the exact failure clearing the column prevents, reintroduced one step later, with no
+symptom on any screen. `members_missing_postal_center()` is the retry queue for a geocode that
+failed, so a member whose Mapbox call timed out does not silently match no radius campaign until they
+next happen to edit their profile.
+
+Mapbox falls back to the nearest thing it can match rather than returning nothing, so the geocoder
+confirms the answer is about the postcode it asked for and discards it otherwise.
+
+### Section 7 is now held on purpose rather than by accident
+
+The previous architecture could not read a member's recovery location because it did not know who the
+reader was. `ads_for()` looks up `auth.uid()` now, so that property had to be rebuilt deliberately:
+the function reads the four stated location fields into locals and nothing else from the row,
+`app.member_matches_target()` takes values rather than a user id, and `targeting_test.sql` reads the
+advertising functions' own source and fails if any names `responders` or `home_location` — the guard
+that stops the dispatch path reading an advertising table, pointed the other way.
+
+That guard immediately failed on two things worth recording. `app.target_audience_count()` joined
+`responders` to skip `redacted_at` rows; reading what the column means settled it in the guard's
+favour, because `redacted_at` marks a volunteer record scrubbed by retention rather than a deleted
+account, and those members still sign in and still see adverts — so the join was under-counting the
+audience as well as being a §7 smell. It was removed. Then the guard failed on `ads_for()` itself,
+because a *comment* in the body named both identifiers: a textual check cannot tell a comment from a
+reference. The comment was reworded and says so, since the alternative is a confusing failure that
+gets a blunt guard deleted instead of understood.
+
+### One assertion in advertising_test.sql was inverted
+
+It read "a reader whose browser gave no position still sees it, rather than targeting quietly meaning
+nobody", and it passed. The fear behind it was right — targeting that matches nobody is worse than
+none — but the cure was a hole the size of the feature. It now asserts the opposite, with the other
+half beside it: the same reader, the same campaign, still no browser position, is served the campaign
+once they have *stated* an area, and stops being served it when that area moves to Houston. A member
+no longer needs to hand over a live GPS fix to be reachable by a local advertiser.
+
+### Both targeting gates must pass
+
+`target_center` / `target_radius_miles` predate `target_locations` and are still honoured, as an
+intersection rather than a union: a campaign narrowed two ways reaches the overlap. The alternative
+would let adding a city WIDEN an existing radius campaign, which is not what anybody adding a city
+believes they are doing.
+
+### Still outstanding from the spec
+
+Events extension (§2), announcements (§1), the four new ad surfaces (§8), campaign lifecycle (§9),
+analytics with the agreed suppression (§12), and the admin Content & Marketing screens (§1, §14, §16).
+`target_counties` on `ad_campaigns` is dead in the serving path and was dead before this change.

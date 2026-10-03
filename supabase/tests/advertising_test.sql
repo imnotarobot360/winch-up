@@ -486,10 +486,74 @@ select is(
   'and not to one in Houston'
 );
 
+-- INVERTED ON 2026-10-03, and this assertion is worth reading as a record rather than a line of SQL.
+--
+-- It used to read "a reader whose browser gave no position still sees it, rather than targeting
+-- quietly meaning nobody" -- and it passed, because ads_for()'s rule was "untargeted, OR we do not
+-- know where the reader is, or inside the radius". The fear behind the old wording was real: a
+-- targeting feature that matches nobody is worse than none. But the cure was a hole the size of the
+-- feature, and nothing passes a position in -- ad-slot.tsx calls this with p_lng and p_lat null -- so
+-- in production every radius-targeted campaign went to everybody, and the two assertions above were
+-- the only place the radius was ever exercised at all.
+--
+-- Section 6 of the owner's spec says only matching members see a campaign. So an unknown position is
+-- a miss now, and the old fear is answered a different way: by giving members a location to state
+-- (/account/location) and by asserting that untargeted campaigns still reach everybody, in
+-- supabase/tests/targeting_test.sql.
+select is(
+  jsonb_array_length(public.ads_for('community_feed') -> 'ads'), 0,
+  'a reader with no browser position and no stated area is NOT served a radius-targeted campaign'
+);
+
+-- AND THE OTHER HALF, without which the line above would be satisfied by targeting that matches
+-- nobody -- which is the failure the original wording was right to be afraid of.
+--
+-- Same reader, same campaign, still no position passed in. The only thing that changes is that they
+-- have now said where they are, which is the whole point of the new lookup: a member no longer has
+-- to hand over a live GPS fix to be reachable by a local advertiser.
+reset role;
+update profiles
+   set city = 'Austin', state = 'TX', postal_code = '78701',
+       postal_center = extensions.st_setsrid(
+                         extensions.st_point(-97.74, 30.27), 4326)::extensions.geography
+ where user_id = 'e4444444-0000-4000-8000-00000000000e';
+
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"e4444444-0000-4000-8000-00000000000e","role":"authenticated"}';
+
 select is(
   jsonb_array_length(public.ads_for('community_feed') -> 'ads'), 1,
-  'a reader whose browser gave no position still sees it, rather than targeting quietly meaning nobody'
+  'a reader whose STATED area is inside the radius is served it with no browser position at all'
 );
+
+reset role;
+update profiles
+   set city = 'Houston', state = 'TX', postal_code = '77007',
+       postal_center = extensions.st_setsrid(
+                         extensions.st_point(-95.3998, 29.7752), 4326)::extensions.geography
+ where user_id = 'e4444444-0000-4000-8000-00000000000e';
+
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"e4444444-0000-4000-8000-00000000000e","role":"authenticated"}';
+
+select is(
+  jsonb_array_length(public.ads_for('community_feed') -> 'ads'), 0,
+  'and moving that stated area to Houston stops it, so the radius is measured and not assumed'
+);
+
+-- Put the shared demo account back. The whole suite drives the same handful of members, and a spec
+-- that leaves one of them 145 miles from where it found them has already cost this project a
+-- diagnosis in a different file.
+reset role;
+update profiles
+   set city = null, state = null, postal_code = null, postal_center = null
+ where user_id = 'e4444444-0000-4000-8000-00000000000e';
+
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"e4444444-0000-4000-8000-00000000000e","role":"authenticated"}';
 
 -- Pausing, by the advertiser.
 set local request.jwt.claims =
