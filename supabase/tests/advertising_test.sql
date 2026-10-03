@@ -64,11 +64,19 @@ on conflict do nothing;
 -- 1. The surfaces that do not exist
 -- ---------------------------------------------------------------------------
 
-select is(
-  (select count(*)::integer from pg_enum e join pg_type t on t.oid = e.enumtypid
-    where t.typname = 'ad_surface'),
-  3,
-  'ad_surface has exactly three values'
+-- THE EXACT LIST, not a count, as of 2026-10-03.
+--
+-- This used to assert "exactly three values", and section 8 of the owner's spec took it to seven --
+-- home feed, map, events and the business directory, all browsing surfaces. A count is the wrong
+-- assertion for what this is protecting: bumping 3 to 7 is a one-character edit that anybody adding a
+-- label would make without thinking, and the thing being protected is that NO label is ever a request,
+-- a live recovery or a message thread. Naming them means adding one is a deliberate act with a
+-- reviewer, which is the whole point.
+select set_eq(
+  $$select e.enumlabel::text from pg_enum e join pg_type t on t.oid = e.enumtypid
+     where t.typname = 'ad_surface'$$,
+  array['community_feed', 'trails', 'resources', 'home_feed', 'map', 'events', 'directory'],
+  'ad_surface is exactly these seven browsing surfaces, named one at a time'
 );
 
 select ok(

@@ -436,6 +436,12 @@ export function CommunityFeed() {
             </Card>
           ) : (
             <ul className="space-y-3">
+              {/* Section 8's `events` surface. Above the list rather than between cards: an advert
+                  between two events reads as an event, and `labelled` only helps somebody who
+                  looks. */}
+              <li>
+                <AdSlot surface="events" />
+              </li>
               {events.map((e) => (
                 <li key={e.id}>
                   <Card className="space-y-2">

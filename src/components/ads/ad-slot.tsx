@@ -20,7 +20,7 @@ type Ad = {
 };
 
 /**
- * One advertisement, on one of the three surfaces that may carry one.
+ * One advertisement, on one of the surfaces that may carry one.
  *
  * Things this component will not do, by construction:
  *
@@ -44,7 +44,22 @@ export function AdSlot({
   slug,
   className,
 }: {
-  surface: "community_feed" | "trails" | "resources";
+  /**
+   * Every value of ad_surface, as of 20261003000800.
+   *
+   * THE DATABASE IS THE AUTHORITY, NOT THIS UNION. ads_for() refuses a surface it cannot cast, which
+   * is what actually stops an advert appearing beside somebody who is stuck; this list exists so a
+   * typo is caught at build time. Three of the four surfaces added by section 8 have no member-facing
+   * page yet -- see the note in 20261003000800 -- so only `events` is mounted so far.
+   */
+  surface:
+    | "community_feed"
+    | "trails"
+    | "resources"
+    | "home_feed"
+    | "map"
+    | "events"
+    | "directory";
   slug?: string;
   className?: string;
 }) {
