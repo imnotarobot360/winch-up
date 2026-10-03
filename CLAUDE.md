@@ -1675,6 +1675,32 @@ docs/                     decisions + runbooks
   column, and `max-w-[85%]` on a message bubble does nothing while the parent's default
   `min-width:auto` lets it grow. The bubbles ran off the right edge on a phone and the DOM text read
   perfectly; only a screenshot showed it.
+- **REPLAYING `20260920000600_rls.sql` OVER A LIVE DATABASE WIPES EVERY GRANT BEFORE IT.** Its second
+  line is `revoke all on all tables in schema public from anon, authenticated` -- correct as the
+  deny-by-default floor at the point in history where it sits, and a demolition charge anywhere else.
+  Run it against a database carried forward for weeks and 45 of 48 tables lose their grants; only
+  migrations numbered after it restore their own. What you then see is SIXTEEN suites failing at once
+  with `permission denied for table vehicles` / `for function send_request_message`, which reads like
+  a catastrophic regression in the product and is nothing of the kind.
+  `select count(distinct table_name) from information_schema.role_table_grants where
+  grantee='authenticated'` settles it in one query: 3 out of 48 is rot, not a bug. The cure is
+  `node scripts/local-stack/rebuild.mjs`, which is also the only thing that proves the history still
+  replays from empty.
+- **A member with no stated location matches NO targeted campaign, by decision (2026-10-03).**
+  `ads_for()` reads "untargeted, or we do not know where the reader is, or inside the radius", and
+  `ad-slot.tsx` calls it with `p_lng: null, p_lat: null` -- so radius targeting has been in the
+  schema for weeks and has never once narrowed anything. Section 6 of the owner's spec says only
+  matching members see a campaign, so unknown is now a miss, and the visible cost is that targeted
+  campaigns reach fewer people until members fill in a location. Asserted in `targeting_test.sql`
+  so it stays a decision rather than becoming an accident. And `app.member_matches_target()` takes
+  the member's FIELDS rather than a user id on purpose: a function taking a uuid could reach for
+  `responders.home_location`, which is recovery data that section 7 forbids advertising from
+  touching, and passing the values in makes that boundary visible at every call site.
+- **Every exclusion assertion in a targeting suite needs an inclusion beside it.** A matching rule
+  that matches nobody passes every "does not see the advert" test in the file, and the feature is
+  then silently dead while the suite reads green -- which is exactly how radius targeting survived
+  weeks of green suites. `targeting_test.sql` pairs them throughout, and tests two radii rather than
+  one so a radius that happened to catch everything cannot pass as a radius.
 - **`npm run build` runs the i18n check first** (`prebuild`). A missing Spanish key fails the
   build rather than silently falling back to English.
 

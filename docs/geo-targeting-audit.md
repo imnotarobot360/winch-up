@@ -109,3 +109,48 @@ Three properties in this area are enforced by tests, and the new surfaces have t
 3. **Approval attaches to the words, not the row.** Editing an approved creative or business sends it
    back to pending. Any new targeting fields have to be inside that rule, or "approve the advert,
    then retarget it at a different city" becomes a way past review.
+
+## Phases 1 and 2, built 2026-10-03
+
+`20261003000100_member_location.sql` and `20261003000200_targeting.sql`, plus
+`supabase/tests/targeting_test.sql` (32 assertions). Full suite: 1037 assertions, 24 suites, all
+exit 0, from a database rebuilt out of the whole migration history.
+
+### Departures from the spec, and why
+
+**One `target_locations` table instead of three.** §10 names
+`campaign_target_locations`, `event_target_locations` and `advertisement_target_locations`. Three
+tables would be the same six columns three times and the matching rule written three times, which is
+three places for "ZIP codes are text, not integers" to be wrong independently. What §10 actually asks
+for is structured targeting rather than comma-separated strings, and a `scope` discriminator delivers
+that with one rule to get right. The cost is no foreign key; it is paid by delete triggers on
+`ad_campaigns` and `events`, asserted in section 10 of the suite.
+
+**"All Members" is the absence of rows, not a row.** So adding a city to an all-members campaign
+cannot leave a stale "everyone" rule behind that silently overrides it.
+
+**A city target requires a state.** Houston TX is not Houston MO. Enforced by the shape CHECK rather
+than by the form.
+
+### The behaviour change the owner should know about
+
+`ads_for()` today reads "untargeted, **or we do not know where the reader is**, or inside the
+radius". `ad-slot.tsx` passes `p_lng: null, p_lat: null`, so every radius-targeted campaign is shown
+to everybody — the targeting column has been in the schema for weeks and has never narrowed
+anything.
+
+§6 says only matching members should see a campaign, so unknown location is now a miss.
+**Until members fill in a location, targeted campaigns reach fewer people.** That is targeting
+working rather than targeting breaking, but it is a visible drop and it is asserted in section 6 of
+the suite so it stays a decision rather than becoming an accident.
+
+### Member location is deliberately not recovery location
+
+`profiles.city/state/postal_code/postal_center` is new and separate from `responders.home_location`,
+which is what `app.candidates()` measures a call-out from and which §7 forbids advertising from
+touching. `app.member_matches_target()` takes the member's **fields** rather than a user id for that
+reason: a function taking a uuid could reach for the recovery point, and passing the values in makes
+the §7 boundary visible at every call site.
+
+`postal_center` has no grant to `authenticated` and is cleared by `set_my_location()` on every write,
+so radius targeting can never measure from where a member used to live.
