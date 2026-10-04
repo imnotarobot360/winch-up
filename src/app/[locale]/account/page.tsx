@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { AccountForm } from "@/components/account/account-form";
+import { signAvatar } from "@/lib/avatar-photos";
 import { redirect } from "@/i18n/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 
@@ -47,6 +48,22 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
 
   const canModerate = (modRoles?.length ?? 0) > 0;
 
+  /**
+   * The photograph, signed HERE rather than in the browser.
+   *
+   * The bucket is private with no anon policy, so a raw path renders nothing; only a short-lived
+   * signed URL works, and minting one needs the service role. Reading the row by user_id for the
+   * same reason every other read on this screen does: profiles_self_read is "own row OR
+   * app.is_admin()", so an admin without the filter gets every row and maybeSingle() fails.
+   */
+  const { data: avatarRow } = await supabase
+    .from("profiles")
+    .select("avatar_path")
+    .eq("user_id", user!.id)
+    .maybeSingle();
+
+  const avatarUrl = await signAvatar(avatarRow?.avatar_path);
+
   const t = await getTranslations("account");
 
   return (
@@ -58,6 +75,7 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
           userId={user!.id}
           email={user!.email ?? user!.phone ?? ""}
           canModerate={canModerate}
+          avatarUrl={avatarUrl}
         />
       </div>
     </main>

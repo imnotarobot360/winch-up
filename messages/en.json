@@ -146,7 +146,13 @@
     "menuMessages": "Messages",
     "menuMessagesHint": "Conversations with other members",
     "menuLocation": "Your area",
-    "menuLocationHint": "Town, state and ZIP, for local events and offers"
+    "menuLocationHint": "Town, state and ZIP, for local events and offers",
+    "photoAdd": "Add a photo",
+    "photoChange": "Change photo",
+    "photoRemove": "Remove photo",
+    "photoWorking": "Uploading…",
+    "photoFailed": "That photo did not upload. Try again.",
+    "photoTooMany": "That is a lot of photos in one hour. Try again later."
   },
   "vehicles": {
     "title": "Your rigs",

@@ -17,7 +17,7 @@ import {
   IconTruck,
   IconWinch,
 } from "@/components/ui/icons";
-import { Avatar } from "@/components/ui/avatar";
+import { AvatarUpload } from "@/components/account/avatar-upload";
 import { MenuList } from "@/components/ui/menu-list";
 import { Button, Callout, Card, Field, TextInput } from "@/components/ui/primitives";
 import { useRouter } from "@/i18n/navigation";
@@ -49,10 +49,13 @@ export function AccountForm({
   userId,
   email,
   canModerate = false,
+  avatarUrl = null,
 }: {
   /** From the page, which already resolved the session server-side. See the load below. */
   userId: string;
   email: string;
+  /** A SIGNED url for the member's photograph, minted server-side, or null. */
+  avatarUrl?: string | null;
   /** Resolved on the server. Hides a row; it does not grant anything -- /moderation gates itself. */
   canModerate?: boolean;
 }) {
@@ -188,13 +191,15 @@ export function AccountForm({
       {/* Screen 12's header: who this is, above the settings rather than buried in a form field.
           Two things the reference has that this does not, both deliberate.
 
-          No photograph. profiles.avatar_path points into a PRIVATE bucket and would need a signed
-          URL per page load; initials read fine and never 404 into a broken-image icon.
+          The photograph is above, from 2026-10-04. It is still a signed URL per page load, because
+          the bucket is private -- and initials remain the fallback for a member who has not added
+          one, an expired URL, or a deleted object.
 
           No @handle. There is no handle in this schema and inventing one on the screen would be a
           label for something a member cannot set, change or be found by. */}
+      <AvatarUpload userId={userId} name={profile.display_name} initialSrc={avatarUrl} />
+
       <div className="flex items-center gap-4">
-        <Avatar name={profile.display_name} size="lg" />
         <div className="min-w-0">
           <p className="truncate text-xl font-bold text-ink">
             {profile.display_name?.trim() || t("noName")}

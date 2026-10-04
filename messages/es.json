@@ -146,7 +146,13 @@
     "menuMessages": "Mensajes",
     "menuMessagesHint": "Conversaciones con otros miembros",
     "menuLocation": "Tu zona",
-    "menuLocationHint": "Pueblo, estado y código postal, para eventos y ofertas de tu zona"
+    "menuLocationHint": "Pueblo, estado y código postal, para eventos y ofertas de tu zona",
+    "photoAdd": "Añadir una foto",
+    "photoChange": "Cambiar la foto",
+    "photoRemove": "Quitar la foto",
+    "photoWorking": "Subiendo…",
+    "photoFailed": "Esa foto no se subió. Inténtalo de nuevo.",
+    "photoTooMany": "Son muchas fotos en una hora. Inténtalo más tarde."
   },
   "vehicles": {
     "title": "Sus vehículos",

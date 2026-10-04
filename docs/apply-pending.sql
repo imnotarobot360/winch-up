@@ -1,30 +1,23 @@
--- Winch Up :: apply the one migration production is still missing (2026-10-03, third batch)
+-- Winch Up :: the bucket a member's photograph goes in (2026-10-04)
 --
--- ONE FILE. Everything before it in this phase (20261003000100..20261003001700) is confirmed in
--- production by probe, not assumed -- every function answers 42501, the two dropped columns answer
--- 42703, and two invented names answer PGRST202/42703 as controls. `docs/probe-2026-10-03.sh`
--- re-runs that check any time with nothing but the publishable key.
---
--- Narrow on purpose, for the reason the second batch was narrowed: these migrations are idempotent,
--- but ON_ERROR_STOP halts at the first problem, and a halt partway through a re-run of seventeen
--- known-good files would leave production in a state none of them intended. Re-reaching a state it
--- is already in buys nothing.
+-- ONE FILE. Everything before it -- 20261003000100..20261003001800 -- is confirmed in production by
+-- probe, not assumed. `docs/probe-2026-10-03.sh` re-runs that check any time with nothing but the
+-- publishable key.
 --
 -- WHAT THIS IS
 --
---   20261003001800  admin_session_state() -- reports whether a session may use the admin console,
---                   and WHICH refusal applies: signed_out, not_admin, mfa_required, or ok.
+--   20261004000100  creates the private `member-avatars` storage bucket.
 --
--- WHY IT MATTERS MORE THAN IT LOOKS. app.require_admin() raises, which is right for an RPC and
--- useless for a page deciding what to render, so the admin layout only ever asked "is this person
--- an admin". With security.require_admin_mfa on and a session still at aal1 -- the state the owner
--- hit on 2026-10-03 -- a real admin passed that check, got the whole console, and then watched
--- every screen show an empty list, because each RPC behind them was raising `mfa_required` and
--- nothing in the app rendered it. Locked and broken look identical from the outside.
+-- WHY IT MATTERS NOW. `profiles.avatar_path` has existed since phase 3 and was granted for UPDATE
+-- to `authenticated` all along; what was missing was somewhere to put the file. The upload route,
+-- the signer and the account-screen control are ALREADY DEPLOYED and reference this bucket, so
+-- until it exists every attempt to add a photograph fails at the signing step and the member sees
+-- "that photo did not upload".
 --
--- The deployed frontend ALREADY calls this function. Until it exists, the admin layout's call fails
--- and the console falls back to the old behaviour -- so this is the migration that stops the
--- console lying, not one that adds a feature.
+-- It is a private bucket with no policies on storage.objects, deliberately. Uploads are signed by
+-- the server from the SESSION, so the browser never picks the path; reads are signed server-side
+-- too. A policy granting `authenticated` direct access would hand every member every other
+-- member's object path, which is the thing signed URLs exist to avoid.
 --
 -- ---------------------------------------------------------------------------------------------
 -- HOW TO RUN IT
@@ -56,18 +49,17 @@
 --     grep -c '^[\]i supabase/' docs/apply-pending.sql     must print 1
 --
 -- Anchored, and the backslash inside a bracket expression: a bare `grep -c '^\\i '` matches nothing
--- in this shell, and a plain `grep -cF '\i supabase/'` counts THIS COMMENT too. The first version
--- of this line said "must print 2" and printed 3, having matched itself.
+-- in this shell, and a plain `grep -cF '\i supabase/'` counts THIS COMMENT too.
 
 \set ON_ERROR_STOP on
 \timing off
 
 \echo ''
-\echo '=== Winch Up :: 2026-10-03 third batch, 1 file ==='
+\echo '=== Winch Up :: 2026-10-04, 1 file ==='
 \echo ''
 
-\echo '--- 1/1  admin_session_state(): which refusal is it ---'
-\i supabase/migrations/20261003001800_admin_session_state.sql
+\echo '--- 1/1  the member-avatars bucket ---'
+\i supabase/migrations/20261004000100_member_avatars.sql
 
 \echo ''
 \echo '=== Telling PostgREST the schema changed ==='
@@ -84,15 +76,17 @@ create schema if not exists supabase_migrations;
 create table if not exists supabase_migrations.schema_migrations (version text primary key);
 
 insert into supabase_migrations.schema_migrations (version) values
-  ('20261003001800')
+  ('20261004000100')
 on conflict (version) do nothing;
 
--- Eighteen, not one: the earlier batches recorded the rest. Anything less and CI will try to
--- re-apply the gap the next time it works.
+-- Did the bucket actually land? One row, said plainly, rather than trusting the absence of an
+-- error -- `insert ... on conflict do nothing` succeeds whether or not it inserted anything.
 \echo ''
-select count(*) || ' of 18 versions from 2026-10-03 are in the ledger' as ledger
-  from supabase_migrations.schema_migrations
- where version like '20261003%';
+select case
+         when exists (select 1 from storage.buckets where id = 'member-avatars')
+           then 'member-avatars bucket: PRESENT'
+         else 'member-avatars bucket: MISSING -- the upload will still fail'
+       end as bucket;
 
 \echo ''
 \echo '================================================================'
@@ -100,6 +94,6 @@ select count(*) || ' of 18 versions from 2026-10-03 are in the ledger' as ledger
 \echo ' If you cannot see this line, the run halted -- scroll up.'
 \echo '================================================================'
 \echo ''
-\echo 'Now verify from outside, with no password:  bash docs/probe-2026-10-03.sh'
-\echo 'Every line should say APPLIED except the two controls at the bottom.'
+\echo 'Then add a photo at /account. The bucket is private, so the picture'
+\echo 'is served through a short-lived signed URL rather than a public link.'
 \echo ''
