@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 
+import { AdminNeedsMfa } from "@/components/admin/admin-needs-mfa";
 import { AdminSignIn } from "@/components/admin/admin-signin";
 import { Link } from "@/i18n/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
@@ -47,6 +48,29 @@ export default async function AdminLayout({
 
   if (!roles || roles.length === 0) {
     return <AdminSignIn reason="not_admin" />;
+  }
+
+  /**
+   * Being an admin is one of TWO questions, and this gate used to ask only the first.
+   *
+   * With `security.require_admin_mfa` on and a session still at aal1, a real admin passed the role
+   * check above, got the whole console, and then watched every screen render an empty list -- each
+   * RPC behind them raising `mfa_required`, which nothing in the app displayed. Locked and broken
+   * are indistinguishable from the outside, and only one of them deserves a support message.
+   *
+   * `admin_session_state()` is the one function in this surface that REPORTS a refusal instead of
+   * raising, which is what makes it callable here. It is still not what enforces anything: every
+   * admin RPC checks for itself, so this decides what renders and nothing more.
+   */
+  const { data: session } = await supabase.rpc("admin_session_state");
+  const state = session as { ok?: boolean; reason?: string } | null;
+
+  if (state && !state.ok && state.reason === "mfa_required") {
+    return (
+      <div className="mx-auto w-full max-w-3xl px-4 py-6">
+        <AdminNeedsMfa />
+      </div>
+    );
   }
 
   const tabs = [

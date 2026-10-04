@@ -786,6 +786,13 @@
         "not_found": "Eso ya no está.",
         "failed": "No funcionó. Inténtalo otra vez."
       }
+    },
+    "mfa": {
+      "title": "Un paso más",
+      "why": "Las cuentas de administrador necesitan el código del autenticador cada vez que inician sesión. Esta sesión se inició sin él.",
+      "what": "No hay nada mal con tu cuenta. Cierra sesión y vuelve a entrar, y se te pedirá el código de seis dígitos de tu aplicación de autenticación.",
+      "signOutAndIn": "Cerrar sesión y volver a entrar",
+      "signingOut": "Cerrando sesión…"
     }
   },
   "enum": {

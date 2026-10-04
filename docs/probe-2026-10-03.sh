@@ -133,6 +133,11 @@ for c in cover_image_path image_paths; do
   esac
 done
 
+echo "=== 20261003001800  which refusal is it ==="
+# Granted to authenticated rather than to admins -- its job is to be callable by somebody whose
+# admin status is the question -- so anon still gets 42501, the APPLIED signal as everywhere else.
+fn admin_session_state '{}'
+
 echo "=== CONTROLS -- if any of these is wrong, ignore everything above ==="
 echo "  these two MUST say APPLIED (they predate today):"
 fn events_upcoming '{"p_limit":1}'

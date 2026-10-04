@@ -786,6 +786,13 @@
         "not_found": "That's gone.",
         "failed": "That didn't work. Try again."
       }
+    },
+    "mfa": {
+      "title": "One more step",
+      "why": "Admin accounts need their authenticator code each time they sign in. This session was signed in without it.",
+      "what": "Nothing is wrong with your account. Sign out and sign in again, and you will be asked for the six-digit code from your authenticator app.",
+      "signOutAndIn": "Sign out and sign in again",
+      "signingOut": "Signing out…"
     }
   },
   "enum": {
