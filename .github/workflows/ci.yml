@@ -449,6 +449,25 @@ jobs:
           echo ""
           echo "To apply by hand in the meantime: docs/apply-pending.sql (psql, session pooler)."
 
+      # WHAT SHAPE IS THE CONNECTION STRING, AND CAN THIS RUNNER EVEN REACH IT.
+      #
+      # Added 2026-10-04, after the secret finally arrived and `migration list` STILL failed. The
+      # advice step further down names three ways to get that string wrong, and a timeout looks
+      # identical for all three -- two days went into guessing between them. This asks the string
+      # and the network directly, before anything tries to authenticate, so "cannot reach it" and
+      # "it refused me" stop looking alike.
+      #
+      # It lives in a SCRIPT rather than inline because an inline diagnostic cannot be tested, and
+      # a diagnostic that fails for its own reasons is worse than none. scripts/check-db-url.sh is
+      # run against one good and six bad strings, and the owner can run it by hand against their
+      # own string without it reaching a shell history. It prints no password; see its header for
+      # why it DOES print the host.
+      - name: Is this string even reachable from here?
+        if: steps.secrets.outputs.ready == 'true'
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: bash scripts/check-db-url.sh
+
       # What it is ABOUT to do, printed before it does it. `migration list` shows local versus
       # remote side by side, so the log answers "what changed" without anybody opening a dashboard --
       # and if the ledger is behind, this is where that becomes visible.

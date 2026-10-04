@@ -795,6 +795,28 @@ docs/                     decisions + runbooks
   which RLS cannot create, there being no INSERT policy on that table -- showed "Saved" and changed
   nothing, for ever. Ask for the written rows back and treat an empty array as a failure. The same
   shape hides in any `.update()` whose filter leans on RLS rather than naming the row.
+- **A CONNECTION FAILURE AND A WRONG PASSWORD LOOK IDENTICAL, AND THERE ARE SIX WAYS TO GET THE
+  STRING WRONG.** `SUPABASE_DB_URL` reached Actions for the first time on 2026-10-04 -- "Are the
+  secrets here?" passed -- and `supabase migration list` still failed, because the string was the
+  IPv6-only direct host. Two days went into guessing between candidates that all present as a
+  timeout. `scripts/check-db-url.sh` now runs before anything authenticates and names the cause:
+  direct host (AAAA only, and GitHub runners have no IPv6), port 6543 instead of 5432 (transaction
+  mode hands out a different backend per statement, so a migration loses its advisory lock), a bare
+  `postgres` username at the pooler (refused as "password authentication failed", a wrong username
+  that reads as a wrong password), an unencoded `@` or `/` in the password (reparses the URL with
+  nothing erroring), a missing password, the wrong database name. Then DNS per address family, then
+  TCP -- so "cannot reach it" and "it refused me" stop looking alike.
+  **It prints the host, port, username and database in full, deliberately.** Those four are where a
+  typo hides; the ref is already in `NEXT_PUBLIC_SUPABASE_URL`, which ships in the browser bundle.
+  Only the password is withheld, as a length. Do not "tighten" this by masking the host.
+  Two things about how it is built, both of which were the second attempt: it is SHELL because the
+  migrate job has no Node step, and it is a FILE rather than inline because an inline diagnostic
+  cannot be tested -- the first draft was inline python, and there is no python on the owner's
+  machine to syntax-check it with, so a diagnostic that failed for its own reasons would have been
+  the next red herring. `scripts/check-db-url.test.ts` drives one good string and six bad ones;
+  `vitest.config.ts` includes `scripts/` for it. And it detects a missing `getent` separately from
+  a missing A record, because getent is Linux-only and the owner works in git-bash -- announcing
+  "IPv6-only" about a perfectly good host is the exact bug class this script exists to stop.
 - **`npm run build` runs the i18n check first** (`prebuild`). A missing Spanish key fails the
   build rather than silently falling back to English.
 

@@ -9,7 +9,9 @@ export default defineConfig({
   test: {
     // Pure logic, plus component tests that opt into jsdom with a file-level
     // @vitest-environment comment. Nothing here touches a database or the network.
-    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    // scripts/ is in here for check-db-url.test.ts: the migrate job has no Node step, so
+    // that checker has to be shell, and one tested implementation beats a TypeScript twin.
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx", "scripts/**/*.test.ts"],
     environment: "node",
   },
   resolve: {
