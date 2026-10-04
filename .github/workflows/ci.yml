@@ -478,6 +478,29 @@ jobs:
           DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: supabase migration list --db-url "$DB_URL"
 
+      # WOULD THIS PUSH REPLAY HISTORY? Refuse if so, before db push gets the chance.
+      #
+      # Nineteen migrations went into production BY HAND between 2026-10-01 and 2026-10-04, because
+      # both auto-apply paths were broken and neither said so. Applying by hand leaves
+      # supabase_migrations.schema_migrations behind unless somebody remembers the insert, and the
+      # files that did those inserts were overwritten batch by batch -- so the repo cannot say what
+      # the ledger holds, and the first successful connection would find out by DOING it.
+      #
+      # db push applies, in order, every local migration the ledger does not list. If the ledger is
+      # behind, that re-runs OLD migrations against a live database, and 20260920000600_rls.sql
+      # opens with `revoke all on all tables in schema public from anon, authenticated` -- the
+      # deny-by-default floor at the point in history where it sits, a demolition charge anywhere
+      # else. CLAUDE.md records the symptom: 45 of 48 tables lose their grants.
+      #
+      # Forward-only is allowed at any count; anything OLDER than the newest recorded version is
+      # refused. A count threshold would block a legitimate large deploy and still wave through a
+      # single dangerous old file.
+      - name: Would this replay history against production?
+        if: steps.secrets.outputs.ready == 'true'
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: bash scripts/check-migration-ledger.sh
+
       - name: Apply what is missing
         id: push
         if: steps.secrets.outputs.ready == 'true'

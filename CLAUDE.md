@@ -839,6 +839,22 @@ docs/                     decisions + runbooks
   now, and a placeholder in the HOST OR USERNAME is caught before DNS is consulted at all. Scanned
   over those two fields only: a password is whatever somebody chose, so looking for `PASSWORD`
   across the whole string would reject a real credential, and a false rejection blocks a deploy.
+- **THE FIRST SUCCESSFUL `db push` WAS ONE STEP AWAY FROM REVOKING EVERY GRANT IN PRODUCTION, and
+  nothing would have stopped it.** Nineteen migrations went in by hand in early October 2026, the
+  files that recorded them in `supabase_migrations.schema_migrations` were overwritten batch by
+  batch, and so NOTHING IN THE REPO CAN SAY WHAT THE LEDGER HOLDS. `db push` applies, in order,
+  every local migration the ledger does not list -- so a ledger that is behind means re-running old
+  migrations against a live database, and `20260920000600_rls.sql` opens by revoking every grant in
+  schema public. The CI job was going to find that out by doing it, on the first connection that
+  worked. `scripts/check-migration-ledger.sh` now runs between `migration list` and `db push` and
+  refuses the dangerous case.
+  **The rule is DIRECTION, not count.** Applying migrations newer than everything recorded is the
+  normal case and is allowed at any number; anything older than the newest recorded version is a
+  replay and is refused by name. A count threshold would have blocked a legitimate large deploy and
+  still let a single dangerous old file through. An empty or unreadable ledger is refused outright,
+  because it is indistinguishable from "replay the entire history".
+  Three of its six tests assert the SAFE cases, for the reason this file keeps repeating: a guard
+  that refuses everything passes every negative test and is an outage rather than a guard.
 - **REMOVING A PHOTOGRAPH HAD THE SILENT-ZERO-ROW BUG WHILE ADDING ONE DID NOT.** `choose()` asked
   for the written row back and checked it; `remove()`, eleven lines below, did not -- so a failed
   or zero-row update cleared the picture from the screen, reported nothing, and a reload brought it
