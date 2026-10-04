@@ -2530,6 +2530,22 @@
     "err_contact_info_in_description": "Please leave phone numbers and links out of the description.",
     "err_too_many_images": "Eight images at most.",
     "err_no_such_announcement": "That announcement is gone. Reload the page.",
-    "err_no_such_event": "That event is gone. Reload the page."
+    "err_no_such_event": "That event is gone. Reload the page.",
+    "eventReportTitle": "How events are doing",
+    "eventReportHint": "Last 30 days. Reach is how many members the targeting matches, not a count of viewers.",
+    "eventReportLine": "{views} views · {going} going · reaches {reach} members"
+  },
+  "eventPage": {
+    "title": "Event",
+    "backToCommunity": "Back to community",
+    "notNearYou": "This one is not in your area. You can still go — events are never hidden from anybody.",
+    "meetLabel": "Where to meet",
+    "organizerLabel": "Organised by",
+    "groupLabel": "Group",
+    "trailLabel": "Trail",
+    "goingLabel": "Going",
+    "goingOfCapacity": "{going} of {capacity}",
+    "register": "Register for this event",
+    "website": "Visit the website"
   }
 }

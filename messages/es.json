@@ -2530,6 +2530,22 @@
     "err_contact_info_in_description": "Por favor, no pongas números de teléfono ni enlaces en la descripción.",
     "err_too_many_images": "Ocho imágenes como máximo.",
     "err_no_such_announcement": "Ese anuncio ya no está. Recarga la página.",
-    "err_no_such_event": "Ese evento ya no está. Recarga la página."
+    "err_no_such_event": "Ese evento ya no está. Recarga la página.",
+    "eventReportTitle": "Cómo van los eventos",
+    "eventReportHint": "Últimos 30 días. El alcance es cuántos miembros coinciden con la segmentación, no cuántos lo vieron.",
+    "eventReportLine": "{views} vistas · {going} van · llega a {reach} miembros"
+  },
+  "eventPage": {
+    "title": "Evento",
+    "backToCommunity": "Volver a la comunidad",
+    "notNearYou": "Este no es de tu zona. Puedes ir igual: los eventos nunca se le ocultan a nadie.",
+    "meetLabel": "Dónde encontrarse",
+    "organizerLabel": "Organizado por",
+    "groupLabel": "Grupo",
+    "trailLabel": "Sendero",
+    "goingLabel": "Van",
+    "goingOfCapacity": "{going} de {capacity}",
+    "register": "Inscríbete en este evento",
+    "website": "Ver el sitio web"
   }
 }

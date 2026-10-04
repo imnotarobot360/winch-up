@@ -53,9 +53,32 @@ test.describe("navigation", () => {
         if (path === "" || seen.has(path)) continue;
         seen.add(path);
 
-        const response = await page.request.get(new URL(path, baseURL).toString(), {
-          maxRedirects: 5,
-        });
+        // ONE RETRY, AND ONLY FOR A TRANSPORT FAILURE.
+        //
+        // `next start` resets a connection now and then under a crawl this rapid -- the error is
+        // `apiRequestContext.get: socket hang up`, it lands on a different unrelated static page
+        // each time (/trails, /es/trails, /resources/etiquette), and it passes when this spec runs
+        // alone. CLAUDE.md records the same thing for this spec and public-pages.spec.
+        //
+        // Letting it throw conflates two different claims. This test is about whether a LINK
+        // RESOLVES; a dropped socket says nothing about that, and failing on it reports a broken
+        // link that is not broken. So a connection error gets one more attempt.
+        //
+        // It is not swallowed: a second failure goes into `broken` like any other, so a genuinely
+        // dead server still fails the test, and says it was the transport rather than a 404.
+        const url = new URL(path, baseURL).toString();
+        let response;
+        try {
+          response = await page.request.get(url, { maxRedirects: 5 });
+        } catch {
+          await page.waitForTimeout(500);
+          try {
+            response = await page.request.get(url, { maxRedirects: 5 });
+          } catch (again) {
+            broken.push(`${start} -> ${path} (transport: ${(again as Error).message})`);
+            continue;
+          }
+        }
 
         // A members-only page answering 200 with a redirect to sign-in is correct; see the note
         // in auth-gate.spec.ts about why the status is 200 rather than 307.

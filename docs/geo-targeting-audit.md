@@ -265,3 +265,51 @@ page. Only `events` is mounted. The labels exist as the permission to sell space
 - **Campaign creation from the admin screen.** That is the advertiser's job on `/business`; a second
   form writing the same row with different validation is how review gets bypassed.
   `admin_save_campaign_targets()` is narrow on purpose.
+
+## Phase 10, 2026-10-03: the event page, and closing the counter loop
+
+`20261003001600_event_detail.sql`, `/events/[eventId]`, and `admin_event_report` finally wired.
+
+### Why this was the right next thing
+
+The project's own built-but-unreachable sweep, re-run after the main phases, found exactly one
+thing from today among 120 member-callable RPCs: **`admin_event_report` was written, granted,
+tested and called by nothing.** Three other uncalled RPCs predate today.
+
+Wiring it alone would have been worse than leaving it. `record_event_view()` and
+`event_daily_stats` had no caller either — there was no per-event surface, and counting a view for
+every event in a list is not a view — so the report's views column was *structurally* stuck at
+zero. A dashboard column that cannot move reads as "nobody looks at our events" rather than
+"nothing is counting". So the page came first, and the report after it.
+
+### The decision inside the page
+
+**A view is counted from the browser, never from the server render.** Next prefetches a route when
+its link is hovered or scrolled into view, which renders the page server-side for somebody who
+never opened it. Counting there would inflate the number by however many event cards scrolled past,
+invisibly and unfixably. A client effect does not run on a prefetch.
+
+The effect is guarded by a ref because React double-invokes effects under StrictMode in
+development, and a counter that double-fires locally is one nobody trusts in production either.
+
+**`event_detail()` is not a filtered `events_upcoming()`.** The list is upcoming-only and capped;
+a link somebody was sent to last weekend's run still has to open. A draft answers `not_found`
+identically to an id that never existed, so the page cannot be used to discover that an admin is
+drafting something.
+
+**No RSVP controls**, per the owner's 2026-10-01 decision. The going count is shown because
+`create_event` marks the organiser as going and the number is real.
+
+### What the e2e test caught
+
+The first version asserted the view count straight after the page rendered and read **zero**. The
+effect had not run yet, and the next step cleared the cookies — so when the action did reach the
+server there was no session and it correctly counted nothing. The test now waits on the action's
+own POST, which is deterministic *and* asserts the action fires at all: a counter that called
+nothing would otherwise be indistinguishable from one that honestly measured zero.
+
+### Still not built
+
+Event images. `cover_image_path` and `image_paths` exist on the table with no uploader and no
+renderer — §2 asked for them and only the columns were built. They are schema-only and should
+either get an upload path (the vehicle-photos migration is the pattern) or be dropped.

@@ -300,9 +300,18 @@ select ok(
 
 select ok(
   (public.events_upcoming(50) -> 'events' -> 0) ? 'event_type'
-  and (public.events_upcoming(50) -> 'events' -> 0) ? 'cover_image_path'
   and (public.events_upcoming(50) -> 'events' -> 0) ? 'matches_my_area',
   'and the new fields are there beside them');
+
+-- The image fields are GONE, by the owner's decision on 2026-10-03. 20261003000600 built the
+-- columns and nothing else -- no uploader, no renderer -- so they were schema nothing could fill,
+-- which reads to the next person as "events have pictures". Asserted as an absence because the
+-- three functions that used to SELECT them were recreated without them, and a dropped column still
+-- named in a function body is an error on the next call that nothing else here would catch.
+select ok(
+  not ((public.events_upcoming(50) -> 'events' -> 0) ? 'cover_image_path')
+  and not ((public.events_upcoming(50) -> 'events' -> 0) ? 'image_paths'),
+  'and the image fields are not, because the columns were dropped');
 
 reset role;
 
@@ -359,6 +368,110 @@ select is(
     where scope = 'event' and target_id = '11110000-0000-4000-8000-00000000002e'),
   0,
   'the sweep trigger reaches event targeting too, not only campaigns');
+
+-- ---------------------------------------------------------------------------
+-- 9. One event, on its own page
+-- ---------------------------------------------------------------------------
+--
+-- event_detail() exists so that record_event_view() has something that can call it. Three things
+-- separate it from events_upcoming(), and each is asserted: it reads ONE event, it is NOT limited to
+-- upcoming ones, and a draft is indistinguishable from a deleted event.
+
+insert into public.events (id, title, starts_at, status, event_type, city, state)
+values
+  ('11140000-0000-4000-8000-00000000001e', 'Detail page event',
+   now() + interval '5 days', 'published', 'meetup', 'Cypress', 'TX'),
+  -- Finished a week ago. events_upcoming() drops anything more than six hours past, so this row is
+  -- the one that proves the detail page is not just a filtered list.
+  ('11150000-0000-4000-8000-00000000001e', 'Last weekend run',
+   now() - interval '7 days', 'published', 'trail_ride', 'Katy', 'TX'),
+  ('11160000-0000-4000-8000-00000000001e', 'Unfinished event',
+   now() + interval '5 days', 'draft', 'meetup', 'Cypress', 'TX');
+
+select set_config('request.jwt.claims',
+  json_build_object('sub', pg_temp.a_member(), 'role', 'authenticated')::text, true);
+set local role authenticated;
+
+select is(
+  public.event_detail('11140000-0000-4000-8000-00000000001e') -> 'event' ->> 'title',
+  'Detail page event',
+  'a published event opens');
+
+select ok(
+  (public.event_detail('11140000-0000-4000-8000-00000000001e') -> 'event') ? 'going_count'
+  and (public.event_detail('11140000-0000-4000-8000-00000000001e') -> 'event') ? 'matches_my_area'
+  and (public.event_detail('11140000-0000-4000-8000-00000000001e') -> 'event') ? 'organizer_name',
+  'carrying the fields the page renders');
+
+-- THE ONE THAT MATTERS FOR A LINK SOMEBODY WAS SENT.
+select is(
+  public.event_detail('11150000-0000-4000-8000-00000000001e') -> 'event' ->> 'title',
+  'Last weekend run',
+  'an event that FINISHED still opens -- events_upcoming() would never return it');
+
+select ok(
+  not exists (
+    select 1 from jsonb_array_elements(public.events_upcoming(100) -> 'events') x
+     where x ->> 'title' = 'Last weekend run'),
+  'and the list genuinely does not, which is what makes the row above a real difference');
+
+-- A DRAFT ANSWERS LIKE A DELETED EVENT. Both not_found, so a guessed uuid cannot confirm that
+-- somebody is drafting something.
+select is(
+  public.event_detail('11160000-0000-4000-8000-00000000001e') ->> 'error',
+  'not_found',
+  'a draft is not readable, even with its exact id');
+
+select is(
+  public.event_detail('99999999-0000-4000-8000-00000000009e') ->> 'error',
+  'not_found',
+  'and an id that never existed answers identically -- the control that makes the refusal silent');
+
+reset role;
+
+-- Signed out, nothing -- and the refusal is HARDER than the function's own not_signed_in branch.
+-- anon has no execute grant, so the call is refused before any of the body runs. Asserted as the
+-- throw it actually is rather than as the friendly error it would give a role that could call it.
+set local role anon;
+select throws_ok(
+  $$select public.event_detail('11140000-0000-4000-8000-00000000001e')$$,
+  '42501',
+  null,
+  'a signed-out reader cannot call it at all: events are members-only');
+reset role;
+
+select ok(
+  not has_function_privilege('anon', 'public.event_detail(uuid)', 'execute'),
+  'which is a missing grant rather than a check inside the function');
+
+-- ---------------------------------------------------------------------------
+-- 10. The view counter now has something that can call it
+-- ---------------------------------------------------------------------------
+--
+-- 20261003001000 shipped record_event_view() with no caller and said so. This is the loop closing:
+-- a page exists, so a view is countable, so admin_event_report stops being a column of zeros.
+
+select is(
+  public.record_event_view('11140000-0000-4000-8000-00000000001e') ->> 'ok', 'true',
+  'a view of the event behind the page is counted');
+
+select is(
+  (select views from public.event_daily_stats
+    where event_id = '11140000-0000-4000-8000-00000000001e'),
+  1,
+  'and lands');
+
+select set_config('request.jwt.claims',
+  json_build_object('sub', pg_temp.an_admin(), 'role', 'authenticated', 'aal', 'aal2')::text, true);
+set local role authenticated;
+
+select ok(
+  (select (x ->> 'views')::int = 1
+     from jsonb_array_elements(public.admin_event_report() -> 'events') x
+    where x ->> 'title' = 'Detail page event'),
+  'and the admin report shows it -- the number can move now, which it could not before');
+
+reset role;
 
 select * from finish();
 rollback;

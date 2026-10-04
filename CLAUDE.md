@@ -730,6 +730,30 @@ docs/                     decisions + runbooks
   for the translator, so a callback depending on it can be rebuilt every render and an effect keyed on
   that callback re-runs every render. Store an error CODE in state and translate at render; the
   notification settings screen was already written this way and the location screen now matches.
+- **`npx playwright test | tail` REPORTS TAIL'S EXIT CODE, NOT PLAYWRIGHT'S.** This file already
+  says to count exit codes rather than assertion tallies, and a pipe defeats exactly that: on
+  2026-10-03 a run quoted as "exit code 0" contained a real failure, and three runs before it had
+  been judged the same worthless way. Redirect to a file and capture `$?` BEFORE reading it --
+  `npx playwright test > log 2>&1; echo $?` -- or use `${PIPESTATUS[0]}`. The same trap applies to
+  every `| grep`/`| head` wrapped around a test command.
+- **`reuseExistingServer: !process.env.CI` MEANS AN ORPHANED `next start` POISONS EVERY LATER RUN.**
+  Locally Playwright reuses whatever answers on 3101 and SKIPS its own `next build` entirely -- so a
+  leftover server keeps serving a `.next` that the next run's build then overwrites underneath it.
+  The symptom is not a failed assertion. It is `apiRequestContext.get: socket hang up` on a
+  DIFFERENT, unrelated static page each run (`/es/trails`, then `/resources/etiquette`), and
+  eventually a spec that took 1.6 minutes wedging past thirty.
+  It accumulates silently: a killed or timed-out run leaves its server behind, and on 2026-10-03
+  there were orphans from two separate runs alive at once.
+  **Before reading any product code**, check it -- `Get-NetTCPConnection -State Listen -LocalPort
+  3101` -- then kill the strays, `rm -rf .next`, and run again. Keep the gateway (54321), PostgREST
+  (54322) and Postgres; killing those is a different afternoon. This is the same family as the
+  existing warning about `next dev` and `next build` sharing `.next`, and it is worth checking
+  first for the same reason: it presents as a broad, product-shaped failure and is neither.
+- **Do not change the database while a browser suite is running against it.** Recreating three
+  functions mid-run on 2026-10-03 confounded the one failure that mattered -- it had to be
+  re-diagnosed from scratch because "my change" and "the environment" could not be separated. The
+  suites share one database and one set of demo accounts; treat a running suite as holding a lock
+  on both.
 - **`npm run build` runs the i18n check first** (`prebuild`). A missing Spanish key fails the
   build rather than silently falling back to English.
 

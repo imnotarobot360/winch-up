@@ -6,6 +6,7 @@ import { useFormatter, useNow, useTranslations } from "next-intl";
 import { AdSlot } from "@/components/ads/ad-slot";
 import { Button, Callout, Card, ChoiceList, Field, TextArea, TextInput } from "@/components/ui/primitives";
 import { IconCheck } from "@/components/ui/icons";
+import { Link } from "@/i18n/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -454,7 +455,13 @@ export function CommunityFeed() {
                         minute: "2-digit",
                       })}
                     </p>
-                    <h2 className="text-xl font-semibold text-ink">{e.title}</h2>
+                    <h2 className="text-xl font-semibold text-ink">
+                      {/* A screen nothing links to is a screen nobody sees -- /welcome was built,
+                          deployed and left unreachable for two days. This is that link. */}
+                      <Link href={`/events/${e.id}`} className="underline underline-offset-4">
+                        {e.title}
+                      </Link>
+                    </h2>
                     {/* Type and place on one line: both are short, and an event card on a phone has
                         room for one more line, not four. */}
                     {eventTypeKey(e.event_type) ? (

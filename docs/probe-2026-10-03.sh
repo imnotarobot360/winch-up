@@ -84,8 +84,10 @@ col events postal_code
 col events is_official
 col events organizer_name
 col events registration_url
-col events cover_image_path
 
+# events.cover_image_path and events.image_paths are NOT checked here: 20261003001700 dropped
+# them. They were columns with no uploader and no renderer, and checking for them would report
+# MISSING for ever and read as a migration that failed.
 echo "=== 20261003000700 / 001500  event admin RPCs ==="
 fn admin_save_event '{"p_payload":{}}'
 fn admin_events '{"p_status":null,"p_limit":1}'

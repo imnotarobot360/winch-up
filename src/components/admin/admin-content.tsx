@@ -537,6 +537,8 @@ function Events() {
           </Button>
         </Card>
       ))}
+
+      <EventReport />
     </div>
   );
 }
@@ -775,5 +777,62 @@ function Badge({ children }: { children: React.ReactNode }) {
     <span className="rounded-field border-2 border-line px-2 py-1 text-xs font-semibold uppercase tracking-wide text-ink-soft">
       {children}
     </span>
+  );
+}
+
+type EventReportRow = {
+  id: string;
+  title: string;
+  starts_at: string;
+  city: string | null;
+  state: string | null;
+  views: number;
+  going: number;
+  estimated_reach: number;
+};
+
+/**
+ * How events are doing (spec section 12).
+ *
+ * THIS IS WHY THE EVENT PAGE EXISTS. `admin_event_report` was written, granted, tested and called
+ * by nothing -- found by re-running the project's own built-but-unreachable sweep rather than by a
+ * failure. Wiring it any earlier would have shipped a views column structurally stuck at zero,
+ * because there was no per-event surface and counting a view for every event in a list is not a
+ * view. There is a page now, so the number can move, so the column is worth rendering.
+ *
+ * Loaded with the tab rather than on demand, unlike the campaign report: one query over a small
+ * table, and it is the only feedback an organiser gets at all.
+ */
+function EventReport() {
+  const t = useTranslations("adminContent");
+  const { data, loading } = useAdminData<{ ok: boolean; events?: EventReportRow[] }>(
+    "admin_event_report",
+    { p_days: 30 },
+  );
+
+  if (loading) return <p className="text-ink-soft">{t("loading")}</p>;
+
+  const rows = data?.events ?? [];
+  if (rows.length === 0) return null;
+
+  return (
+    <Card className="space-y-3 p-4">
+      <h3 className="text-base font-semibold text-ink">{t("eventReportTitle")}</h3>
+      <p className="text-sm text-ink-soft">{t("eventReportHint")}</p>
+      <ul className="space-y-2">
+        {rows.map((row) => (
+          <li key={row.id} className="min-w-0">
+            <p className="break-words text-base text-ink">{row.title}</p>
+            <p className="text-sm text-ink-faint">
+              {t("eventReportLine", {
+                views: row.views,
+                going: row.going,
+                reach: row.estimated_reach,
+              })}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }
