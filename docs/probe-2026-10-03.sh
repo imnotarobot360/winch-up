@@ -85,9 +85,6 @@ col events is_official
 col events organizer_name
 col events registration_url
 
-# events.cover_image_path and events.image_paths are NOT checked here: 20261003001700 dropped
-# them. They were columns with no uploader and no renderer, and checking for them would report
-# MISSING for ever and read as a migration that failed.
 echo "=== 20261003000700 / 001500  event admin RPCs ==="
 fn admin_save_event '{"p_payload":{}}'
 fn admin_events '{"p_status":null,"p_limit":1}'
@@ -119,6 +116,22 @@ fn admin_announcements '{"p_status":null,"p_limit":1}'
 echo "=== 20261003001500  targeting round-trip ==="
 col target_locations kind
 fn admin_save_campaign_targets '{"p_campaign_id":"00000000-0000-4000-8000-000000000000","p_targets":[]}'
+
+echo "=== 20261003001600 / 001700  second batch: the event page ==="
+fn event_detail '{"p_event_id":"00000000-0000-4000-8000-000000000000"}'
+# THE ABSENCE OF SOMETHING, which a probe built to look for presence has to be told how to read.
+# 20261003001700 DROPPED these two columns, so 42703 is the PASS here and 42501 would mean the
+# migration has not run. The script's col() helper prints it the other way round, so they are
+# checked by hand with the expectation spelled out.
+for c in cover_image_path image_paths; do
+  r=$(curl -s "$HOST/rest/v1/events?select=$c&limit=1" \
+        -H "apikey: $KEY" -H "Authorization: Bearer $KEY" | code_of)
+  case "$r" in
+    42703) printf '  APPLIED      %-32s (42703 -- dropped, as intended)\n' "events.$c" ;;
+    42501) printf '  MISSING      %-32s (42501 -- STILL THERE; 001700 has not run)\n' "events.$c" ;;
+    *)     printf '  ?            %-32s (%s)\n' "events.$c" "$r" ;;
+  esac
+done
 
 echo "=== CONTROLS -- if any of these is wrong, ignore everything above ==="
 echo "  these two MUST say APPLIED (they predate today):"
