@@ -829,6 +829,27 @@ docs/                     decisions + runbooks
   `vitest.config.ts` includes `scripts/` for it. And it detects a missing `getent` separately from
   a missing A record, because getent is Linux-only and the owner works in git-bash -- announcing
   "IPv6-only" about a perfectly good host is the exact bug class this script exists to stop.
+  **AND IT GOT THAT WRONG ON ITS FIRST REAL RUN, which is the useful part.** The secret held
+  `aws-0-REGION.pooler.supabase.com` -- an unreplaced placeholder out of a documentation example.
+  DNS found no A record and the script announced "resolves only over IPv6", a confident wrong cause
+  from the one tool whose job is refusing to state one. NO A RECORD HAS TWO CAUSES: with an AAAA
+  record the host is real and merely unreachable from a runner, and with NEITHER record the host
+  does not exist, which is a typo and not a network fault -- telling somebody to "use the session
+  pooler" when they already named one sends them to check the wrong thing. Both are separate errors
+  now, and a placeholder in the HOST OR USERNAME is caught before DNS is consulted at all. Scanned
+  over those two fields only: a password is whatever somebody chose, so looking for `PASSWORD`
+  across the whole string would reject a real credential, and a false rejection blocks a deploy.
+- **REMOVING A PHOTOGRAPH HAD THE SILENT-ZERO-ROW BUG WHILE ADDING ONE DID NOT.** `choose()` asked
+  for the written row back and checked it; `remove()`, eleven lines below, did not -- so a failed
+  or zero-row update cleared the picture from the screen, reported nothing, and a reload brought it
+  straight back. Same shape as the /account save that said "Saved" while writing nothing, in the
+  same file, written the same day. **When a rule is applied in one branch of a component, grep the
+  rest of the component before believing it is applied.**
+  The test for it was ALSO wrong, and in a way worth knowing: it clicked Remove and called
+  `page.reload()` immediately, which aborts the in-flight update. Its first ever run -- on CI, since
+  the no-Docker stack answers 501 for `/storage/v1` and the upload path cannot run locally at all --
+  failed there and PASSED ON RETRY, so it presented as flake. A reload is not a wait: assert the
+  optimistic state first, then reload and assert persistence, which also distinguishes the two.
 - **`npm run build` runs the i18n check first** (`prebuild`). A missing Spanish key fails the
   build rather than silently falling back to English.
 

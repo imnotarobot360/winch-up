@@ -87,6 +87,31 @@ describe("check-db-url.sh", () => {
     expect(out).toContain("password : ABSENT");
   });
 
+  // THE ONE THAT WAS ACTUALLY IN THE SECRET on 2026-10-04. DNS found no A record and the first
+  // version of this script announced "resolves only over IPv6" -- a confident wrong cause from the
+  // one tool whose job is refusing to state one. The host simply did not exist.
+  it("rejects an unreplaced placeholder in the host", () => {
+    const { code, out } = check(`postgresql://postgres.${REF}:realpw@aws-0-REGION.pooler.supabase.com:5432/postgres`);
+    expect(code).toBe(1);
+    expect(out).toContain("placeholder 'REGION'");
+    expect(out).toContain("TEMPLATE");
+  });
+
+  // The pairing for it. The placeholder scan covers the host and username ONLY, because a password
+  // is whatever somebody chose -- and a false rejection here blocks a deploy, which is worse than
+  // the fault being caught.
+  it("accepts a real password that happens to contain the word PASSWORD", () => {
+    const { code, out } = check(`postgresql://postgres.${REF}:MYPASSWORD123@${POOLER}:5432/postgres`);
+    expect(code, out).toBe(0);
+    expect(out).toContain("Shape is plausible");
+  });
+
+  it("rejects angle brackets, which are never valid unencoded in a URL", () => {
+    const { code, out } = check(`postgresql://postgres.${REF}:pw@<host>:5432/postgres`);
+    expect(code).toBe(1);
+    expect(out).toContain("< or >");
+  });
+
   it("rejects the wrong database name", () => {
     const { code, out } = check(`postgresql://postgres.${REF}:fake@${POOLER}:5432/winchup`);
     expect(code).toBe(1);

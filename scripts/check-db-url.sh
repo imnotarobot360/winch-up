@@ -96,6 +96,26 @@ for ch in '@' '/' '?' '#' '[' ']'; do
 done
 [ -n "$bad" ] && note "The password contains$bad which must be percent-encoded in a URL (@ is %40, / is %2F, # is %23, ? is %3F)."
 
+# AN UNREPLACED TEMPLATE, caught before DNS because that is what it is -- not a network fault.
+# This is what the secret actually held on 2026-10-04: aws-0-REGION.pooler.supabase.com, straight
+# out of a documentation example. DNS then found no A record, and the first version of this script
+# reported "resolves only over IPv6" -- a confident wrong cause, in the one tool whose entire job is
+# refusing to state a wrong cause. Checked case-sensitively on purpose: REGION is a placeholder,
+# but a real host is lowercase, so "region" inside one is not a false positive waiting to happen.
+# Scanned over the HOST AND USERNAME ONLY, never the whole string. A password is whatever somebody
+# chose, so looking for PASSWORD or REGION across the lot would reject a real credential containing
+# either -- and a false rejection here blocks a deploy, which is a worse failure than the one being
+# caught. The angle brackets are checked everywhere because they are never valid unencoded in a URL.
+for ph in REGION PROJECT PROJECT-REF PROJECT_REF YOUR PASSWORD HOST EXAMPLE abcdef; do
+  case "$host$user" in
+    *"$ph"*) note "The host or username still contains the placeholder '$ph'. This is a TEMPLATE rather than your connection string -- copy it from Dashboard -> Connect -> Session pooler -> URI, which fills in every field." ; break ;;
+  esac
+done
+
+case "$RAW" in
+  *'<'*|*'>'*) note "The string contains < or >, which is never valid unencoded in a URL. Angle brackets usually mean a placeholder was left in place." ;;
+esac
+
 case "$host" in
   db.*.supabase.co)
     note "THE DIRECT HOST. db.<ref>.supabase.co publishes only an AAAA record, and GitHub runners have no IPv6 -- so this can never connect from CI however correct the password is. Use the session pooler."
@@ -161,8 +181,18 @@ else
 fi
 echo ""
 
+# NO A RECORD HAS TWO CAUSES AND THEY NEED DIFFERENT CURES. With an AAAA record the host is real
+# and simply unreachable from a runner, which is the direct-host trap. With NEITHER record the host
+# does not exist -- a typo or an unreplaced placeholder -- and telling somebody to "use the session
+# pooler" when they already named one sends them to check the wrong thing. The first version of
+# this conflated them and was wrong the first time it ran.
+if [ -z "$V4" ] && [ -n "${V6:-}" ]; then
+  echo "::error title=The database host has no IPv4 address::$host publishes an AAAA record and no A record. GitHub runners have no IPv6, so nothing there can reach it however correct the credentials are. Use the SESSION POOLER host from Dashboard -> Connect, which is dual-stack."
+  exit 1
+fi
+
 if [ -z "$V4" ]; then
-  echo "::error title=No IPv4 for the database host::$host resolves only over IPv6. GitHub runners have no IPv6 address, so nothing there can reach it. Use the session pooler (aws-N-<region>.pooler.supabase.com), which is dual-stack."
+  echo "::error title=The database host does not resolve at all::$host has no A and no AAAA record, so it is not a reachable name. That is a typo or an unreplaced placeholder in the connection string, NOT a network or IPv6 problem. Copy the URI from Dashboard -> Connect -> Session pooler."
   exit 1
 fi
 

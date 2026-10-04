@@ -139,11 +139,21 @@ test("a member can add a photograph, and it survives a reload", async ({ page })
   // members list and the DM screens render for everybody else's runs.
   await page.getByRole("button", { name: /remove photo/i }).click();
 
+  // WAIT FOR THE REMOVAL TO LAND BEFORE RELOADING. Reloading straight after the click aborts the
+  // in-flight update, so avatar_path survives, the control still reads "Change photo" and the
+  // assertion below fails -- which is exactly what happened on the first CI run that ever reached
+  // this code. Local has no Storage, so it had never run anywhere else; it passed on retry, i.e. it
+  // presented as flake and was a race in the test.
+  await expect(
+    page.getByRole("button", { name: /add a photo/i }),
+    "the control goes back to Add once the removal is accepted",
+  ).toBeVisible({ timeout: 20_000 });
+
   await page.reload();
   await hydrated(page.locator("main"));
   await expect(
     page.getByRole("button", { name: /add a photo/i }),
-    "the photo is removed again, asserted rather than hoped for",
+    "and it STAYS removed across a reload, so a row was written rather than only the state",
   ).toBeVisible({ timeout: 20_000 });
 });
 

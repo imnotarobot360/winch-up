@@ -105,14 +105,19 @@ export function AvatarUpload({
     setBusy(true);
     setError(null);
 
-    const { error: saveError } = await supabaseBrowser()
+    // ASK FOR THE ROW BACK, exactly as choose() does above. A zero-row UPDATE through PostgREST is
+    // a silent success, so without this the picture disappears from the screen, the member is told
+    // nothing is wrong, and a reload brings it straight back -- the same shape as the /account save
+    // that reported "Saved" while writing nothing, which cost the owner a day on 2026-10-04.
+    const { data: written, error: saveError } = await supabaseBrowser()
       .from("profiles")
       .update({ avatar_path: null })
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .select("user_id");
 
     setBusy(false);
 
-    if (saveError) {
+    if (saveError || !written || written.length === 0) {
       setError(t("photoFailed"));
       return;
     }
