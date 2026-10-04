@@ -67,6 +67,23 @@ export function NotificationSettings() {
   const load = useCallback(async () => {
     const supabase = supabaseBrowser();
 
+    // BY user_id, resolved first. profiles_self_read is "own row OR app.is_admin()", so an admin
+    // reads every profile row and maybeSingle() fails -- every switch on this screen then showed
+    // its default to exactly one person, the owner. Same bug as /account and /account/location,
+    // and invisible to tests because they all sign in as an ordinary member.
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      // A raw code, like the save paths below: this screen renders ONE message for any error and
+      // ignores the value. Using t() here would also have put the translator back in the load
+      // callback's dependencies, which is the thing its empty dep list exists to avoid.
+      setError("load_failed");
+      setLoaded(true);
+      return;
+    }
+
     const [{ data: profile }, { data: subs }] = await Promise.all([
       supabase
         .from("profiles")
@@ -76,6 +93,7 @@ export function NotificationSettings() {
         .select(
           "notify_recovery, notify_recovery_status, notify_chat, notify_community, notify_marketing, available_to_help, allow_direct_messages, notify_direct_messages",
         )
+        .eq("user_id", user.id)
         .maybeSingle(),
       // RLS on push_subscriptions is owner-only, so this returns this member's devices and
       // nobody else's. The keys are never selected: they are what a payload is encrypted to and

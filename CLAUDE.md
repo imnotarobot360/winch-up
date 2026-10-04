@@ -776,6 +776,25 @@ docs/                     decisions + runbooks
   whether the caller is an admin. Its MFA condition is a deliberate COPY of require_admin()'s rather
   than a call wrapped in an exception handler: swallowing would also swallow a genuine error and
   report it as "needs MFA". It still enforces nothing; every admin RPC checks for itself.
+- **THE ADMIN IS A DIFFERENT RLS SUBJECT, SO THE ADMIN HAS TO OPEN THE MEMBER SCREENS TOO.**
+  `profiles_self_read` is `user_id = auth.uid() OR app.is_admin()`, so an admin reads EVERY profile
+  row. Four places selected from `profiles` with NO user_id filter and called `maybeSingle()`,
+  which fails on more than one row -- so /account showed "we could not load your details",
+  /account/location sat on "Loading...", /account/notifications showed every switch at its default,
+  and /api/ads/event filed impressions under "no area given". All four were broken for exactly one
+  person, the owner, and worked for everybody else. It also got WORSE AS THE MEMBERSHIP GREW: at one
+  member the unfiltered select returned one row and looked perfect.
+  Nothing could catch it. Every pgTAP suite and every browser test signs in as an ordinary member,
+  so the whole class of "works unless you are an admin" was untestable by construction.
+  `e2e/geo-targeting.spec.ts` now opens those three screens as the ADMIN, and that test was proven
+  to fail on the unfixed code before being trusted.
+  **Never rely on a policy to return one row.** Filter by `user_id` even when RLS "already" scopes
+  it: the policy is a permission boundary, not a query.
+- **A zero-row UPDATE through PostgREST is a silent success.** `/account` saved with
+  `.not("user_id","is",null)` and no `.select()`, so an account whose `profiles` row was missing --
+  which RLS cannot create, there being no INSERT policy on that table -- showed "Saved" and changed
+  nothing, for ever. Ask for the written rows back and treat an empty array as a failure. The same
+  shape hides in any `.update()` whose filter leans on RLS rather than naming the row.
 - **`npm run build` runs the i18n check first** (`prebuild`). A missing Spanish key fails the
   build rather than silently falling back to English.
 

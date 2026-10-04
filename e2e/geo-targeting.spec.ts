@@ -340,6 +340,81 @@ test("opening an event counts a view, which the admin report can see", async ({ 
   ).toContainText(/[1-9][0-9]* views/, { timeout: 20_000 });
 });
 
+test("the account screen works for an ADMIN, not just a member", async ({ page }) => {
+  /**
+   * THE REGRESSION THIS GUARDS, and why nothing caught it for weeks.
+   *
+   * `profiles_self_read` is `user_id = auth.uid() OR app.is_admin()`, so an admin reads EVERY
+   * profile row. /account, /account/location and /account/notifications all selected from
+   * `profiles` with no user_id filter and called maybeSingle(), which fails on more than one row.
+   * So those three screens were broken for exactly one person -- the owner -- and worked for
+   * everybody else. It also got worse as the membership grew: at one member it returned one row.
+   *
+   * Every pgTAP suite and every other browser test signs in as an ordinary member. The whole
+   * class of "works unless you are an admin" was untestable by construction, which is the actual
+   * lesson: the admin is a different RLS subject, so the admin has to open the member screens too.
+   */
+  await signIn(page, ADMIN);
+
+  // --- /account ---------------------------------------------------------------
+  await page.goto("/account");
+  await hydrated(page.locator("main"));
+
+  await expect(
+    page.getByText(/could not load your details/i),
+    "no load-failure banner: the select returns one row, not every row",
+  ).toHaveCount(0, { timeout: 20_000 });
+
+  const name = page.getByLabel(/display name/i);
+  await expect(name, "the form renders").toBeVisible({ timeout: 20_000 });
+
+  // Remember what was there so this suite puts the shared admin back.
+  const original = (await name.inputValue()) ?? "";
+  const marker = `Admin ${Date.now().toString(36)}`;
+
+  await name.fill("");
+  await name.pressSequentially(marker);
+  await page.getByRole("button", { name: /save changes|guardar/i }).click();
+
+  // A ZERO-ROW UPDATE USED TO REPORT SUCCESS. Reloading is what tells the two apart.
+  await page.reload();
+  await hydrated(page.locator("main"));
+  await expect(
+    page.getByLabel(/display name/i),
+    "the name actually persisted, rather than the save reporting a row it never wrote",
+  ).toHaveValue(marker, { timeout: 20_000 });
+
+  // --- the other two screens with the same bug --------------------------------
+  await page.goto("/account/location");
+  await hydrated(page.locator("main"));
+  await expect(
+    page.getByLabel(/town or city/i),
+    "/account/location gets past Loading for an admin too",
+  ).toBeVisible({ timeout: 20_000 });
+
+  await page.goto("/account/notifications");
+  await hydrated(page.locator("main"));
+  await expect(
+    page.getByText(/could not|no se pudo/i),
+    "/account/notifications loads for an admin without an error",
+  ).toHaveCount(0, { timeout: 20_000 });
+
+  // --- put the shared admin back ----------------------------------------------
+  await page.goto("/account");
+  await hydrated(page.locator("main"));
+  const restore = page.getByLabel(/display name/i);
+  await restore.fill("");
+  if (original) await restore.pressSequentially(original);
+  await page.getByRole("button", { name: /save changes|guardar/i }).click();
+
+  await page.reload();
+  await hydrated(page.locator("main"));
+  await expect(
+    page.getByLabel(/display name/i),
+    "the admin's name is back to what this test found, asserted rather than hoped for",
+  ).toHaveValue(original, { timeout: 20_000 });
+});
+
 test("a member cannot reach Content & Marketing", async ({ page }) => {
   await signIn(page, MEMBER);
   await page.goto("/admin/content");

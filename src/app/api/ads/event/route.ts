@@ -121,6 +121,10 @@ export async function POST(request: Request) {
       const { data: profile } = await session
         .from("profiles")
         .select("state, city, postal_code")
+        // By id: profiles_self_read is "own row OR app.is_admin()", so for an admin this returns
+        // every row and maybeSingle() fails. Here the failure was swallowed by the catch and the
+        // impression filed under "no area given" -- wrong rather than loud.
+        .eq("user_id", user.id)
         .maybeSingle();
 
       if (profile) {

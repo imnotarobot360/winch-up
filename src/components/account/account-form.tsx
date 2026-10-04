@@ -46,9 +46,12 @@ const EMPTY: Profile = {
  * auth.users needs the service role.
  */
 export function AccountForm({
+  userId,
   email,
   canModerate = false,
 }: {
+  /** From the page, which already resolved the session server-side. See the load below. */
+  userId: string;
   email: string;
   /** Resolved on the server. Hides a row; it does not grant anything -- /moderation gates itself. */
   canModerate?: boolean;
@@ -69,8 +72,19 @@ export function AccountForm({
     (async () => {
       try {
         const { data, error: loadError } = await supabaseBrowser()
+          // FILTERED BY user_id, and that is not belt-and-braces over RLS.
+          //
+          // `profiles_self_read` is `user_id = auth.uid() OR app.is_admin()`, so an ADMIN reads
+          // every profile row. An unfiltered select then hands maybeSingle() five of them and it
+          // fails -- this screen showed "we could not load your details" to exactly one person,
+          // the owner, and worked for everybody else. It also got worse as the membership grew:
+          // with one member it returned one row and looked fine.
+          //
+          // Every pgTAP suite and every browser test signs in as an ordinary member, so nothing
+          // could see it. Filter by the id rather than trusting a policy to stay narrow.
           .from("profiles")
           .select("display_name, home_region")
+          .eq("user_id", userId)
           .maybeSingle();
 
         if (!alive) return;
@@ -91,7 +105,11 @@ export function AccountForm({
     return () => {
       alive = false;
     };
-  }, []);
+    // userId, because the load now filters on it. It comes from the server-rendered page and does
+    // not change while this component is mounted, so in practice the effect still runs once --
+    // but a dependency the body reads and the array omits is how a screen ends up showing the
+    // previous account's data after a switch.
+  }, [userId]);
 
   function set<K extends keyof Profile>(key: K, value: Profile[K]) {
     setProfile((p) => ({ ...p, [key]: value }));
@@ -104,19 +122,32 @@ export function AccountForm({
     setBusy(true);
     setError(null);
 
-    const { error: saveError } = await supabaseBrowser()
+    const { data: written, error: saveError } = await supabaseBrowser()
       .from("profiles")
       .update({
         display_name: profile.display_name?.trim() || null,
         home_region: profile.home_region?.trim() || null,
       })
-      .not("user_id", "is", null);
+      // The same filter, for the same reason, plus one of its own: this used to mean "every row
+      // RLS will let me write", which is safe only because the UPDATE policy happens to be
+      // narrower than the SELECT one. Naming the row makes the write independent of that.
+      .eq("user_id", userId)
+      .select("user_id");
 
     setBusy(false);
 
     if (saveError) {
       // The CHECK that rejects a phone number or link in a display name surfaces as 23514.
       setError(saveError.code === "23514" ? "contact_in_name" : "save_failed");
+      return;
+    }
+
+    // A ZERO-ROW UPDATE IS NOT A SUCCESS. An account with no profiles row -- which RLS cannot
+    // create, there being no INSERT policy -- would otherwise show "Saved" and change nothing, for
+    // ever. Better to say it did not land than to let somebody type their name three times and
+    // walk away believing it took.
+    if (!written || written.length === 0) {
+      setError("save_failed");
       return;
     }
 

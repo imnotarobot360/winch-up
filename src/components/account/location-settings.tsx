@@ -48,9 +48,24 @@ export function LocationSettings() {
 
     // One string literal, not a concatenation -- supabase-js infers the row type from the select
     // text and a joined expression degrades to GenericStringError.
+    // BY user_id. profiles_self_read is "own row OR app.is_admin()", so an admin reads every
+    // profile row and maybeSingle() fails on five of them -- this screen sat on "Loading..." for
+    // exactly one person, the owner, and worked for everybody else. Every test signs in as an
+    // ordinary member, which is why nothing caught it.
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setErrorCode("readFailed");
+      setLoaded(true);
+      return;
+    }
+
     const { data, error: readError } = await supabase
       .from("profiles")
       .select("city, state, postal_code")
+      .eq("user_id", user.id)
       .maybeSingle();
 
     if (readError) {

@@ -54,7 +54,11 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
       <h1 className="text-3xl font-bold">{t("title")}</h1>
       <p className="mt-2 text-lg text-ink-soft">{t("body")}</p>
       <div className="mt-6">
-        <AccountForm email={user!.email ?? user!.phone ?? ""} canModerate={canModerate} />
+        <AccountForm
+          userId={user!.id}
+          email={user!.email ?? user!.phone ?? ""}
+          canModerate={canModerate}
+        />
       </div>
     </main>
   );
