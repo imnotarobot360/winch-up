@@ -754,6 +754,28 @@ docs/                     decisions + runbooks
   re-diagnosed from scratch because "my change" and "the environment" could not be separated. The
   suites share one database and one set of demo accounts; treat a running suite as holding a lock
   on both.
+- **PRODUCTION ENFORCES ADMIN MFA, AND ONLY /signin CAN SATISFY IT.** `security.require_admin_mfa`
+  is TRUE in production and false on the local stack, so this is a class of bug that cannot be
+  reproduced by running the app locally without setting the flag. With it on and a session at aal1,
+  every `admin_*` RPC raises `mfa_required` -- which is deliberately distinct from `forbidden` so
+  the UI can tell "you are not an admin" from "you are, but this session has not been challenged".
+  **The admin console's own phone-OTP form does NOT step up.** `signInWithOtp` returns a session at
+  aal1 with `nextLevel: aal2`, so signing in there lands you right back at the refusal having done
+  work. The only path that steps up is `/signin`, whose form calls
+  `getAuthenticatorAssuranceLevel()` after the password and asks for the six-digit code.
+  `AdminNeedsMfa` says exactly that and its button signs out and goes there.
+  **The lockout to watch for:** enforcement on with NO verified TOTP factor means aal2 is
+  unreachable and the console is gone for good. `/admin/security` enforces enrol-then-sign-in-then-
+  enable precisely to prevent that, so it can only happen if the flag was set directly in SQL. The
+  escape is `update app_settings set value = 'false'::jsonb where key = 'security.require_admin_mfa';`
+- **A GATE THAT RAISES CANNOT ALSO DECIDE WHAT TO RENDER.** `app.require_admin()` raising is right
+  for an RPC and useless for a page, which is why the admin layout asked only about the ROLE for
+  months and an admin with an unchallenged session got the whole console full of empty lists.
+  `admin_session_state()` is the one function in that surface that answers a refusal with DATA --
+  signed_out / not_admin / mfa_required / ok -- and that is what makes it callable before you know
+  whether the caller is an admin. Its MFA condition is a deliberate COPY of require_admin()'s rather
+  than a call wrapped in an exception handler: swallowing would also swallow a genuine error and
+  report it as "needs MFA". It still enforces nothing; every admin RPC checks for itself.
 - **`npm run build` runs the i18n check first** (`prebuild`). A missing Spanish key fails the
   build rather than silently falling back to English.
 
