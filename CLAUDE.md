@@ -503,6 +503,18 @@ docs/                     decisions + runbooks
   guard and errored. Run the verifier after every deploy that ships a migration, and read ALL of
   its rows -- it sorts failures first, so the top of the output is the bad news and the rest is
   the part that tells you whether anything else is wrong.
+- **STORAGE CANNOT BE PROBED THE WAY POSTGREST CAN, and it answers as though every bucket is
+  missing.** With the publishable key, `GET /storage/v1/bucket/<name>` returns
+  `{"code":"NoSuchBucket"}` for a bucket that EXISTS -- `anon` cannot read `storage.buckets`, and
+  the service reports the RLS miss as absence. `POST /storage/v1/object/list/<name>` returns `[]`
+  for every name for the same reason. Tried on 2026-10-04 to settle whether `member-avatars` had
+  been applied: a name that certainly does not exist answered IDENTICALLY to the real one, in both
+  endpoints. Without that control the first answer reads as proof the migration never landed, which
+  is a confident wrong conclusion about production.
+  So the 42501-versus-PGRST202 trick does NOT extend to Storage. What settles a bucket is
+  `supabase migration list` against the ledger, or `select id from storage.buckets` with the
+  service role -- and a probe whose control matches its subject has measured nothing, whatever it
+  printed.
 - **PostgREST will say a function is missing when it is not.** `POST /rest/v1/rpc/<fn>` with the
   publishable key is a genuine unauthenticated way to check production without the database
   password: `42501` means it exists and the gate works, `PGRST202` means no such function. But
