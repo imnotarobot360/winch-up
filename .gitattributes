@@ -1,0 +1,13 @@
+# Shell scripts MUST be stored and checked out with LF.
+#
+# This repo is developed on Windows and run on Linux. A .sh file committed with CRLF fails on a
+# GitHub runner with `$'\r': command not found` -- an error that names a byte nobody can see and
+# points at the wrong line. scripts/check-db-url.sh is run by the migrate job, so it would break
+# the one step whose job is explaining breakage.
+*.sh text eol=lf
+
+# Same reasoning: these are read by Linux tooling.
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sql text eol=lf
+*.mjs text eol=lf
