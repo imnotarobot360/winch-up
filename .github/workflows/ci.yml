@@ -453,20 +453,48 @@ jobs:
       # remote side by side, so the log answers "what changed" without anybody opening a dashboard --
       # and if the ledger is behind, this is where that becomes visible.
       - name: What does production already have?
+        id: list
         if: steps.secrets.outputs.ready == 'true'
         env:
           DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: supabase migration list --db-url "$DB_URL"
 
       - name: Apply what is missing
+        id: push
         if: steps.secrets.outputs.ready == 'true'
         env:
           DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: supabase db push --db-url "$DB_URL"
 
-      # Read this when it goes red. The most likely cause is the ledger, not the SQL.
+      # TWO DIFFERENT FAILURES, TWO DIFFERENT CAUSES, and one piece of advice for both was worse
+      # than none. This used to fire on ANY failure once the secret was present and talk about the
+      # migration ledger -- so on 2026-10-04, when the connection string turned out to be the
+      # IPv6-only direct host and the job could not connect at all, it printed a confident
+      # explanation about `schema_migrations` being behind. Wrong advice at the exact moment
+      # somebody is looking for the right one.
+      #
+      # `migration list` is the first step that CONNECTS, so its failure is about reaching the
+      # database. `db push` runs only after a successful connection, so its failure is about the
+      # SQL or the ledger.
+      - name: Why the connection failed, which is not the migration
+        if: ${{ failure() && steps.list.outcome == 'failure' }}
+        run: |
+          echo "::error title=Could not reach the database::migration list failed before applying anything. Nothing was changed."
+          echo "The connection string is the usual cause, and there are three ways to get it wrong:"
+          echo "  1. THE DIRECT HOST IS IPv6-ONLY. db.<ref>.supabase.co has no A record, and GitHub's"
+          echo "     runners have no IPv6, so it fails as a TIMEOUT that reads like Supabase being down."
+          echo "     Use the SESSION POOLER: aws-0-<region>.pooler.supabase.com"
+          echo "  2. PORT 5432, not 6543. Transaction mode hands out a different backend per statement,"
+          echo "     so migrations lose the advisory lock they take."
+          echo "  3. USERNAME postgres.<project-ref>, with the dot. A bare 'postgres' at the pooler"
+          echo "     answers 'password authentication failed' -- a wrong username that reads as a"
+          echo "     wrong password."
+          echo "Dashboard -> Connect -> Session pooler -> URI gives all three correctly."
+
+      # Read this when the APPLY goes red. By then the connection worked, so the likely cause is the
+      # ledger rather than the SQL.
       - name: Why a failure here is usually not the migration
-        if: ${{ failure() && steps.secrets.outputs.ready == 'true' }}
+        if: ${{ failure() && steps.push.outcome == 'failure' }}
         run: |
           echo "::error title=Migrations did not apply::Nothing was changed -- each migration runs in its own transaction and the first failure stops the run."
           echo "If the error says 'already exists', the ledger is behind rather than the SQL being wrong:"
