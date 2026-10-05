@@ -31,7 +31,8 @@ export type EmailTemplateKey =
   | "security.password_changed"
   | "security.email_changed"
   | "security.account_deleted"
-  | "membership.signed";
+  | "membership.signed"
+  | "recovery.offer";
 
 export type EmailParams = Record<string, string | number | null | undefined>;
 
@@ -340,6 +341,62 @@ const TEMPLATES: Record<EmailTemplateKey, { en: Renderer; es: Renderer }> = {
   // reference:" followed by nothing when a param is missing, and "Signed by you on today". The
   // render script passes no params at all, which is how both were caught. Missing facts drop
   // their line instead of printing a stub of one.
+  /**
+   * Somebody nearby needs pulling out.
+   *
+   * THE SAME RULES AS THE TEXT, because the medium does not change what is private: no requester
+   * phone number, no exact coordinates, no name. Distance, vehicle and situation are enough to
+   * decide whether to go, and the rest is behind a sign-in.
+   *
+   * The call to action is the only thing that differs. A text says "reply 1", which works on one
+   * bar with no data; an email cannot be replied to by a machine, so this links to /help, where
+   * the offer buttons are. Both end at the same place.
+   *
+   * Every fact is optional, and a missing one drops its line rather than printing a stub. These
+   * params are resolved at SEND time from the request -- if the recovery was scrubbed or deleted
+   * between queueing and sending, this still renders a sensible email instead of "undefined mi".
+   */
+  "recovery.offer": {
+    en: (p) => ({
+      subject: p.miles
+        ? `Recovery needed ${p.miles} mi from you`
+        : "Somebody nearby needs a recovery",
+      blocks: [
+        p.miles
+          ? `A fellow off-roader is stuck about ${p.miles} miles from your last reported location.`
+          : "A fellow off-roader nearby is stuck and asking for help.",
+        [p.vehicle, p.situation].filter(Boolean).join(" — ") || null,
+        p.extras ? `They may need ${p.extras}.` : null,
+        "If you can go, open the request and say so. The requester sees who has offered and chooses who comes; their phone number and exact location are shared only once you are accepted.",
+      ].filter(Boolean) as string[],
+      cta: "See the request",
+      after: [
+        "You are getting this because you have nearby recovery alerts switched on. You can change that, or stop recovery emails and texts separately, in your notification settings.",
+        "Never put yourself in danger. If anyone is hurt or in immediate danger, that is a 911 call, not a recovery.",
+      ],
+      tagline: "No rig left behind.",
+    }),
+    es: (p) => ({
+      subject: p.miles
+        ? `Rescate a ${p.miles} mi de usted`
+        : "Alguien cerca necesita un rescate",
+      blocks: [
+        p.miles
+          ? `Un compañero está atascado a unas ${p.miles} millas de su última ubicación reportada.`
+          : "Un compañero cerca de usted está atascado y pide ayuda.",
+        [p.vehicle, p.situation].filter(Boolean).join(" — ") || null,
+        p.extras ? `Puede que necesite ${p.extras}.` : null,
+        "Si puede ir, abra la solicitud y ofrézcase. Quien pidió ayuda ve quién se ofreció y elige; su teléfono y su ubicación exacta se comparten solo cuando lo aceptan a usted.",
+      ].filter(Boolean) as string[],
+      cta: "Ver la solicitud",
+      after: [
+        "Recibe esto porque tiene activadas las alertas de rescates cercanos. Puede cambiarlo, o desactivar los correos y los mensajes de texto por separado, en sus preferencias de notificación.",
+        "Nunca se ponga en peligro. Si alguien está herido o en peligro inmediato, eso es una llamada al 911, no un rescate.",
+      ],
+      tagline: "Ningún vehículo se queda atrás.",
+    }),
+  },
+
   "membership.signed": {
     en: (p) => ({
       subject: `Your ${APP_NAME} membership agreement — signed`,

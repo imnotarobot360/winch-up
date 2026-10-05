@@ -37,6 +37,12 @@ type ClaimedRow = {
   to_email: string;
   template_key: string;
   locale: string;
+  /**
+   * Built by claim_email_deliveries AT CLAIM TIME from the request the delivery points at, and
+   * never stored. email_deliveries holds no address, subject, body or action URL on purpose, and
+   * a params column would have made it a durable log of who is stuck where.
+   */
+  params?: Record<string, unknown> | null;
 };
 
 type Personalisation = { actionUrl: string; params?: Record<string, string | number> };
@@ -57,6 +63,35 @@ async function personalise(
   siteUrl: string,
   supportEmail: string,
 ): Promise<Personalisation> {
+  // A RECOVERY CALL-OUT. The facts came with the claim, so there is no second round trip; this
+  // only has to turn them into the words the template prints and point the button at /help with
+  // the recovery in focus. Reply-by-text remains the other way in -- see sms/templates.ts.
+  if (row.template_key === "recovery.offer") {
+    const p = (row.params ?? {}) as Record<string, unknown>;
+    const str = (v: unknown) => (typeof v === "string" && v.trim() !== "" ? v : undefined);
+
+    const extras = [
+      p.needs_tractor ? (row.locale === "es" ? "un tractor" : "a tractor") : null,
+      p.needs_second_truck ? (row.locale === "es" ? "una segunda troca" : "a second truck") : null,
+    ].filter(Boolean) as string[];
+
+    return {
+      // The short code focuses the feed on this recovery; /help is behind a sign-in, so the link
+      // reveals nothing to somebody who merely has the email.
+      actionUrl: str(p.short_code)
+        ? `${siteUrl}/help?r=${encodeURIComponent(String(p.short_code))}`
+        : `${siteUrl}/help`,
+      params: {
+        ...(typeof p.miles === "number" || typeof p.miles === "string"
+          ? { miles: String(p.miles) }
+          : {}),
+        ...(str(p.vehicle_class) ? { vehicle: String(p.vehicle_class) } : {}),
+        ...(str(p.stuck_type) ? { situation: String(p.stuck_type) } : {}),
+        ...(extras.length ? { extras: extras.join(row.locale === "es" ? " y " : " and ") } : {}),
+      },
+    };
+  }
+
   if (row.template_key !== "membership.signed") {
     // The welcome email's button goes to the app itself. It carries no token: unlike
     // verification, there is nothing single-use about "open the app", and putting a credential

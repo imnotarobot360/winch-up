@@ -92,12 +92,25 @@ select hasnt_column('public', 'email_deliveries', 'action_url',
   'this table worth attacking');
 
 -- The whole column list, so a new column has to be thought about rather than just added.
+--
+-- request_id and dispatch_id joined it on 2026-10-05, for recovery call-out emails, and they are
+-- the reason this assertion is worth having: they were added only after working out that the
+-- alternative was a params column, which WOULD have broken the rule above. A call-out email needs
+-- facts -- distance, vehicle, situation -- and storing them here would quietly turn a delivery log
+-- into a durable record of who was stuck where and who was told about it. References do not: they
+-- say which recovery this was about, and claim_email_deliveries resolves the facts at send time
+-- and hands them to the sender without writing them down. sms_messages has carried exactly these
+-- two references all along.
+--
+-- Both are ON DELETE SET NULL, like user_id above, so deleting a recovery can never erase the
+-- evidence that mail went out about it.
 select set_eq(
   $$select column_name::text from information_schema.columns
      where table_schema = 'public' and table_name = 'email_deliveries'$$,
   array[
     'id', 'user_id', 'template_key', 'locale', 'status', 'provider', 'provider_message_id',
-    'idempotency_key', 'failure_reason', 'attempts', 'created_at', 'completed_at'
+    'idempotency_key', 'failure_reason', 'attempts', 'created_at', 'completed_at',
+    'request_id', 'dispatch_id'
   ],
   'the column list is exactly what was reasoned about'
 );
