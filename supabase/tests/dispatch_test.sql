@@ -192,7 +192,11 @@ select is(
 select is(
   (select app.advance_one(id) ->> 'action' from t_ids where name = 'r1'),
   'not_due',
-  'nothing escalates before the ring has had its seven minutes'
+  -- Not "seven minutes" any more: the wait is per wave since 20261004000400 and wave 1 is two.
+  -- The assertion never depended on the number -- it checks that a wave which has not finished
+  -- waiting reports not_due -- but a name that states a figure the system no longer uses is how a
+  -- reader learns something false from a passing test.
+  'nothing escalates before the wave has finished waiting'
 );
 
 do $$ begin perform pg_temp.rewind((select id from t_ids where name = 'r1'), 8); end $$;
