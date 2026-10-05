@@ -3,6 +3,7 @@ import "server-only";
 import webpush from "web-push";
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { interpolate } from "./copy";
 import en from "../../../messages/en.json";
 import es from "../../../messages/es.json";
 
@@ -119,8 +120,12 @@ export async function drainPush(limit = 100): Promise<PushDrainResult> {
   const claims = (data as Claim[] | null) ?? [];
 
   for (const claim of claims) {
-    const title =
+    // The params were claimed, typed, and then dropped on the floor -- so a direct message pushed
+    // the literal text "{name} sent you a message". The fallback copy is a bare kind label with no
+    // placeholders, so interpolating it is a no-op rather than a second thing to keep in step.
+    const template =
       localise(claim.title_key, claim.locale) ?? localise(`kinds.${claim.kind}`, claim.locale);
+    const title = template === null ? null : interpolate(template, claim.params);
 
     const payload = JSON.stringify({
       // Deliberately thin. See the note at the top of this file.

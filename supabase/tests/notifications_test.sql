@@ -136,9 +136,14 @@ values ('f0000000-1111-4111-8111-0000000000ff', 'responder_notified', 'system',
 
 select ok(
   exists (select 1 from notifications
-           where user_id = 'f2222222-0000-4000-8000-0000000000ff' and title_key = 'notify.responder.responder_notified'
+           where user_id = 'f2222222-0000-4000-8000-0000000000ff'
+             and title_key = 'notify.responder.responder_notified_near'
              and kind = 'recovery_request'),
-  'a volunteer being texted about a job also gets it in the app'
+  -- The key gained a suffix on 2026-10-05: enriched copy needs {miles}, and next-intl throws on a
+  -- missing interpolation value, so pointing the OLD key at it would have broken the notification
+  -- bell for every call-out already in somebody's inbox. This assertion caught the change, which
+  -- is what pinning a literal key is for.
+  'a volunteer called out to a job gets it in the app'
 );
 
 insert into request_events (request_id, event_type, actor_kind, actor_responder_id)

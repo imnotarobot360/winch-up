@@ -2028,6 +2028,7 @@
     },
     "responder": {
       "responder_notified": "Alguien cerca de ti necesita ayuda — {short_code}.",
+      "responder_notified_near": "Alguien necesita ayuda a {miles} millas. ¿Puedes ayudar?",
       "thanked": "Te dieron las gracias por {short_code}."
     },
     "message": {
