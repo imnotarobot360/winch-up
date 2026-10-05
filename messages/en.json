@@ -532,6 +532,7 @@
         "failed": "That did not work. Try again, and tell somebody if it keeps happening.",
         "not_found": "That recovery no longer exists. Refresh the queue.",
         "no_responder": "That volunteer no longer exists. Refresh the queue.",
+        "not_approved": "Nobody has approved that volunteer yet, so they cannot be called out. Approve them under Volunteers first.",
         "already_closed": "That recovery is already closed — somebody may have just finished it.",
         "forbidden": "You do not have permission to do that.",
         "mfa_required": "This needs a second factor. Sign out and sign in again at the main sign-in page, which asks for your code.",

@@ -25,7 +25,8 @@ delete from dispatches;
 create temporary table t (name text primary key, id uuid not null);
 insert into t (name, id) values
   ('admin', gen_random_uuid()), ('req', gen_random_uuid()),
-  ('willing', gen_random_uuid()), ('declined', gen_random_uuid()), ('stopped', gen_random_uuid());
+  ('willing', gen_random_uuid()), ('declined', gen_random_uuid()), ('stopped', gen_random_uuid()),
+  ('unapproved', gen_random_uuid());
 
 insert into auth.users (id, email, created_at)
 values ((select id from t where name = 'admin'), 'manual-admin@winchup.test', now());
@@ -52,6 +53,18 @@ from (values
   -- Replied STOP: opted out AND stamped, which is what the inbound webhook writes.
   ((select id from t where name = 'stopped'),  '+15125559303', 'Stu',   false, now())
 ) as v(id, phone, nm, opt, stopped_at);
+
+-- A fifth volunteer, identical to 'willing' in every way an admin can see, except that nobody has
+-- reviewed them. Separate insert because the one above hard-codes 'approved'.
+insert into responders (
+  id, phone, first_name, home_location, radius_miles, equipment,
+  vehicle_class, drivetrain, approval, availability, is_test, sms_opt_in
+)
+values (
+  (select id from t where name = 'unapproved'), '+15125559304', 'Unapp',
+  (select g from spot), 30, '{winch}'::equipment_type[],
+  'truck', '4wd', 'pending', 'active', true, true
+);
 
 insert into requests (
   id, requester_name, requester_phone, location, vehicle_class, stuck_type, land_type,
@@ -200,6 +213,72 @@ select cmp_ok(
       and e.user_id = (select user_id from responders where id = (select id from t where name = 'declined'))),
   '>=', 0,
   'declining texts does not decline email -- the channels are separate consents'
+);
+
+-- ---------------------------------------------------------------------------
+-- 4c. Approval gates this route too
+-- ---------------------------------------------------------------------------
+--
+-- app.candidates() has required approval since 20261005000900, so the automatic waves skip anybody
+-- an admin has not reviewed. Without the same check here the Text button was a way round the gate,
+-- while /join promises "an admin checks every signup before anyone starts getting call-outs".
+--
+-- THE CONTRAST WITH SECTION 2 IS THE POINT, and the two must not be confused. Declining TEXTS
+-- withholds the text and still writes the dispatch row, because that row is the alert and the
+-- member refused one channel. NOT BEING APPROVED withholds everything, because nobody has checked
+-- them and there is no alert to make. One is consent, the other is review.
+
+select is(
+  public.admin_manual_dispatch((select id from t where name = 'req'),
+                               (select id from t where name = 'unapproved')) ->> 'error',
+  'not_approved',
+  'pressing Text on an unreviewed volunteer is refused, by name rather than as a generic failure'
+);
+
+select is(
+  (public.admin_manual_dispatch((select id from t where name = 'req'),
+                               (select id from t where name = 'unapproved')) ->> 'ok')::boolean,
+  false,
+  -- Phrased WITHOUT the words "not ok": a pgTAP description containing them is counted as a
+  -- failure by every grep-based tally, including the loop in scripts/local-stack/README.md. Written
+  -- that way first, and it reported one failing assertion on a run where nothing failed.
+  'and reported as a refusal, so the dashboard shows it instead of a success note'
+);
+
+-- REFUSED BEFORE ANYTHING IS WRITTEN. A check placed after the insert would pass both assertions
+-- above and leave a dispatch row behind -- which IS the alert, so the volunteer would appear on
+-- their own dashboard with a job nobody meant to give them.
+select is(
+  (select count(*)::int from dispatches
+    where request_id = (select id from t where name = 'req')
+      and responder_id = (select id from t where name = 'unapproved')),
+  0,
+  'no dispatch row is written -- the refusal lands before the alert exists'
+);
+
+select is(
+  (select count(*)::int from sms_messages where to_phone = '+15125559304'),
+  0,
+  'and no text, although they had consented to texts -- consent is not the thing missing here'
+);
+
+-- THE PAIRING. A gate that refused everybody would pass every assertion above.
+select is(
+  (public.admin_manual_dispatch((select id from t where name = 'req'),
+                               (select id from t where name = 'willing')) ->> 'ok')::boolean,
+  true,
+  'an APPROVED volunteer can still be texted by an admin -- the gate selects rather than refusing all'
+);
+
+-- And approving them is the only step needed, as it is for the automatic waves.
+update responders set approval = 'approved'
+ where id = (select id from t where name = 'unapproved');
+
+select is(
+  (public.admin_manual_dispatch((select id from t where name = 'req'),
+                               (select id from t where name = 'unapproved')) ->> 'ok')::boolean,
+  true,
+  'and once approved, the same press works with nothing else to remember'
 );
 
 -- ---------------------------------------------------------------------------

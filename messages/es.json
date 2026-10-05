@@ -532,6 +532,7 @@
         "failed": "No funcionó. Inténtelo otra vez y avise si sigue pasando.",
         "not_found": "Ese rescate ya no existe. Actualice la lista.",
         "no_responder": "Ese voluntario ya no existe. Actualice la lista.",
+        "not_approved": "Nadie ha aprobado a ese voluntario todavía, así que no se le puede convocar. Apruébalo primero en Voluntarios.",
         "already_closed": "Ese rescate ya está cerrado; puede que alguien lo acabe de terminar.",
         "forbidden": "No tiene permiso para hacer eso.",
         "mfa_required": "Esto necesita un segundo factor. Cierre sesión y vuelva a entrar desde la página principal de inicio de sesión, que pide su código.",
