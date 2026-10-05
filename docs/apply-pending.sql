@@ -53,35 +53,39 @@
 -- ---------------------------------------------------------------------------------------------
 -- JUDGE THE RUN BY THE BANNER AT THE BOTTOM, NEVER BY THE ABSENCE OF RED
 --
---     grep -c '^[\]i supabase/' docs/apply-pending.sql     must print 7
+--     grep -c '^[\]i supabase/' docs/apply-pending.sql     must print 8
 
 \set ON_ERROR_STOP on
 \timing off
 
 \echo ''
-\echo '=== Winch Up :: the day's dispatch fixes, 7 files ==='
+\echo '=== Winch Up :: the day's dispatch fixes, 8 files ==='
 \echo ''
 
-\echo '--- 1/7  admin_cancel_request + the shared core ---'
+\echo '--- 1/8  admin_cancel_request + the shared core ---'
 \i supabase/migrations/20261005000200_admin_cancel_request.sql
 
-\echo '--- 2/7  admin Text honours STOP, and can re-send ---'
+\echo '--- 2/8  admin Text honours STOP, and can re-send ---'
 \i supabase/migrations/20261005000300_manual_dispatch_consent.sql
 
-\echo '--- 3/7  a recovery cannot fall out of the scheduler ---'
+\echo '--- 3/8  a recovery cannot fall out of the scheduler ---'
 \i supabase/migrations/20261005000400_unmatched_cannot_get_stuck.sql
 
-\echo '--- 4/7  a phone verified after sign-in reaches the volunteer profile ---'
+\echo '--- 4/8  a phone verified after sign-in reaches the volunteer profile ---'
 \i supabase/migrations/20261005000500_phone_from_auth_users.sql
 
-\echo '--- 5/7  pressing Text sends the email too ---'
+\echo '--- 5/8  pressing Text sends the email too ---'
 \i supabase/migrations/20261005000600_manual_dispatch_emails_too.sql
 
-\echo '--- 6/7  completing /join is what makes somebody dispatchable, + backfill ---'
+\echo '--- 6/8  completing /join is what makes somebody dispatchable, + backfill ---'
 \i supabase/migrations/20261005000700_join_sets_available_to_help.sql
 
-\echo '--- 7/7  a recovery call-out reaches a phone, not only the app ---'
+\echo '--- 7/8  a recovery call-out reaches a phone, not only the app ---'
 \i supabase/migrations/20261005000800_callout_pushes.sql
+
+\echo '--- 8/8  nobody is called out without an admin approving them ---'
+\echo '      READ THE NOTICES THIS ONE PRINTS: it says how many volunteers are now waiting.'
+\i supabase/migrations/20261005000900_approval_gates_dispatch.sql
 
 \echo ''
 \echo '=== Telling PostgREST the schema changed ==='
@@ -95,7 +99,7 @@ create table if not exists supabase_migrations.schema_migrations (version text p
 
 insert into supabase_migrations.schema_migrations (version) values
   ('20261005000200'), ('20261005000300'), ('20261005000400'), ('20261005000500'),
-  ('20261005000600'), ('20261005000700'), ('20261005000800')
+  ('20261005000600'), ('20261005000700'), ('20261005000800'), ('20261005000900')
 on conflict (version) do nothing;
 
 \echo ''

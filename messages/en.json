@@ -271,7 +271,7 @@
     "vehicleDescPlaceholder": "Lifted F-250, 12k winch",
     "drivetrainLabel": "Drive",
     "availableLabel": "I can be called out to help someone",
-    "availableHint": "This is what puts you in the alerts for recoveries near you. You can turn it off any time in your account settings.",
+    "availableHint": "This is what puts you in the alerts for recoveries near you, once an admin has approved you. You can turn it off any time in your account settings.",
     "nightLabel": "I take night calls",
     "nightHint": "Turn this off and we will leave you alone between 9pm and 6am.",
     "waiver": "I have read and accept the <link>volunteer agreement</link>.",
