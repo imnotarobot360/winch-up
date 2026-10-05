@@ -65,6 +65,9 @@ export function AdminDashboard() {
   const { data, loading, error, reload } = useAdminData<Dashboard>("admin_dashboard");
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  // An outcome that is NOT a failure. Pressing Text on somebody who declined texts worked -- they
+  // were dispatched -- and saying nothing would leave the admin believing a message went out.
+  const [actionNote, setActionNote] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const available = useMemo(
@@ -72,14 +75,37 @@ export function AdminDashboard() {
     [data],
   );
 
+  /**
+   * Text a volunteer directly, or nudge one who already has the offer.
+   *
+   * THE RESULT IS THREE OUTCOMES, NOT TWO. Until 2026-10-05 this reported ok or an error code,
+   * and the screen printed the code raw -- the owner pressed Text and got the bare string
+   * "already_offered" with nothing to do about it. Worse, the RPC behind it texted people who had
+   * declined, so "ok" could mean a message had gone to somebody who replied STOP.
+   *
+   * Now: texted, dispatched-without-a-text (they declined SMS, so they get push and in-app), or a
+   * real failure. Each says so in words.
+   */
   async function dispatchTo(requestId: string, responderId: string) {
     setBusy(true);
     setActionError(null);
-    const result = await adminAction("admin_manual_dispatch", {
+    setActionNote(null);
+
+    const result = (await adminAction("admin_manual_dispatch", {
       p_request_id: requestId,
       p_responder_id: responderId,
-    });
-    if (!result.ok) setActionError(result.error ?? "failed");
+    })) as { ok: boolean; error?: string; texted?: boolean; resent?: boolean; reason?: string };
+
+    if (!result.ok) {
+      setActionError(t(`err.${result.error ?? "failed"}`));
+    } else if (result.texted) {
+      setActionNote(t(result.resent ? "noteResent" : "noteTexted"));
+    } else {
+      // Dispatched, deliberately not texted. Named by reason, because "they have opted out" and
+      // "we have no number for them" need different things done about them.
+      setActionNote(t(`noteNoText.${result.reason ?? "no_sms_consent"}`));
+    }
+
     await reload();
     setBusy(false);
   }
@@ -102,12 +128,13 @@ export function AdminDashboard() {
 
     setBusy(true);
     setActionError(null);
+    setActionNote(null);
     const result = await adminAction("admin_cancel_request", {
       p_request_id: requestId,
       // Who closed it is in the audit row; this says why, in words, where the next person looks.
       p_reason: "cancelled from the admin queue",
     });
-    if (!result.ok) setActionError(result.error ?? "failed");
+    if (!result.ok) setActionError(t(`err.${result.error ?? "failed"}`));
     await reload();
     setBusy(false);
   }
@@ -115,6 +142,7 @@ export function AdminDashboard() {
   async function reassign(requestId: string, responderId: string) {
     setBusy(true);
     setActionError(null);
+    setActionNote(null);
     const result = await adminAction("admin_reassign", {
       p_request_id: requestId,
       p_responder_id: responderId,
@@ -150,6 +178,7 @@ export function AdminDashboard() {
       </section>
 
       {actionError ? <Callout tone="danger">{actionError}</Callout> : null}
+      {actionNote ? <Callout tone="neutral">{actionNote}</Callout> : null}
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">

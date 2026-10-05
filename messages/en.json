@@ -518,7 +518,24 @@
       "text": "Text",
       "assign": "Assign",
       "cancel": "Cancel",
-      "cancelConfirm": "Cancel {code}? The person who asked for help will see the search stop, and any volunteer already on the way is texted that the job is off. This cannot be undone."
+      "cancelConfirm": "Cancel {code}? The person who asked for help will see the search stop, and any volunteer already on the way is texted that the job is off. This cannot be undone.",
+      "noteTexted": "Texted them, and added the offer to this recovery.",
+      "noteResent": "Sent them another text. They already had the offer, so nothing else changed.",
+      "noteNoText": {
+        "no_sms_consent": "Added the offer — they get it by push and in the app. No text was sent, because they have not agreed to recovery texts.",
+        "stopped": "Added the offer — they get it by push and in the app. No text was sent, because they replied STOP.",
+        "no_phone": "Added the offer — they get it by push and in the app. No text was sent, because we have no number for them."
+      },
+      "err": {
+        "failed": "That did not work. Try again, and tell somebody if it keeps happening.",
+        "not_found": "That recovery no longer exists. Refresh the queue.",
+        "no_responder": "That volunteer no longer exists. Refresh the queue.",
+        "already_closed": "That recovery is already closed — somebody may have just finished it.",
+        "forbidden": "You do not have permission to do that.",
+        "mfa_required": "This needs a second factor. Sign out and sign in again at the main sign-in page, which asks for your code.",
+        "signed_out": "You have been signed out. Sign in again.",
+        "no_result": "No answer came back. Refresh the queue and check whether it happened."
+      }
     },
     "responders": {
       "loading": "Loading…",

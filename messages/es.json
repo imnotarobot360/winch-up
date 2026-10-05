@@ -518,7 +518,24 @@
       "text": "Avisar",
       "assign": "Asignar",
       "cancel": "Cancelar",
-      "cancelConfirm": "¿Cancelar {code}? Quien pidió ayuda verá que la búsqueda se detiene, y a cualquier voluntario que ya vaya en camino se le avisa por mensaje que el trabajo se canceló. Esto no se puede deshacer."
+      "cancelConfirm": "¿Cancelar {code}? Quien pidió ayuda verá que la búsqueda se detiene, y a cualquier voluntario que ya vaya en camino se le avisa por mensaje que el trabajo se canceló. Esto no se puede deshacer.",
+      "noteTexted": "Se le envió un mensaje y se agregó la oferta a este rescate.",
+      "noteResent": "Se le envió otro mensaje. Ya tenía la oferta, así que no cambió nada más.",
+      "noteNoText": {
+        "no_sms_consent": "Oferta agregada: la recibe por notificación y en la aplicación. No se envió mensaje porque no ha aceptado los mensajes de rescate.",
+        "stopped": "Oferta agregada: la recibe por notificación y en la aplicación. No se envió mensaje porque respondió STOP.",
+        "no_phone": "Oferta agregada: la recibe por notificación y en la aplicación. No se envió mensaje porque no tenemos su número."
+      },
+      "err": {
+        "failed": "No funcionó. Inténtelo otra vez y avise si sigue pasando.",
+        "not_found": "Ese rescate ya no existe. Actualice la lista.",
+        "no_responder": "Ese voluntario ya no existe. Actualice la lista.",
+        "already_closed": "Ese rescate ya está cerrado; puede que alguien lo acabe de terminar.",
+        "forbidden": "No tiene permiso para hacer eso.",
+        "mfa_required": "Esto necesita un segundo factor. Cierre sesión y vuelva a entrar desde la página principal de inicio de sesión, que pide su código.",
+        "signed_out": "Se cerró su sesión. Vuelva a entrar.",
+        "no_result": "No llegó respuesta. Actualice la lista y revise si se hizo."
+      }
     },
     "responders": {
       "loading": "Cargando…",
