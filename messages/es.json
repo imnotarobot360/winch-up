@@ -270,6 +270,8 @@
     "vehicleDescHint": "Esto es lo que ve el conductor varado, para que sepa quién llegó. Sin teléfonos ni enlaces.",
     "vehicleDescPlaceholder": "F-250 levantada, winche de 12k",
     "drivetrainLabel": "Tracción",
+    "availableLabel": "Pueden llamarme para ayudar a alguien",
+    "availableHint": "Esto es lo que te incluye en los avisos de rescates cerca de ti. Puedes desactivarlo cuando quieras en los ajustes de tu cuenta.",
     "nightLabel": "Acepto avisos de noche",
     "nightHint": "Apague esto y no lo molestamos entre las 9pm y las 6am.",
     "waiver": "He leído y acepto el <link>acuerdo del voluntario</link>.",

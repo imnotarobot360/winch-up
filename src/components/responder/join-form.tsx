@@ -65,6 +65,15 @@ export function JoinForm() {
   const [vehicleClass, setVehicleClass] = useState<VehicleKey>("truck");
   const [vehicleDesc, setVehicleDesc] = useState("");
   const [drivetrain, setDrivetrain] = useState<DriveKey>("4wd");
+  // DEFAULT TRUE, and that is why this field exists at all.
+  //
+  // Until 2026-10-05 this form wrote a volunteer record and left profiles.available_to_help at its
+  // default false, so somebody who filled in their home, radius and equipment was never in the
+  // candidate set -- no error, nothing on screen, simply never rung. Three real members sat 0, 15
+  // and 28 miles from the owner that way. Somebody completing a VOLUNTEER form has said what they
+  // came to say; the checkbox is here so it is stated rather than inferred, and so the one person
+  // in ten who wants to watch the board without being woken at 2am can say no.
+  const [availableToHelp, setAvailableToHelp] = useState(true);
   const [nightOk, setNightOk] = useState(true);
   const [waiver, setWaiver] = useState(false);
 
@@ -192,6 +201,7 @@ export function JoinForm() {
           vehicle_class: vehicleClass,
           vehicle_desc: vehicleDesc.trim() || null,
           drivetrain,
+          available_to_help: availableToHelp,
           night_ok: nightOk,
         },
       },
@@ -414,11 +424,23 @@ export function JoinForm() {
           </Field>
 
           <Toggle
-            checked={nightOk}
-            onChange={setNightOk}
-            label={t("nightLabel")}
-            hint={t("nightHint")}
+            checked={availableToHelp}
+            onChange={setAvailableToHelp}
+            label={t("availableLabel")}
+            hint={t("availableHint")}
           />
+
+          {/* Asking somebody who has just said "do not call me out" whether they take NIGHT
+              call-outs is incoherent, so it only appears once the answer above is yes. night_ok is
+              still sent either way, so their answer survives turning availability back on. */}
+          {availableToHelp ? (
+            <Toggle
+              checked={nightOk}
+              onChange={setNightOk}
+              label={t("nightLabel")}
+              hint={t("nightHint")}
+            />
+          ) : null}
 
           <Checkbox id="responder-waiver" checked={waiver} onChange={setWaiver}>
             {t.rich("waiver", {
