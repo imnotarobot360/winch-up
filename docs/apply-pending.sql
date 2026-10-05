@@ -35,6 +35,19 @@
 -- The username is `postgres.<project-ref>`, with the dot, and the host is a REAL region.
 -- `bash scripts/check-db-url.sh` vets a string first and prints no password.
 --
+-- RUN IT THROUGH THE GUARD, not psql directly:
+--
+--     cd "C:\Users\jjser\New folder\txrecover"; git pull; node scripts/apply-pending.mjs
+--
+-- It fetches and REFUSES if this checkout is behind the remote -- which is the failure that cost a
+-- round trip on 2026-10-05, when this file had been rewritten five times in a day and the copy
+-- being run predated the newest migration. A stale driver and a broken migration look identical
+-- from the outside: the run succeeds, the banner prints, nothing changed. It also re-checks the
+-- backslashes and that no migration on disk has been left out, then prompts for the URI and hands
+-- it to psql, which asks for the password itself without echoing.
+--
+-- Straight psql still works and is the fallback if node is unavailable:
+--
 --     cd "C:\Users\jjser\New folder\txrecover"; $U = Read-Host "URI"; & "C:\Users\jjser\tools\pgsql\bin\psql.exe" $U -v ON_ERROR_STOP=1 -f docs/apply-pending.sql
 --
 -- ---------------------------------------------------------------------------------------------
