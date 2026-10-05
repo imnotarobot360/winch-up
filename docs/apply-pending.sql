@@ -46,14 +46,17 @@
 \timing off
 
 \echo ''
-\echo '=== Winch Up :: admin cancel + manual-dispatch consent, 2 files ==='
+\echo '=== Winch Up :: admin cancel, consent, and the stuck-recovery fix, 3 files ==='
 \echo ''
 
-\echo '--- 1/2  admin_cancel_request + the shared core ---'
+\echo '--- 1/3  admin_cancel_request + the shared core ---'
 \i supabase/migrations/20261005000200_admin_cancel_request.sql
 
-\echo '--- 2/2  admin Text honours STOP, and can re-send ---'
+\echo '--- 2/3  admin Text honours STOP, and can re-send ---'
 \i supabase/migrations/20261005000300_manual_dispatch_consent.sql
+
+\echo '--- 3/3  a recovery cannot fall out of the scheduler ---'
+\i supabase/migrations/20261005000400_unmatched_cannot_get_stuck.sql
 
 \echo ''
 \echo '=== Telling PostgREST the schema changed ==='
@@ -66,7 +69,7 @@ create schema if not exists supabase_migrations;
 create table if not exists supabase_migrations.schema_migrations (version text primary key);
 
 insert into supabase_migrations.schema_migrations (version) values
-  ('20261005000200'), ('20261005000300')
+  ('20261005000200'), ('20261005000300'), ('20261005000400')
 on conflict (version) do nothing;
 
 \echo ''
@@ -80,7 +83,14 @@ select
   strpos(pg_get_functiondef('public.cancel_request_by_token(text, text)'::regprocedure),
          'app.cancel_request') > 0                                             as token_path_shares_core,
   has_function_privilege('service_role', 'public.cancel_request_by_token(text, text)', 'execute')
-                                                                               as token_path_still_granted;
+                                                                               as token_path_still_granted,
+  -- THE ROOT CAUSE OF THE STUCK RECOVERY. wait_min was declared and never assigned, so every
+  -- deferral wrote `now() + make_interval(mins => null)` -- a null due time, after which the
+  -- scheduler never looked at the request again.
+  strpos(pg_get_functiondef('app.advance_one(uuid)'::regprocedure),
+         'wait_min := app.ring_wait_minutes') > 0                              as deferral_has_a_wait,
+  strpos(pg_get_functiondef('public.advance_dispatch(integer)'::regprocedure),
+         'next_action_at is null') > 0                                         as stuck_rows_rescued;
 
 \echo ''
 \echo '================================================================'
