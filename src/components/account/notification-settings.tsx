@@ -60,6 +60,119 @@ export function NotificationSettings() {
 
   const [prefs, setPrefs] = useState<Prefs>(DEFAULTS);
   /**
+   * THREE OUTCOMES, NOT TWO, because two of them were being reported as the same sentence.
+   *
+   *   "no_profile" — availability has never been turned on, so there is nothing to consent to.
+   *   "no_phone"   — a volunteer profile exists but carries no number, so no text can be sent.
+   *   otherwise    — a real on/off switch.
+   *
+   * The middle one is the reason this exists. A PHONE LIVES IN TWO PLACES AND ONLY ONE OF THEM
+   * MAKES YOU TEXTABLE. /account/security adds a number to the ACCOUNT (auth.users); the
+   * dispatcher reads responders.phone, which only /join writes through
+   * upsert_responder_profile. So a member can verify a number, watch the code arrive, see the
+   * account screen confirm it, turn availability on — and still never be texted, with nothing
+   * anywhere saying why. That happened to the owner on 2026-10-05: the coverage report said
+   * "no number" for the only volunteer on call, hours after they had verified one.
+   */
+  const [smsState, setSmsState] = useState<"no_profile" | "no_phone" | boolean>("no_profile");
+  // Kept so the saves below can name the row instead of leaning on RLS to scope them.
+  const [userId, setUserId] = useState<string | null>(null);
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    const supabase = supabaseBrowser();
+
+    // BY user_id, resolved first. profiles_self_read is "own row OR app.is_admin()", so an admin
+    // reads every profile row and maybeSingle() fails -- every switch on this screen then showed
+    // its default to exactly one person, the owner. Same bug as /account and /account/location,
+    // and invisible to tests because they all sign in as an ordinary member.
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      // A raw code, like the save paths below: this screen renders ONE message for any error and
+      // ignores the value. Using t() here would also have put the translator back in the load
+      // callback's dependencies, which is the thing its empty dep list exists to avoid.
+      setError("load_failed");
+      setLoaded(true);
+      return;
+    }
+
+    setUserId(user.id);
+
+    const [{ data: profile }, { data: subs }, { data: recovery }] = await Promise.all([
+      supabase
+        .from("profiles")
+        // ONE STRING LITERAL, not a concatenation. supabase-js infers the row type from the select
+        // text, and a `+` joined expression is not literal enough for it -- the result degrades to
+        // GenericStringError and the destructure below stops compiling. Long line, working types.
+        .select(
+          "notify_recovery, notify_recovery_status, notify_chat, notify_community, notify_marketing, allow_direct_messages, notify_direct_messages",
+        )
+        .eq("user_id", user.id)
+        .maybeSingle(),
+      // RLS on push_subscriptions is owner-only, so this returns this member's devices and
+      // nobody else's. The keys are never selected: they are what a payload is encrypted to and
+      // the browser has no use for them.
+      supabase
+        .from("push_subscriptions")
+        .select("id, user_agent, created_at, last_used_at")
+        .order("created_at", { ascending: false }),
+      // Consent to recovery TEXTS lives on responders, not profiles: it is a property of being a
+      // volunteer, and a member who never turned availability on has no row here at all.
+      // Filtered by user_id for the same reason as the profiles read above -- an admin can read
+      // every responder row, and maybeSingle() fails on more than one.
+      supabase
+        .from("responders")
+        .select("sms_opt_in, sms_opt_out_at, phone")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+    ]);
+
+    if (profile) {
+      setPrefs({ ...DEFAULTS, ...(profile as Partial<Prefs>) });
+    }
+    const row = recovery as { sms_opt_in: boolean; sms_opt_out_at: string | null; phone: string | null } | null;
+    // Told apart rather than lumped together: "you have not volunteered" and "we have no number
+    // for you" need different things done about them, and only one of them is a surprise.
+    setSmsState(!row ? "no_profile" : !row.phone ? "no_phone" : Boolean(row.sms_opt_in));
+
+    setDevices((subs as Device[] | null) ?? []);
+    setLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function setPref<K extends keyof Prefs>(key: K, value: boolean) {
+    const previous = prefs[key];
+    setPrefs((p) => ({ ...p, [key]: value }));
+    setError(null);
+
+    // NAME THE ROW, and ask for it back.
+    //
+    // This said `.not("user_id", "is", null)` with no select, leaning on RLS to scope it. The
+    // update policy here is user_id = auth.uid() with no admin clause, so nothing was ever written
+    // to anybody else's row -- but a member whose profiles row is missing got a silent success and
+    // a switch that moved and saved nothing, for ever. Same shape as the /account save that
+    // reported "Saved" while writing nothing.
+    const { data: written, error: saveError } = await supabaseBrowser()
+      .from("profiles")
+      .update({ [key]: value })
+      .eq("user_id", userId ?? "")
+      .select("user_id");
+
+    if (saveError || !written || written.length === 0) {
+      setPrefs((p) => ({ ...p, [key]: previous }));
+      setError("save_failed");
+    }
+  }
+
+  /**
    * Recovery call-out texts: the one consent on this screen that is not a profiles column.
    *
    * Through the RPC, not a table write. `responders` holds a phone number and a home location and
