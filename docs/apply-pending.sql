@@ -46,11 +46,14 @@
 \timing off
 
 \echo ''
-\echo '=== Winch Up :: admin cancel, 1 file ==='
+\echo '=== Winch Up :: admin cancel + manual-dispatch consent, 2 files ==='
 \echo ''
 
-\echo '--- 1/1  admin_cancel_request + the shared core ---'
+\echo '--- 1/2  admin_cancel_request + the shared core ---'
 \i supabase/migrations/20261005000200_admin_cancel_request.sql
+
+\echo '--- 2/2  admin Text honours STOP, and can re-send ---'
+\i supabase/migrations/20261005000300_manual_dispatch_consent.sql
 
 \echo ''
 \echo '=== Telling PostgREST the schema changed ==='
@@ -63,7 +66,7 @@ create schema if not exists supabase_migrations;
 create table if not exists supabase_migrations.schema_migrations (version text primary key);
 
 insert into supabase_migrations.schema_migrations (version) values
-  ('20261005000200')
+  ('20261005000200'), ('20261005000300')
 on conflict (version) do nothing;
 
 \echo ''
