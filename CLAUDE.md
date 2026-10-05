@@ -866,6 +866,30 @@ docs/                     decisions + runbooks
   the no-Docker stack answers 501 for `/storage/v1` and the upload path cannot run locally at all --
   failed there and PASSED ON RETRY, so it presented as flake. A reload is not a wait: assert the
   optimistic state first, then reload and assert persistence, which also distinguishes the two.
+- **SOME MIGRATIONS CHANGE A FUNCTION WITHOUT CONTAINING `create or replace function`, SO THAT GREP
+  DOES NOT FIND THE LATEST DEFINITION.** `20261001000500_exclude_requester.sql` and
+  `20261001001200_dispatch_respects_suspension.sql` both rewrite `app.candidates()` by reading
+  `pg_get_functiondef`, patching the text and executing it -- deliberately, because that is how you
+  edit a function whose body later migrations have already changed. Neither file contains the
+  declaration, so `grep -l "function app.candidates"` returns the five files that DO declare it and
+  silently omits the two that most recently changed it.
+  On 2026-10-04 I used exactly that grep, concluded the newest definition was universal
+  membership's, "extracted it verbatim to be safe", and replaced the live function with a body four
+  migrations out of date -- reverting the requester exclusion, the open-directory changes and
+  suspension handling in one go. Caught by `directory_test` ("a suspended member is not dispatched
+  to either", have 1 want 0) and `member_safety_test`, which is the entire reason those assertions
+  exist. The file was never committed and production never saw it.
+  **Before replacing any function, list every migration that so much as NAMES it**
+  (`grep -l "app.candidates" supabase/migrations/*.sql`), not the ones that declare it — and prefer
+  reading the body out of the database you are about to change over reconstructing it from files.
+  The irony is on the record: the migration doing this carried a long comment about how extracting
+  verbatim avoids exactly this mistake.
+- **AND THAT IS ALSO HOW TO CHECK WHETHER SOMETHING IS ALREADY BUILT.** The same grep led to
+  reporting "spec section 3 item 4 was never implemented" when it had been implemented three days
+  earlier, in a file literally named `exclude_requester.sql`. This file already warns twice that
+  "deferred" has meant "the backend is built" — the search that answers it has to be for the
+  BEHAVIOUR and the column (`requester_user_id`), across the whole migrations folder, not for a
+  declaration.
 - **`npm run build` runs the i18n check first** (`prebuild`). A missing Spanish key fails the
   build rather than silently falling back to English.
 
