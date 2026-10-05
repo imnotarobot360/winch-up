@@ -624,6 +624,18 @@ update public.responders set phone = null
  where id = (select id from public.responders
               where user_id is not null order by created_at, id limit 1);
 
+-- AND THE ACCOUNT'S PHONE TOO, or this is no longer a phone-less member.
+--
+-- Since 20261005000500 upsert_responder_profile falls back to auth.users when the JWT carries no
+-- phone claim -- a session issued before the member verified their number used to save nothing and
+-- report success, which left the owner's own account unreachable in production on 2026-10-05.
+-- Clearing only responders.phone therefore describes somebody whose number the save will now
+-- correctly RECOVER, which is the fix working rather than this scenario.
+--
+-- Somebody with no phone anywhere has none in either place, so the fixture says so.
+update auth.users set phone = null, phone_confirmed_at = null
+ where id = (select user_id from public.responders where phone is null and user_id is not null limit 1);
+
 select set_config('request.jwt.claims',
   (select json_build_object('sub', user_id, 'role', 'authenticated')::text
      from public.responders where phone is null and user_id is not null limit 1), true) as _;
