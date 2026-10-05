@@ -34,7 +34,13 @@ test.describe.configure({ mode: "serial" });
 
 function psql(statement: string): string {
   return execFileSync(
-    process.env.PSQL ?? "psql",
+    // Same resolution as scripts/local-stack/rebuild.mjs, and for the same reason: psql is NOT on
+    // PATH on the machine this repo is developed on -- the Postgres zip is unpacked, never
+    // installed. Falling back to a bare "psql" fails with spawnSync ENOENT inside beforeAll, which
+    // Playwright reports as a 0ms failure and then SKIPS the rest of the file, so four assertions
+    // vanish and the run still looks mostly green. A default that works nowhere is worse than no
+    // default; this one works on the machine it was written on.
+    process.env.PSQL ?? "C:/Users/jjser/tools/pgsql/bin/psql.exe",
     [
       "-h", "127.0.0.1",
       "-p", process.env.PGPORT ?? "55432",

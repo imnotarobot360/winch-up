@@ -29,7 +29,12 @@ test.describe.configure({ mode: "serial" });
 
 function psql(statement: string): string {
   return execFileSync(
-    process.env.PSQL ?? "psql",
+    // Same resolution as rebuild.mjs and global-setup.ts: psql is NOT on PATH on the machine this
+    // repo is developed on, so a bare "psql" throws spawnSync ENOENT inside beforeAll -- which
+    // Playwright reports as ONE 0ms failure and then skips the rest of the file. Both specs written
+    // on 2026-10-05 had this, and both were reported as passing earlier the same day, because they
+    // happened to be run from a shell that had pgsql/bin on its PATH.
+    process.env.PSQL ?? "C:/Users/jjser/tools/pgsql/bin/psql.exe",
     [
       "-h", "127.0.0.1",
       "-p", process.env.PGPORT ?? "55432",
