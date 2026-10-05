@@ -516,7 +516,9 @@
       "pickVolunteer": "Text or assign a volunteer directly. Assigning skips the ring and hands them the job.",
       "noVolunteers": "No free volunteers on call right now.",
       "text": "Text",
-      "assign": "Assign"
+      "assign": "Assign",
+      "cancel": "Cancel",
+      "cancelConfirm": "Cancel {code}? The person who asked for help will see the search stop, and any volunteer already on the way is texted that the job is off. This cannot be undone."
     },
     "responders": {
       "loading": "Loading…",

@@ -516,7 +516,9 @@
       "pickVolunteer": "Avise o asigne a un voluntario directamente. Asignar se salta el anillo y le entrega el trabajo.",
       "noVolunteers": "No hay voluntarios libres disponibles ahora mismo.",
       "text": "Avisar",
-      "assign": "Asignar"
+      "assign": "Asignar",
+      "cancel": "Cancelar",
+      "cancelConfirm": "¿Cancelar {code}? Quien pidió ayuda verá que la búsqueda se detiene, y a cualquier voluntario que ya vaya en camino se le avisa por mensaje que el trabajo se canceló. Esto no se puede deshacer."
     },
     "responders": {
       "loading": "Cargando…",

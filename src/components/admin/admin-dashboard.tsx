@@ -84,6 +84,34 @@ export function AdminDashboard() {
     setBusy(false);
   }
 
+  /**
+   * Close a recovery nobody is going to.
+   *
+   * Until 2026-10-05 only the requester could, using the token in their status link -- so a
+   * request filed and then abandoned sat on the PUBLIC BOARD until the 24-hour expiry with nobody
+   * able to clear it. A test, a duplicate, somebody pulled out by a mate who closed the tab.
+   *
+   * CONFIRMED FIRST, and not with a toast afterwards. This is visible to the person who asked for
+   * help: their status page stops offering to find anybody, and any volunteer already driving gets
+   * a text saying the job is off. There is no undo -- a cancelled request cannot be reopened, they
+   * would have to file again -- so the cheap guard goes in front of it rather than an apology
+   * behind it.
+   */
+  async function cancelRequest(requestId: string, shortCode: string) {
+    if (!window.confirm(t("cancelConfirm", { code: shortCode }))) return;
+
+    setBusy(true);
+    setActionError(null);
+    const result = await adminAction("admin_cancel_request", {
+      p_request_id: requestId,
+      // Who closed it is in the audit row; this says why, in words, where the next person looks.
+      p_reason: "cancelled from the admin queue",
+    });
+    if (!result.ok) setActionError(result.error ?? "failed");
+    await reload();
+    setBusy(false);
+  }
+
   async function reassign(requestId: string, responderId: string) {
     setBusy(true);
     setActionError(null);
@@ -156,6 +184,18 @@ export function AdminDashboard() {
                     {t("ringAndCount", { ring: row.current_ring, count: row.notified_count })}
                   </p>
                 </div>
+                <span className="flex shrink-0 items-center gap-2">
+                  <Button
+                    type="button"
+                    size="md"
+                    variant="quiet"
+                    className="w-auto"
+                    disabled={busy}
+                    onClick={() => cancelRequest(row.id, row.short_code)}
+                  >
+                    {t("cancel")}
+                  </Button>
+                </span>
                 {stale ? (
                   <span className="shrink-0 rounded-full bg-danger-tint px-3 py-1 text-sm font-bold text-danger">
                     {t("stale")}
