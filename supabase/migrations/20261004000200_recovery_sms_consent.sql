@@ -79,6 +79,11 @@ $fn$;
 revoke all on function public.set_my_recovery_sms(boolean) from public, anon;
 grant execute on function public.set_my_recovery_sms(boolean) to authenticated;
 
+-- TELL POSTGREST, because set_my_recovery_sms() is a NEW public function and the schema cache
+-- decides what the app can call. Without this it answers PGRST202 until something restarts
+-- PostgREST -- which reads like an unapplied migration and is nothing of the kind.
+notify pgrst, 'reload schema';
+
 -- 4. Did it land? Counted rather than assumed -- an `alter column set default` affects no existing
 --    row, so the update above is the only thing that could have changed anybody.
 select

@@ -258,3 +258,47 @@ describe("carrier compliance", () => {
     expect(body.length).toBeLessThanOrEqual(160);
   });
 });
+
+describe("the call-out's secure link", () => {
+  const base = {
+    short_code: "WU-1234",
+    miles: 3.2,
+    vehicle_class: "truck",
+    stuck_type: "mud",
+    stuck_depth: "hubs",
+  };
+
+  it("ends with a link to the authenticated page for that recovery", () => {
+    const body = renderSms("responder.offer", { ...base, site_url: "https://www.winch-up.com" }, "en");
+    expect(body).toContain("https://www.winch-up.com/help?r=WU-1234");
+    // Last, because some phones mangle text that follows a URL -- the rule at the top of
+    // templates.ts, and the reason STOP comes before it rather than after.
+    expect(body?.trimEnd().endsWith("https://www.winch-up.com/help?r=WU-1234")).toBe(true);
+  });
+
+  it("keeps reply-by-text, which the link does not replace", () => {
+    const body = renderSms("responder.offer", { ...base, site_url: "https://www.winch-up.com" }, "en");
+    expect(body).toContain("Reply 1 to offer");
+    expect(body).toContain("STOP to opt out");
+  });
+
+  it("says nothing rather than 'undefined' when no site url was supplied", () => {
+    const body = renderSms("responder.offer", base, "en");
+    expect(body).not.toContain("undefined");
+    expect(body).not.toContain("/help?r=");
+    expect(body?.trimEnd().endsWith("STOP to opt out.")).toBe(true);
+  });
+
+  it("carries the link in Spanish too, since the catalogues must not drift", () => {
+    const body = renderSms("responder.offer", { ...base, site_url: "https://www.winch-up.com" }, "es");
+    expect(body).toContain("/help?r=WU-1234");
+    expect(body).toContain("STOP para no recibir");
+  });
+
+  it("a trailing slash on the site url does not produce a double slash", () => {
+    const body = renderSms("responder.offer", { ...base, site_url: "https://www.winch-up.com/" }, "en");
+    expect(body).toContain("https://www.winch-up.com/help?r=WU-1234");
+    expect(body).not.toContain(".com//help");
+  });
+});
+

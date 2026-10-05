@@ -473,7 +473,8 @@
       "trails": "Trails",
       "ads": "Ads",
       "membership": "Agreement",
-      "content": "Content"
+      "content": "Content",
+      "alerts": "Alerts"
     },
     "signin": {
       "title": "Admin sign in",
@@ -799,6 +800,42 @@
       "what": "Nothing is wrong with your account. Sign out and sign in again, and you will be asked for the six-digit code from your authenticator app.",
       "signOutAndIn": "Sign out and sign in again",
       "signingOut": "Signing out…"
+    },
+    "alerts": {
+      "title": "Recovery alerts",
+      "window": "Last {days} days",
+      "loading": "Loading…",
+      "smsOff": "Outbound SMS is switched off, so call-outs are recorded but not sent. Volunteers are still alerted by push and in-app. Turn on sms.outbound_enabled in Settings to start texting.",
+      "reach": "Who was reached",
+      "helpersNotified": "Helpers notified",
+      "recoveries": "Recoveries",
+      "offers": "Offers received",
+      "declined": "Passed",
+      "noReply": "No reply",
+      "avgResponse": "Average reply",
+      "noneYet": "—",
+      "medianNote": "Median reply: {median}. The median is the more honest number when one volunteer answers hours late.",
+      "byWave": "By wave",
+      "noWaves": "No waves have opened in this window.",
+      "waveLabel": "Wave {wave} · {miles} mi",
+      "waveCounts": "{notified} notified · {offers} offered · {miles} mi average",
+      "texts": "Text messages",
+      "sent": "Sent",
+      "delivered": "Delivered",
+      "failed": "Failed",
+      "queued": "Queued",
+      "suppressed": "Suppressed",
+      "teams": "Teams",
+      "multiHelper": "Wanted 2+ helpers",
+      "accepted": "Crewed",
+      "unmatched": "Nobody came",
+      "settingsTitle": "Settings behind these numbers",
+      "settingsNote": "Read-only here. Change them in Settings, where every setting lives.",
+      "radii": "Wave radii",
+      "helpersPerWave": "Helpers per wave",
+      "waits": "Wait between waves",
+      "unmatchedAfter": "Give up after",
+      "freshness": "Location counts as current for"
     }
   },
   "enum": {

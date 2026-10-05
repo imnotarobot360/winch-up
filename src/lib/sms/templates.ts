@@ -53,6 +53,30 @@ const CATALOGUES: Record<string, Catalogue> = { en, es: es as unknown as Catalog
  * Look an enum label up in the same message catalogue the UI uses, so a volunteer's text says
  * "to the frame" and "hasta el chasis" without a second copy of those words living here.
  */
+/**
+ * The authenticated page for one recovery.
+ *
+ * The spec asks the call-out to carry a "[SECURE LINK]" to a page with I CAN HELP / CAN'T HELP.
+ * /help is that page: it is behind an account, and its RPCs are granted to `authenticated` only,
+ * so the link reveals nothing to somebody who merely has the text. The short code focuses the
+ * feed on the recovery this message is about.
+ *
+ * REPLY-1 STAYS, and that is a deliberate refusal to "upgrade". Replying to a text needs no data
+ * connection, no app, no sign-in and no working browser, which for a volunteer standing in a field
+ * on one bar is the difference between answering and not. The link is an addition.
+ *
+ * `site_url` is injected by the drain rather than coming from the database -- the dispatch tick is
+ * pg_cron calling an Edge Function and has no origin to work from. If it is ever missing, this
+ * returns an empty string and the message simply ends after STOP, rather than texting somebody the
+ * word "undefined" inside a URL.
+ */
+function offerLink(p: SmsParams): string {
+  const raw = typeof p.site_url === "string" ? p.site_url : "";
+  const site = raw.endsWith("/") ? raw.slice(0, -1) : raw;
+  if (!site || !p.short_code) return "";
+  return `${site}/help?r=${encodeURIComponent(String(p.short_code))}`;
+}
+
 function label(locale: string, group: EnumGroup, value: unknown): string {
   if (value == null || value === "") return "";
   const catalogue = CATALOGUES[locale] ?? en;
@@ -132,7 +156,7 @@ const TEMPLATES: Record<SmsTemplateKey, { en: Renderer; es: Renderer }> = {
           p.needs_second_truck ? "needs a second truck" : "",
           p.county ? `${p.county} County` : "",
         ],
-      )}. Reply 1 to offer, 2 to pass. STOP to opt out.`,
+      )}. Reply 1 to offer, 2 to pass. STOP to opt out. ${offerLink(p)}`.trimEnd(),
     es: (p) =>
       `${APP_SHORT_NAME} ${p.short_code}: ${label("es", "vehicleClass", p.vehicle_class)} atascado a ${p.miles} mi de usted. ${join(
         [
@@ -142,7 +166,7 @@ const TEMPLATES: Record<SmsTemplateKey, { en: Renderer; es: Renderer }> = {
           p.needs_second_truck ? "necesita segunda troca" : "",
           p.county ? `condado de ${p.county}` : "",
         ],
-      )}. Responda 1 para ofrecerse, 2 para pasar. STOP para no recibir más.`,
+      )}. Responda 1 para ofrecerse, 2 para pasar. STOP para no recibir más. ${offerLink(p)}`.trimEnd(),
   },
 
   /**

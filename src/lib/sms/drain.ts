@@ -45,10 +45,26 @@ export async function drainSmsOutbox(limit = 20): Promise<DrainSummary> {
   const messages = (data ?? []) as QueuedMessage[];
   summary.claimed = messages.length;
 
+  // THE SITE URL IS ADDED HERE, not in the database.
+  //
+  // create_request takes p_site_url as an argument because a server action knows it. The dispatch
+  // tick does not: it is pg_cron calling an Edge Function, with no request and no origin, so a
+  // template that needs a link either gets one from a setting somebody has to remember to keep in
+  // step with the deployment, or from the process that is already holding the environment. This is
+  // that process.
+  const rawSite = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.winch-up.com";
+  const siteUrl = rawSite.endsWith("/") ? rawSite.slice(0, -1) : rawSite;
+
   for (const message of messages) {
     const body =
       message.body ??
-      renderSms(message.template_key ?? "", message.params ?? {}, message.locale);
+      renderSms(
+        message.template_key ?? "",
+        // Spread first, so a site_url that somehow came from the database cannot be overridden
+        // silently -- and so nothing already queued changes shape.
+        { ...(message.params ?? {}), site_url: siteUrl },
+        message.locale,
+      );
 
     if (!body) {
       summary.failed += 1;

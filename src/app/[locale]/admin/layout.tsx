@@ -84,6 +84,9 @@ export default async function AdminLayout({
     { href: "/admin/membership", label: t("nav.membership") },
     { href: "/admin/settings", label: t("nav.settings") },
     { href: "/admin/security", label: t("nav.security") },
+    // Beside system rather than settings: this is "what happened", like the health screen, not
+    // "what is configured". The settings it shows are read-only context for the numbers.
+    { href: "/admin/alerts", label: t("nav.alerts") },
     { href: "/admin/system", label: t("nav.system") },
     { href: "/admin/audit", label: t("nav.audit") },
   ];

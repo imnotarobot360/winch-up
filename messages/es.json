@@ -473,7 +473,8 @@
       "trails": "Caminos",
       "ads": "Anuncios",
       "membership": "Acuerdo",
-      "content": "Contenido"
+      "content": "Contenido",
+      "alerts": "Alertas"
     },
     "signin": {
       "title": "Entrar como administrador",
@@ -799,6 +800,42 @@
       "what": "No hay nada mal con tu cuenta. Cierra sesión y vuelve a entrar, y se te pedirá el código de seis dígitos de tu aplicación de autenticación.",
       "signOutAndIn": "Cerrar sesión y volver a entrar",
       "signingOut": "Cerrando sesión…"
+    },
+    "alerts": {
+      "title": "Alertas de rescate",
+      "window": "Últimos {days} días",
+      "loading": "Cargando…",
+      "smsOff": "Los SMS salientes están desactivados, así que los avisos se registran pero no se envían. Los voluntarios siguen recibiendo aviso por notificación y en la aplicación. Active sms.outbound_enabled en Ajustes para empezar a enviar mensajes.",
+      "reach": "A quién se avisó",
+      "helpersNotified": "Voluntarios avisados",
+      "recoveries": "Rescates",
+      "offers": "Ofertas recibidas",
+      "declined": "Pasaron",
+      "noReply": "Sin respuesta",
+      "avgResponse": "Respuesta promedio",
+      "noneYet": "—",
+      "medianNote": "Mediana de respuesta: {median}. La mediana es más honesta cuando un voluntario contesta horas después.",
+      "byWave": "Por ronda",
+      "noWaves": "No se abrió ninguna ronda en este periodo.",
+      "waveLabel": "Ronda {wave} · {miles} mi",
+      "waveCounts": "{notified} avisados · {offers} ofrecieron · {miles} mi en promedio",
+      "texts": "Mensajes de texto",
+      "sent": "Enviados",
+      "delivered": "Entregados",
+      "failed": "Fallidos",
+      "queued": "En cola",
+      "suppressed": "Retenidos",
+      "teams": "Equipos",
+      "multiHelper": "Pidieron 2+ voluntarios",
+      "accepted": "Con equipo",
+      "unmatched": "No llegó nadie",
+      "settingsTitle": "Ajustes detrás de estos números",
+      "settingsNote": "Solo lectura aquí. Cámbielos en Ajustes, donde vive cada ajuste.",
+      "radii": "Radios por ronda",
+      "helpersPerWave": "Voluntarios por ronda",
+      "waits": "Espera entre rondas",
+      "unmatchedAfter": "Rendirse después de",
+      "freshness": "La ubicación cuenta como actual por"
     }
   },
   "enum": {

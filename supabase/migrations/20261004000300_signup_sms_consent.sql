@@ -145,6 +145,11 @@ begin
 end;
 $fn$;
 
+-- The signature is unchanged, so this is belt and braces rather than strictly required -- but a
+-- replaced body is exactly the case where a stale cache is hardest to spot, because the function
+-- still answers and simply behaves like its old self.
+notify pgrst, 'reload schema';
+
 -- Did the signature survive, and does the body now mention the column? Two cheap facts, because a
 -- create-or-replace that quietly dropped a branch still reports CREATE FUNCTION.
 select

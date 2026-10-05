@@ -192,6 +192,11 @@ begin
 end;
 $$;
 
+-- TELL POSTGREST. This adds a COLUMN, and the schema cache holds columns as well as functions:
+-- without a reload, requests.helpers_needed is invisible to every select the app makes, and a
+-- screen reading it gets a 42703 that looks like the migration never ran.
+notify pgrst, 'reload schema';
+
 -- Prove the column exists, the counter answers, and -- the one that matters -- that the unmatched
 -- branch is still gated on 'dispatching' alone. That last one is a source read rather than a
 -- behaviour test because reproducing it needs a 25-minute-old request, and a regression there
