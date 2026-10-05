@@ -82,6 +82,12 @@ select
     when not pt.available_to_help                   then 'no - not available to help'
     when pt.availability is null                    then 'no - no recovery profile'
     when pt.availability <> 'active'                then 'no - paused'
+    -- Approval is a gate AGAIN as of 20261005000900. This line was deleted earlier the same day,
+    -- correctly at the time, because candidates() had stopped checking it -- and reinstating it is
+    -- the reminder that a report encoding another function's rules goes stale silently. It never
+    -- errors; it just starts saying "yes" about somebody nobody will ring.
+    when pt.approval is null                        then 'no - no recovery profile'
+    when pt.approval <> 'approved'                  then 'no - ' || pt.approval || ', needs approving at /admin/responders'
     when pt.point is null                           then 'no - no location to match on'
     else 'yes'
   end                                                                as alertable,
@@ -92,10 +98,11 @@ select
     else 'text ok'
   end                                                                as sms,
   case when pt.has_email then 'email ok' else 'no email' end         as email,
-  -- NOT a gate: app.candidates() has not checked approval since universal membership, only
-  -- availability. Shown because it still drives the admin screens -- reading it as a dispatch
-  -- gate sends you off approving members who were never blocked.
-  pt.approval                                                        as approval_fyi,
+  -- A GATE AGAIN since 20261005000900, and on BOTH routes: the automatic waves through
+  -- app.candidates(), and an admin pressing Text through admin_manual_dispatch (20261005001000).
+  -- Kept as its own column as well as in alertable, because "pending" and "banned" need very
+  -- different things done about them.
+  pt.approval                                                        as approval_state,
   pt.last_location_at                                                as position_taken_at
 from pt
 left join origin o on true

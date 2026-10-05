@@ -43,11 +43,19 @@
 -- psql asks for it without echoing. On 2026-10-05 a full URI was pasted into a PowerShell
 -- `Read-Host`, which DOES echo, and the production password ended up in the terminal scrollback.
 
+-- Pass -v lat=29.7604 -v lng=-95.3698 to skip the prompts (that is how it is tested).
 \set ON_ERROR_STOP on
 \timing off
 
-\prompt 'Latitude  (e.g. 29.7604): ' lat
-\prompt 'Longitude (e.g. -95.3698): ' lng
+\if :{?lat}
+\else
+  \prompt 'Latitude  (e.g. 29.7604): ' lat
+\endif
+
+\if :{?lng}
+\else
+  \prompt 'Longitude (e.g. -95.3698): ' lng
+\endif
 
 begin;
 
