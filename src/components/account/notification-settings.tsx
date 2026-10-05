@@ -6,6 +6,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { setAvailableToHelpAction } from "@/app/actions/offers";
 import { PushToggle } from "@/components/pwa/push-toggle";
 import { Button, Callout, Card, Toggle } from "@/components/ui/primitives";
+import { Link } from "@/i18n/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
 /** The columns this screen owns. Everything here is a boolean on `profiles`. */
@@ -60,9 +61,22 @@ export function NotificationSettings() {
 
   const [prefs, setPrefs] = useState<Prefs>(DEFAULTS);
   const [available, setAvailable] = useState(false);
-  // null means "no recovery profile yet", which is a different thing from "opted out" and is
-  // rendered differently: there is nothing to consent to until availability has been turned on.
-  const [smsOptIn, setSmsOptIn] = useState<boolean | null>(null);
+  /**
+   * THREE OUTCOMES, NOT TWO, because two of them were being reported as the same sentence.
+   *
+   *   "no_profile" — availability has never been turned on, so there is nothing to consent to.
+   *   "no_phone"   — a volunteer profile exists but carries no number, so no text can be sent.
+   *   otherwise    — a real on/off switch.
+   *
+   * The middle one is the reason this exists. A PHONE LIVES IN TWO PLACES AND ONLY ONE OF THEM
+   * MAKES YOU TEXTABLE. /account/security adds a number to the ACCOUNT (auth.users); the
+   * dispatcher reads responders.phone, which only /join writes through
+   * upsert_responder_profile. So a member can verify a number, watch the code arrive, see the
+   * account screen confirm it, turn availability on — and still never be texted, with nothing
+   * anywhere saying why. That happened to the owner on 2026-10-05: the coverage report said
+   * "no number" for the only volunteer on call, hours after they had verified one.
+   */
+  const [smsState, setSmsState] = useState<"no_profile" | "no_phone" | boolean>("no_profile");
   // Kept so the saves below can name the row instead of leaning on RLS to scope them.
   const [userId, setUserId] = useState<string | null>(null);
   const [devices, setDevices] = useState<Device[]>([]);
@@ -126,9 +140,9 @@ export function NotificationSettings() {
       setAvailable(Boolean(willing));
     }
     const row = recovery as { sms_opt_in: boolean; sms_opt_out_at: string | null; phone: string | null } | null;
-    // No row, or no phone, both mean there is nothing to text: render the explanation rather than
-    // a switch that cannot do anything.
-    setSmsOptIn(row && row.phone ? Boolean(row.sms_opt_in) : null);
+    // Told apart rather than lumped together: "you have not volunteered" and "we have no number
+    // for you" need different things done about them, and only one of them is a surprise.
+    setSmsState(!row ? "no_profile" : !row.phone ? "no_phone" : Boolean(row.sms_opt_in));
 
     setDevices((subs as Device[] | null) ?? []);
     setLoaded(true);
@@ -192,8 +206,8 @@ export function NotificationSettings() {
    * and putting somebody back on call because they ticked a box is not what they asked for.
    */
   async function setRecoverySms(next: boolean) {
-    const previous = smsOptIn;
-    setSmsOptIn(next);
+    const previous = smsState;
+    setSmsState(next);
     setError(null);
 
     const { data, error: rpcError } = await supabaseBrowser().rpc("set_my_recovery_sms", {
@@ -202,7 +216,7 @@ export function NotificationSettings() {
 
     const result = data as { ok?: boolean } | null;
     if (rpcError || !result?.ok) {
-      setSmsOptIn(previous);
+      setSmsState(previous);
       setError("save_failed");
     }
   }
@@ -321,11 +335,24 @@ export function NotificationSettings() {
           Shown as an explanation rather than a control when there is no volunteer profile or no
           verified phone: a switch that cannot change anything is worse than a sentence saying why.
         */}
-        {smsOptIn === null ? (
+        {smsState === "no_profile" ? (
           <p className="text-sm text-ink-soft">{t("smsNoProfile")}</p>
+        ) : smsState === "no_phone" ? (
+          /*
+            THE ONE WORTH SPELLING OUT. Somebody here has almost certainly verified a phone
+            already -- on the account screen, where it does nothing for dispatch -- so "add your
+            number" on its own reads as something they have done. It says which number is missing
+            and links to the screen that writes it.
+          */
+          <Callout tone="neutral">
+            <p>{t("smsNoPhone")}</p>
+            <Link href="/join" className="mt-1 inline-block font-semibold underline underline-offset-4">
+              {t("smsNoPhoneAction")}
+            </Link>
+          </Callout>
         ) : (
           <Toggle
-            checked={smsOptIn}
+            checked={smsState}
             onChange={(v) => void setRecoverySms(v)}
             label={t("smsLabel")}
             hint={t("smsHint")}

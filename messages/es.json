@@ -2077,7 +2077,9 @@
     "notifyDmHint": "Aparte de los mensajes de un rescate, para que apagarlo no silencie al voluntario que va en camino.",
     "smsLabel": "Avísenme por mensaje de texto",
     "smsHint": "Un mensaje cuando alguien cerca de usted necesita ayuda, con la distancia y en qué está atascado. Nunca su número de teléfono para esa persona, y nunca la ubicación exacta en el mensaje. Responda STOP a cualquiera de ellos para desactivarlo. Aplican tarifas normales de mensajes.",
-    "smsNoProfile": "Los avisos por mensaje necesitan un perfil de voluntario con teléfono verificado. Active «Estoy dispuesto a ayudar» arriba y agregue su número, y la opción aparecerá aquí."
+    "smsNoProfile": "Los avisos por mensaje necesitan un perfil de voluntario con teléfono verificado. Active «Estoy dispuesto a ayudar» arriba y agregue su número, y la opción aparecerá aquí.",
+    "smsNoPhone": "No tenemos un número de teléfono en su perfil de voluntario, así que no podemos avisarle por mensaje de los rescates — seguirá recibiendo notificación y lo verá en la aplicación. Un número en su cuenta no es lo mismo: el que cuenta para los avisos se guarda con sus datos de voluntario.",
+    "smsNoPhoneAction": "Agregue su número a su perfil de voluntario"
   },
   "push": {
     "title": "Avisos en este dispositivo",

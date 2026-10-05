@@ -2077,7 +2077,9 @@
     "notifyDmHint": "Separate from recovery messages, so turning this off won't silence a volunteer on their way to you.",
     "smsLabel": "Text me recovery call-outs",
     "smsHint": "A text when somebody near you needs help, with the distance and what they are stuck in. Never your phone number to them, and never their exact location in the message. Reply STOP to any of them to switch this off. Standard message rates apply.",
-    "smsNoProfile": "Recovery call-out texts need a volunteer profile with a verified phone. Turn on “I'm willing to help” above and add your number, and the choice will appear here."
+    "smsNoProfile": "Recovery call-out texts need a volunteer profile with a verified phone. Turn on “I'm willing to help” above and add your number, and the choice will appear here.",
+    "smsNoPhone": "We have no phone number on your volunteer profile, so we cannot text you about recoveries — you will still get a notification and see it in the app. A number on your account is not the same thing: the one that matters for call-outs is saved with your volunteer details.",
+    "smsNoPhoneAction": "Add your number to your volunteer profile"
   },
   "push": {
     "title": "Alerts on this device",
