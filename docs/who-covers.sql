@@ -19,10 +19,21 @@
 -- has agreed to texts -- the two things the dispatcher decides. Delivery after that is Twilio,
 -- the carrier, and a handset.
 --
--- RUN IT
+-- RUN IT -- copy this line as it stands, it needs no editing:
 --
---   cd "C:\Users\jjser\New folder\txrecover"
---   & "C:\Users\jjser\tools\pgsql\bin\psql.exe" "<session-pooler URI, NO PASSWORD>" -f docs/who-covers.sql
+--   cd "C:\Users\jjser\New folder\txrecover"; & "C:\Users\jjser\tools\pgsql\bin\psql.exe" "postgresql://postgres@db.icpwyepfwkguaocbkawe.supabase.co:5432/postgres" -f docs/who-covers.sql
+--
+-- THE URI IS COMPLETE AND DELIBERATELY HAS NO PASSWORD IN IT. psql sees none and asks for one,
+-- reading it without echoing -- which is the whole point. It is not a placeholder: an earlier
+-- version of this header said `"<session-pooler URI, NO PASSWORD>"` and that is exactly what got
+-- pasted, so psql took the angle brackets for a database name and tried localhost:5432.
+-- "connection to server at localhost (::1), port 5432 failed" means the connection string never
+-- arrived, not that anything is wrong with the database.
+--
+-- That host is the DIRECT one, which resolves over IPv6 only. It works from this machine and does
+-- NOT work from a GitHub runner -- see scripts/check-db-url.sh. If it ever stops resolving, use
+-- the session pooler from the dashboard instead: Connect -> Session pooler -> URI, then delete
+-- the password out of it, colon and all.
 --
 -- It prompts for a latitude and longitude. Paste them from Google Maps: right-click a spot, and
 -- the first item on the menu is "lat, lng" -- note that order, and that this asks for latitude
