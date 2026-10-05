@@ -118,7 +118,7 @@ select
 \echo ' If you cannot see this line, the run halted -- scroll up.'
 \echo '================================================================'
 \echo ''
-\echo 'Expected: 1 / t / f / t / t.'
+\echo 'Every value above must read t, except the first (1) and anon_callable (f).'
 \echo ''
 \echo 'anon_callable must be FALSE -- the gate is auth.uid() through'
 \echo 'app.require_admin(), so there is no shared key that confers admin.'
