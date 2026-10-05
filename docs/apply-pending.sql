@@ -53,26 +53,29 @@
 -- ---------------------------------------------------------------------------------------------
 -- JUDGE THE RUN BY THE BANNER AT THE BOTTOM, NEVER BY THE ABSENCE OF RED
 --
---     grep -c '^[\]i supabase/' docs/apply-pending.sql     must print 4
+--     grep -c '^[\]i supabase/' docs/apply-pending.sql     must print 5
 
 \set ON_ERROR_STOP on
 \timing off
 
 \echo ''
-\echo '=== Winch Up :: admin cancel, consent, stuck-recovery and stale-claim fixes, 4 files ==='
+\echo '=== Winch Up :: the day's dispatch fixes, 5 files ==='
 \echo ''
 
-\echo '--- 1/4  admin_cancel_request + the shared core ---'
+\echo '--- 1/5  admin_cancel_request + the shared core ---'
 \i supabase/migrations/20261005000200_admin_cancel_request.sql
 
-\echo '--- 2/4  admin Text honours STOP, and can re-send ---'
+\echo '--- 2/5  admin Text honours STOP, and can re-send ---'
 \i supabase/migrations/20261005000300_manual_dispatch_consent.sql
 
-\echo '--- 3/4  a recovery cannot fall out of the scheduler ---'
+\echo '--- 3/5  a recovery cannot fall out of the scheduler ---'
 \i supabase/migrations/20261005000400_unmatched_cannot_get_stuck.sql
 
-\echo '--- 4/4  a phone verified after sign-in reaches the volunteer profile ---'
+\echo '--- 4/5  a phone verified after sign-in reaches the volunteer profile ---'
 \i supabase/migrations/20261005000500_phone_from_auth_users.sql
+
+\echo '--- 5/5  pressing Text sends the email too ---'
+\i supabase/migrations/20261005000600_manual_dispatch_emails_too.sql
 
 \echo ''
 \echo '=== Telling PostgREST the schema changed ==='
@@ -85,7 +88,8 @@ create schema if not exists supabase_migrations;
 create table if not exists supabase_migrations.schema_migrations (version text primary key);
 
 insert into supabase_migrations.schema_migrations (version) values
-  ('20261005000200'), ('20261005000300'), ('20261005000400'), ('20261005000500')
+  ('20261005000200'), ('20261005000300'), ('20261005000400'), ('20261005000500'),
+  ('20261005000600')
 on conflict (version) do nothing;
 
 \echo ''
@@ -110,7 +114,11 @@ select
   -- A phone verified AFTER sign-in: the JWT claim is a snapshot and goes stale, so the writer
   -- falls back to the server's own record for the caller. Confirmed only, never the form.
   strpos(pg_get_functiondef('public.upsert_responder_profile(jsonb)'::regprocedure),
-         'phone_confirmed_at is not null') > 0                                 as phone_survives_a_stale_token;
+         'phone_confirmed_at is not null') > 0                                 as phone_survives_a_stale_token,
+  -- Pressing Text must alert by both channels, as the automatic waves do. It did not, and on the
+  -- day Twilio refused the account's token that meant the button reached nobody at all.
+  strpos(pg_get_functiondef('public.admin_manual_dispatch(uuid, uuid)'::regprocedure),
+         'recovery.offer') > 0                                                 as text_button_emails_too;
 
 \echo ''
 \echo '================================================================'

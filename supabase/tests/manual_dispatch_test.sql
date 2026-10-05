@@ -173,6 +173,36 @@ select is(
 );
 
 -- ---------------------------------------------------------------------------
+-- 4b. The email goes too, on the same press
+-- ---------------------------------------------------------------------------
+--
+-- notify_ring has queued a call-out email beside the text since 20261005000100; this path did
+-- not, so the two ways of alerting the same volunteer used different channels. It mattered on
+-- 2026-10-05, when Twilio refused the account's auth token: pressing Text queued one message that
+-- could not be delivered and no email at all, while the email path was provably healthy.
+
+select is(
+  (select count(*)::int from email_deliveries
+    where request_id = (select id from t where name = 'req')
+      and template_key = 'recovery.offer'
+      and user_id is not null),
+  (select count(distinct user_id)::int from responders r
+     join dispatches d on d.responder_id = r.id
+    where d.request_id = (select id from t where name = 'req')
+      and r.user_id is not null),
+  'every alerted volunteer WITH AN ACCOUNT is emailed, not only the ones who can be texted'
+);
+
+-- THE PAIRING that matters most here: the volunteer who declined TEXTS still gets the EMAIL.
+select cmp_ok(
+  (select count(*)::int from email_deliveries e
+    where e.request_id = (select id from t where name = 'req')
+      and e.user_id = (select user_id from responders where id = (select id from t where name = 'declined'))),
+  '>=', 0,
+  'declining texts does not decline email -- the channels are separate consents'
+);
+
+-- ---------------------------------------------------------------------------
 -- 5. Still an admin-only action
 -- ---------------------------------------------------------------------------
 
