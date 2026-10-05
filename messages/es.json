@@ -2055,7 +2055,10 @@
     "allowDmLabel": "Permitir que otros miembros me escriban",
     "allowDmHint": "Al apagarlo no se inician conversaciones nuevas. Las que ya tiene siguen funcionando: bloquee a alguien para detenerlo.",
     "notifyDmLabel": "Avisarme de los mensajes directos",
-    "notifyDmHint": "Aparte de los mensajes de un rescate, para que apagarlo no silencie al voluntario que va en camino."
+    "notifyDmHint": "Aparte de los mensajes de un rescate, para que apagarlo no silencie al voluntario que va en camino.",
+    "smsLabel": "Avísenme por mensaje de texto",
+    "smsHint": "Un mensaje cuando alguien cerca de usted necesita ayuda, con la distancia y en qué está atascado. Nunca su número de teléfono para esa persona, y nunca la ubicación exacta en el mensaje. Responda STOP a cualquiera de ellos para desactivarlo. Aplican tarifas normales de mensajes.",
+    "smsNoProfile": "Los avisos por mensaje necesitan un perfil de voluntario con teléfono verificado. Active «Estoy dispuesto a ayudar» arriba y agregue su número, y la opción aparecerá aquí."
   },
   "push": {
     "title": "Avisos en este dispositivo",
@@ -2092,7 +2095,10 @@
     "errors": {
       "not_signed_in": "Inicia sesión para ver tus notificaciones.",
       "failed": "No cargó. Inténtalo otra vez."
-    }
+    },
+    "smsLabel": "Avísenme por mensaje de texto",
+    "smsHint": "Un mensaje cuando alguien cerca de usted necesita ayuda, con la distancia y en qué está atascado. Nunca su número de teléfono para esa persona, y nunca la ubicación exacta en el mensaje. Responda STOP a cualquiera de ellos para desactivarlo. Aplican tarifas normales de mensajes.",
+    "smsNoProfile": "Los avisos por mensaje necesitan un perfil de voluntario con teléfono verificado. Active «Estoy dispuesto a ayudar» arriba y agregue su número, y la opción aparecerá aquí."
   },
   "splash": {
     "community": "Comunidad de rescate todoterreno"

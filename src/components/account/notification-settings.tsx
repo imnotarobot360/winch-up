@@ -60,6 +60,11 @@ export function NotificationSettings() {
 
   const [prefs, setPrefs] = useState<Prefs>(DEFAULTS);
   const [available, setAvailable] = useState(false);
+  // null means "no recovery profile yet", which is a different thing from "opted out" and is
+  // rendered differently: there is nothing to consent to until availability has been turned on.
+  const [smsOptIn, setSmsOptIn] = useState<boolean | null>(null);
+  // Kept so the saves below can name the row instead of leaning on RLS to scope them.
+  const [userId, setUserId] = useState<string | null>(null);
   const [devices, setDevices] = useState<Device[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +89,9 @@ export function NotificationSettings() {
       return;
     }
 
-    const [{ data: profile }, { data: subs }] = await Promise.all([
+    setUserId(user.id);
+
+    const [{ data: profile }, { data: subs }, { data: recovery }] = await Promise.all([
       supabase
         .from("profiles")
         // ONE STRING LITERAL, not a concatenation. supabase-js infers the row type from the select
@@ -102,6 +109,15 @@ export function NotificationSettings() {
         .from("push_subscriptions")
         .select("id, user_agent, created_at, last_used_at")
         .order("created_at", { ascending: false }),
+      // Consent to recovery TEXTS lives on responders, not profiles: it is a property of being a
+      // volunteer, and a member who never turned availability on has no row here at all.
+      // Filtered by user_id for the same reason as the profiles read above -- an admin can read
+      // every responder row, and maybeSingle() fails on more than one.
+      supabase
+        .from("responders")
+        .select("sms_opt_in, sms_opt_out_at, phone")
+        .eq("user_id", user.id)
+        .maybeSingle(),
     ]);
 
     if (profile) {
@@ -109,6 +125,11 @@ export function NotificationSettings() {
       setPrefs({ ...DEFAULTS, ...(rest as Partial<Prefs>) });
       setAvailable(Boolean(willing));
     }
+    const row = recovery as { sms_opt_in: boolean; sms_opt_out_at: string | null; phone: string | null } | null;
+    // No row, or no phone, both mean there is nothing to text: render the explanation rather than
+    // a switch that cannot do anything.
+    setSmsOptIn(row && row.phone ? Boolean(row.sms_opt_in) : null);
+
     setDevices((subs as Device[] | null) ?? []);
     setLoaded(true);
   }, []);
@@ -122,12 +143,20 @@ export function NotificationSettings() {
     setPrefs((p) => ({ ...p, [key]: value }));
     setError(null);
 
-    const { error: saveError } = await supabaseBrowser()
+    // NAME THE ROW, and ask for it back.
+    //
+    // This said `.not("user_id", "is", null)` with no select, leaning on RLS to scope it. The
+    // update policy here is user_id = auth.uid() with no admin clause, so nothing was ever written
+    // to anybody else's row -- but a member whose profiles row is missing got a silent success and
+    // a switch that moved and saved nothing, for ever. Same shape as the /account save that
+    // reported "Saved" while writing nothing.
+    const { data: written, error: saveError } = await supabaseBrowser()
       .from("profiles")
       .update({ [key]: value })
-      .not("user_id", "is", null);
+      .eq("user_id", userId ?? "")
+      .select("user_id");
 
-    if (saveError) {
+    if (saveError || !written || written.length === 0) {
       setPrefs((p) => ({ ...p, [key]: previous }));
       setError("save_failed");
     }
@@ -148,6 +177,32 @@ export function NotificationSettings() {
     const result = await setAvailableToHelpAction(next);
     if (!result.ok) {
       setAvailable(previous);
+      setError("save_failed");
+    }
+  }
+
+  /**
+   * Recovery call-out texts: the one consent on this screen that is not a profiles column.
+   *
+   * Through the RPC, not a table write. `responders` holds a phone number and a home location and
+   * has no update grant for `authenticated` at all -- every member-facing write to it goes through
+   * a security definer function. The RPC is also where the opted-out invariant is kept: a trigger
+   * forbids a row being both opted in and stamped with a STOP, so granting consent has to clear
+   * that stamp, and it deliberately does NOT un-pause availability. Replying STOP paused them too,
+   * and putting somebody back on call because they ticked a box is not what they asked for.
+   */
+  async function setRecoverySms(next: boolean) {
+    const previous = smsOptIn;
+    setSmsOptIn(next);
+    setError(null);
+
+    const { data, error: rpcError } = await supabaseBrowser().rpc("set_my_recovery_sms", {
+      p_opt_in: next,
+    });
+
+    const result = data as { ok?: boolean } | null;
+    if (rpcError || !result?.ok) {
+      setSmsOptIn(previous);
       setError("save_failed");
     }
   }
@@ -257,6 +312,25 @@ export function NotificationSettings() {
           label={t("chatLabel")}
           hint={t("chatHint")}
         />
+        {/*
+          THE ONLY WAY ANYBODY CAN AGREE TO BE TEXTED. Until 2026-10-04 responders.sms_opt_in
+          defaulted to true and no screen showed it, so proving a phone number WAS consent and the
+          only way to decline was to receive a text and reply STOP. The default is false now, which
+          means without this switch nobody could ever be called out at all.
+
+          Shown as an explanation rather than a control when there is no volunteer profile or no
+          verified phone: a switch that cannot change anything is worse than a sentence saying why.
+        */}
+        {smsOptIn === null ? (
+          <p className="text-sm text-ink-soft">{t("smsNoProfile")}</p>
+        ) : (
+          <Toggle
+            checked={smsOptIn}
+            onChange={(v) => void setRecoverySms(v)}
+            label={t("smsLabel")}
+            hint={t("smsHint")}
+          />
+        )}
       </Card>
 
       <Card className="space-y-3">

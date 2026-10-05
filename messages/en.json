@@ -2055,7 +2055,10 @@
     "allowDmLabel": "Let other members message me",
     "allowDmHint": "Turning this off stops new conversations. Conversations you already have keep working — block someone to stop them.",
     "notifyDmLabel": "Tell me about direct messages",
-    "notifyDmHint": "Separate from recovery messages, so turning this off won't silence a volunteer on their way to you."
+    "notifyDmHint": "Separate from recovery messages, so turning this off won't silence a volunteer on their way to you.",
+    "smsLabel": "Text me recovery call-outs",
+    "smsHint": "A text when somebody near you needs help, with the distance and what they are stuck in. Never your phone number to them, and never their exact location in the message. Reply STOP to any of them to switch this off. Standard message rates apply.",
+    "smsNoProfile": "Recovery call-out texts need a volunteer profile with a verified phone. Turn on “I'm willing to help” above and add your number, and the choice will appear here."
   },
   "push": {
     "title": "Alerts on this device",
@@ -2092,7 +2095,10 @@
     "errors": {
       "not_signed_in": "Sign in to see your notifications.",
       "failed": "That didn't load. Try again."
-    }
+    },
+    "smsLabel": "Text me recovery call-outs",
+    "smsHint": "A text when somebody near you needs help, with the distance and what they are stuck in. Never your phone number to them, and never their exact location in the message. Reply STOP to any of them to switch this off. Standard message rates apply.",
+    "smsNoProfile": "Recovery call-out texts need a volunteer profile with a verified phone. Turn on “I'm willing to help” above and add your number, and the choice will appear here."
   },
   "splash": {
     "community": "Off-road recovery community"
