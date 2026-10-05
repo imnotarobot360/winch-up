@@ -66,6 +66,18 @@ insert into responders (
    st_setsrid(st_point(-95.3698, 29.8474), 4326)::geography, 60, '{winch}',
    'truck', '4wd', 'approved', now(), 'paused', true, true);
 
+-- CONSENT, STATED, because the column default stopped granting it.
+--
+-- responders.sms_opt_in defaulted to true until 20261004000200 -- a verified phone was read as
+-- agreement to be texted, which the owner's spec forbids. These fixture rows name no sms_opt_in, so
+-- they were born consenting and the assertions below about an invitation being QUEUED passed
+-- without ever saying what they depended on. app.notify_ring() queues the SMS only with consent, so
+-- the dependency has to be visible.
+--
+-- One statement rather than a value on every row: rows get added to this fixture over time, and a
+-- new one would otherwise be born opted out and fail an assertion written about a different row.
+update responders set sms_opt_in = true where is_test;
+
 -- A request maker, so each scenario gets its own clean row.
 create or replace function pg_temp.make_request(
   p_token text,

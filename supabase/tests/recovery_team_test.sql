@@ -53,6 +53,16 @@ values
    '{winch}', 'approved', 'active')
 on conflict (id) do nothing;
 
+-- CONSENT, STATED. responders.sms_opt_in stopped defaulting to true in 20261004000200 -- a verified
+-- phone is not agreement to be texted -- so this fixture's helpers were born consenting and the
+-- assertion below about the closure message being SENT never said what it rested on. One statement
+-- rather than a value per row, so a helper added here later cannot be born opted out and fail an
+-- assertion written about somebody else.
+update public.responders set sms_opt_in = true
+ where id in ('bbbb2222-0000-4000-8000-00000000000b',
+              'cccc2222-0000-4000-8000-00000000000c',
+              'dddd2222-0000-4000-8000-00000000000d');
+
 insert into public.requests (
   id, public_token, short_code, status, locale, requester_user_id,
   requester_name, requester_phone, location, vehicle_class, stuck_type, land_type,

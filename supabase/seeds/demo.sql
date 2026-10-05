@@ -77,80 +77,88 @@ insert into responders (
   id, user_id, phone, first_name, last_name, locale,
   home_location, home_address_text, radius_miles,
   equipment, vehicle_class, vehicle_desc, drivetrain,
-  approval, approved_at, availability, night_ok, recoveries_count
+  approval, approved_at, availability, night_ok, recoveries_count,
+  -- STATED EXPLICITLY, because the column default is now FALSE.
+  --
+  -- responders.sms_opt_in stopped defaulting to true in 20261004000200: a verified phone is not
+  -- consent to be texted. Production is therefore born opted OUT, which is right -- and it would
+  -- make the demo data silently unable to demonstrate the feature it exists to demonstrate, since
+  -- app.notify_ring() skips the SMS without consent. The four demo members consent here, where
+  -- anybody reading the seed can see that they do.
+  sms_opt_in
 ) values
   ('11111111-1111-4111-8111-000000000001', '00000000-0000-4000-8000-000000000002',
    '+12815550101', 'Mike', 'Alvarez', 'en',
    extensions.st_setsrid(extensions.st_point(-95.0616, 29.9116), 4326)::extensions.geography, 'Crosby, TX', 30,
    '{winch,kinetic_rope,traction_boards,lifted_4x4,night_lights}', 'truck',
-   'Lifted F-250, 12k winch', '4wd', 'approved', now() - interval '60 days', 'active', true, 14),
+   'Lifted F-250, 12k winch', '4wd', 'approved', now() - interval '60 days', 'active', true, 14, true),
 
   ('11111111-1111-4111-8111-000000000002', '00000000-0000-4000-8000-000000000003',
    '+19365550102', 'Rosa', 'Mendez', 'es',
    extensions.st_setsrid(extensions.st_point(-95.4561, 30.3119), 4326)::extensions.geography, 'Conroe, TX', 60,
    '{winch,kinetic_rope,tractor,trailer,night_lights}', 'truck',
-   'Ram 3500 dually, tractor on trailer', '4wd', 'approved', now() - interval '45 days', 'active', true, 31),
+   'Ram 3500 dually, tractor on trailer', '4wd', 'approved', now() - interval '45 days', 'active', true, 31, true),
 
   ('11111111-1111-4111-8111-000000000003', null,
    '+12815550104', 'Dewayne', 'Fisher', 'en',
    extensions.st_setsrid(extensions.st_point(-95.6972, 29.9691), 4326)::extensions.geography, 'Cypress, TX', 30,
    '{winch,kinetic_rope,traction_boards}', 'jeep',
-   'JK Rubicon on 37s', '4wd', 'approved', now() - interval '30 days', 'active', true, 8),
+   'JK Rubicon on 37s', '4wd', 'approved', now() - interval '30 days', 'active', true, 8, true),
 
   ('11111111-1111-4111-8111-000000000004', null,
    '+17135550105', 'Tanya', 'Brooks', 'en',
    extensions.st_setsrid(extensions.st_point(-95.3698, 29.7604), 4326)::extensions.geography, 'Houston, TX', 15,
    '{kinetic_rope,traction_boards}', 'suv',
-   '4Runner, straps only', '4wd', 'approved', now() - interval '20 days', 'active', false, 3),
+   '4Runner, straps only', '4wd', 'approved', now() - interval '20 days', 'active', false, 3, true),
 
   ('11111111-1111-4111-8111-000000000005', null,
    '+19365550106', 'Curtis', 'Ray', 'en',
    extensions.st_setsrid(extensions.st_point(-95.5508, 30.7235), 4326)::extensions.geography, 'Huntsville, TX', 60,
    '{winch,tractor,second_truck,trailer}', 'truck',
-   'Farm truck plus a Kubota', '4wd', 'approved', now() - interval '90 days', 'active', true, 22),
+   'Farm truck plus a Kubota', '4wd', 'approved', now() - interval '90 days', 'active', true, 22, true),
 
   ('11111111-1111-4111-8111-000000000006', null,
    '+12815550107', 'Hector', 'Solis', 'es',
    extensions.st_setsrid(extensions.st_point(-95.8245, 29.7858), 4326)::extensions.geography, 'Katy, TX', 30,
    '{winch,kinetic_rope,traction_boards,night_lights}', 'truck',
-   'Tacoma, winch bumper', '4wd', 'approved', now() - interval '15 days', 'active', true, 5),
+   'Tacoma, winch bumper', '4wd', 'approved', now() - interval '15 days', 'active', true, 5, true),
 
   ('11111111-1111-4111-8111-000000000007', null,
    '+14095550108', 'Bobby', 'Lane', 'en',
    extensions.st_setsrid(extensions.st_point(-94.7977, 29.3013), 4326)::extensions.geography, 'Galveston, TX', 30,
    '{traction_boards,kinetic_rope}', 'truck',
-   'Beach sand specialist', '4wd', 'approved', now() - interval '10 days', 'active', true, 11),
+   'Beach sand specialist', '4wd', 'approved', now() - interval '10 days', 'active', true, 11, true),
 
   ('11111111-1111-4111-8111-000000000008', null,
    '+12815550109', 'Jenna', 'Whitfield', 'en',
    extensions.st_setsrid(extensions.st_point(-95.6349, 29.6197), 4326)::extensions.geography, 'Sugar Land, TX', 15,
    '{winch,kinetic_rope}', 'suv',
-   'Bronco Badlands', '4wd', 'approved', now() - interval '5 days', 'paused', true, 1),
+   'Bronco Badlands', '4wd', 'approved', now() - interval '5 days', 'paused', true, 1, true),
 
   ('11111111-1111-4111-8111-000000000009', null,
    '+19365550110', 'Ollie', 'Nguyen', 'en',
    extensions.st_setsrid(extensions.st_point(-95.1616, 30.2352), 4326)::extensions.geography, 'Splendora, TX', 30,
    '{winch,kinetic_rope,traction_boards,second_truck,night_lights}', 'truck',
-   'Two trucks, both winched', '4wd', 'approved', now() - interval '70 days', 'active', true, 19),
+   'Two trucks, both winched', '4wd', 'approved', now() - interval '70 days', 'active', true, 19, true),
 
   ('11111111-1111-4111-8111-000000000010', null,
    '+12815550111', 'Marisol', 'Cantu', 'es',
    extensions.st_setsrid(extensions.st_point(-94.9774, 29.7355), 4326)::extensions.geography, 'Baytown, TX', 30,
    '{kinetic_rope,traction_boards,night_lights}', 'jeep',
-   'Gladiator, recovery kit', '4wd', 'approved', now() - interval '25 days', 'active', true, 6),
+   'Gladiator, recovery kit', '4wd', 'approved', now() - interval '25 days', 'active', true, 6, true),
 
   ('11111111-1111-4111-8111-000000000011', null,
    '+19795550112', 'Wade', 'Kirkpatrick', 'en',
    extensions.st_setsrid(extensions.st_point(-95.9463, 29.7855), 4326)::extensions.geography, 'Brookshire, TX', 60,
    '{tractor,second_truck,trailer,winch}', 'truck',
-   'Ranch equipment, tractor available', '4wd', 'approved', now() - interval '80 days', 'active', true, 27),
+   'Ranch equipment, tractor available', '4wd', 'approved', now() - interval '80 days', 'active', true, 27, true),
 
   -- Not approved yet: must never receive a dispatch.
   ('11111111-1111-4111-8111-000000000012', '00000000-0000-4000-8000-000000000004',
    '+14095550103', 'Trey', 'Holloway', 'en',
    extensions.st_setsrid(extensions.st_point(-95.4546, 29.3541), 4326)::extensions.geography, 'Rosharon, TX', 30,
    '{winch,kinetic_rope}', 'truck',
-   'Signed up last night', '4wd', 'pending', null, 'active', true, 0)
+   'Signed up last night', '4wd', 'pending', null, 'active', true, 0, true)
 on conflict (id) do nothing;
 
 -- ===========================================================================
