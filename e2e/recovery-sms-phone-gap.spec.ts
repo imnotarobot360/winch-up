@@ -34,7 +34,7 @@ function psql(statement: string): string {
     // Playwright reports as ONE 0ms failure and then skips the rest of the file. Both specs written
     // on 2026-10-05 had this, and both were reported as passing earlier the same day, because they
     // happened to be run from a shell that had pgsql/bin on its PATH.
-    process.env.PSQL ?? "C:/Users/jjser/tools/pgsql/bin/psql.exe",
+    process.env.PSQL ?? "psql",
     [
       "-h", "127.0.0.1",
       "-p", process.env.PGPORT ?? "55432",
