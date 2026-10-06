@@ -43,9 +43,9 @@ function psql(statement: string): string {
     process.env.PSQL ?? "psql",
     [
       "-h", "127.0.0.1",
-      "-p", process.env.PGPORT ?? "55432",
+      "-p", process.env.PGPORT ?? "54322",
       "-U", process.env.PGUSER ?? "postgres",
-      "-d", process.env.PGDATABASE ?? "winchup",
+      "-d", process.env.PGDATABASE ?? "postgres",
       "-v", "ON_ERROR_STOP=1",
       "-tAc", statement,
     ],
