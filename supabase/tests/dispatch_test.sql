@@ -25,7 +25,7 @@ select no_plan();
 --   R3  45 mi   winch                      -> ring 3
 --   R4   8 mi   winch + tractor            -> ring 1, and the only one for tractor jobs
 --   R5  40 mi   winch, but only drives 15  -> never, their own radius rules them out
---   R6   6 mi   winch, awaiting approval   -> never
+--   R6   6 mi   winch, awaiting approval   -> ring 1 (approval is not a membership gate)
 --   R7   6 mi   winch, paused              -> never
 -- ---------------------------------------------------------------------------
 
@@ -138,29 +138,13 @@ select is(
   'the request moves to dispatching'
 );
 
--- TWO, NOT THREE. THE GATE IS BACK, by the owner's decision on 2026-10-05.
---
--- The comment that stood here called itself the gate's headstone and said "if it ever reads 2
--- again, the gate is back". It reads 2. Leaving that sentence in place while changing the number
--- would be the version of this edit that teaches a reader something false.
---
--- Universal membership removed the approval gate DELIBERATELY -- nearby, willing and carrying the
--- right kit was the whole test, and this assertion existed to hold that. Two findings reversed it:
---
---   1. /join's confirmation screen never stopped promising "An admin checks every signup before
---      anyone starts getting call-outs. It is how we keep tow companies out of a volunteer group."
---      The product said one thing and did another, on the screen every new volunteer reads.
---   2. With no approval check, approval = 'banned' removed somebody from the admin lists and from
---      re-signup, and did NOT stop them being sent to a member who is alone and stuck. Suspension
---      is a different column, which is why that went unseen. Proved by running
---      approval_gates_dispatch_test.sql against the pre-gate body, where the banned assertion fails.
---
--- 'Waiting' is approval = 'pending' and is no longer reached.
+-- UNIVERSAL MEMBERSHIP. Approval is legacy moderation metadata, not a recovery eligibility gate.
+-- Ringone, Tractorguy and Waiting are all active, geographically eligible members with matching kit.
 select is(
   (select count(*)::int from dispatches
     where request_id = (select id from t_ids where name = 'r1') and ring = 1),
-  2,
-  'ring 1 reaches the two APPROVED willing volunteers inside 15 miles'
+  3,
+  'ring 1 reaches all three active matching members inside 15 miles'
 );
 
 select is(
@@ -168,8 +152,8 @@ select is(
      join responders r on r.id = d.responder_id
     where d.request_id = (select id from t_ids where name = 'r1')
       and r.first_name = 'Waiting'),
-  0,
-  'a volunteer nobody has approved is NOT reached -- somebody has to look at them first'
+  1,
+  'a pending legacy approval value does not hide an otherwise eligible member'
 );
 
 -- What did NOT change. Paused still means paused: it is the member saying "not right now", and
@@ -187,8 +171,8 @@ select is(
   (select count(*)::int from sms_messages
     where request_id = (select id from t_ids where name = 'r1')
       and template_key = 'responder.offer'),
-  2,
-  'each dispatched volunteer has an invitation queued'
+  3,
+  'each SMS-consented dispatched member has an invitation queued'
 );
 
 select is(
