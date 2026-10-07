@@ -103,8 +103,8 @@ select ok(
 );
 
 select ok(
-  not app.may_see_request_photos('c1000001-0000-4000-8000-00000000000c', '9000000d-0000-4000-8000-00000000000a'),
-  'close by, but not available to help: no -- opting out of call-outs opts out of this too'
+  app.may_see_request_photos('c1000001-0000-4000-8000-00000000000c', '9000000d-0000-4000-8000-00000000000a'),
+  'close by and active: yes under universal membership'
 );
 
 select ok(
