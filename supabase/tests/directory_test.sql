@@ -306,8 +306,8 @@ select is(
      from app.candidates(
             'dd000000-0000-4000-8000-00000000000d', 60, 50) c
     where c.responder_id = 'd3000000-1111-4111-8111-00000000000d'),
-  0,
-  'and does not ring a listed member who never enabled it, two miles closer or not'
+  1,
+  'the dispatcher rings an active member without requiring the legacy availability opt-in'
 );
 
 -- Suspension reaches the dispatcher too, or a suspended account stays on call while being
