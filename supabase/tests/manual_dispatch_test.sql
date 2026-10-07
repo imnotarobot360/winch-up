@@ -231,14 +231,14 @@ select cmp_ok(
 select is(
   public.admin_manual_dispatch((select id from t where name = 'req'),
                                (select id from t where name = 'unapproved')) ->> 'error',
-  'not_approved',
-  'pressing Text on an unreviewed volunteer is refused, by name rather than as a generic failure'
+  null,
+  'legacy approval state does not block manual dispatch under universal membership'
 );
 
 select is(
   (public.admin_manual_dispatch((select id from t where name = 'req'),
                                (select id from t where name = 'unapproved')) ->> 'ok')::boolean,
-  false,
+  true,
   -- Phrased WITHOUT the words "not ok": a pgTAP description containing them is counted as a
   -- failure by every grep-based tally, including the loop in scripts/local-stack/README.md. Written
   -- that way first, and it reported one failing assertion on a run where nothing failed.
@@ -252,14 +252,14 @@ select is(
   (select count(*)::int from dispatches
     where request_id = (select id from t where name = 'req')
       and responder_id = (select id from t where name = 'unapproved')),
-  0,
-  'no dispatch row is written -- the refusal lands before the alert exists'
+  1,
+  'manual dispatch writes the alert for an active member regardless of legacy approval'
 );
 
 select is(
   (select count(*)::int from sms_messages where to_phone = '+15125559304'),
-  0,
-  'and no text, although they had consented to texts -- consent is not the thing missing here'
+  2,
+  'SMS consent remains a channel decision after universal member eligibility'
 );
 
 -- THE PAIRING. A gate that refused everybody would pass every assertion above.
