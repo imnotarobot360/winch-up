@@ -105,3 +105,25 @@ body {
   line-height: 0.95;
   text-transform: uppercase;
 }
+
+/* WINCH-UP off-road mobile redesign: reusable presentation styles, no SOS logic changes. */
+@theme {
+  --color-winch-night: #06110c;
+  --color-winch-panel: #102219;
+  --color-winch-orange: #ff6a00;
+  --radius-winch-card: 1.125rem;
+}
+.winch-app-shell { min-height: 100dvh; background: radial-gradient(ellipse at top, #153c29, #06110c 65%); color: #f2f5f3; }
+.winch-screen { width: min(100%, 32rem); margin-inline: auto; padding: 1rem 1rem calc(6rem + env(safe-area-inset-bottom)); }
+.winch-panel { border: 1px solid #294b38; border-radius: 1.125rem; background: linear-gradient(145deg, #193125, #0d1e15); box-shadow: 0 10px 28px #0005; }
+.winch-heading { font-family: var(--font-display); font-size: clamp(2rem, 7vw, 3.25rem); line-height: 1; text-transform: uppercase; }
+.winch-primary-action { display: flex; align-items: center; justify-content: center; gap: .65rem; min-height: 3.5rem; width: 100%; border-radius: .875rem; background: linear-gradient(110deg, #ff6a00, #ff8738); color: #18120c; font-weight: 800; }
+.winch-primary-action:disabled { opacity: .55; cursor: not-allowed; }
+.winch-secondary-action { display: flex; align-items: center; justify-content: center; min-height: 3.5rem; width: 100%; border: 1px solid #64816f; border-radius: .875rem; background: #0d1d15; color: #f2f5f3; font-weight: 700; }
+.winch-sos-action { min-height: 4rem; border-radius: 1rem; background: linear-gradient(120deg, #e72c1c, #ff6a00); color: white; font-weight: 800; }
+.winch-status-pill { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid #416b51; border-radius: 999px; background: #10281c; color: #9ce3b7; padding: .3rem .7rem; font-size: .8rem; font-weight: 700; }
+.winch-bottom-nav { position: fixed; z-index: 40; bottom: 0; inset-inline: 0; display: flex; justify-content: space-around; padding: .65rem .75rem calc(.65rem + env(safe-area-inset-bottom)); border-top: 1px solid #294b38; background: #08170ff5; backdrop-filter: blur(16px); }
+.winch-bottom-nav a { display: grid; justify-items: center; min-width: 3.5rem; min-height: 3.5rem; color: #b6c6bd; font-size: .72rem; }
+.winch-bottom-nav a[aria-current="page"] { color: #ff9147; }
+.winch-map-overlay { background: #08170feb; border: 1px solid #44684f; border-radius: 1rem; box-shadow: 0 12px 36px #0009; backdrop-filter: blur(14px); }
+@media (min-width: 768px) { .winch-screen { width: min(100%, 74rem); padding-inline: 2rem; } }
