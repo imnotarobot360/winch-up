@@ -1,6 +1,6 @@
 -- Winch Up :: the two patches applied by hand on 2026-10-05, re-verified
 --
--- READ ONLY. 20261005001000 and 20261005001100 rewrite function bodies through pg_get_functiondef
+-- READ ONLY. 20261005001000 and 20261008000100 rewrite function bodies through pg_get_functiondef
 -- and declare nothing, so docs/verify-group-b.sql cannot extract a marker for them -- they are 2 of
 -- its 11 unverifiable. Their evidence is their OWN trailing verification query, the one that ran
 -- when they were applied and printed every column true.
@@ -30,9 +30,9 @@ select
   strpos(pg_get_functiondef('public.admin_manual_dispatch(uuid, uuid)'::regprocedure),
          'recovery.offer') > 0                                      as emails_too_intact;
 
--- 20261005001100_stand_down_tells_everyone.sql
+-- 20261008000100_stand_down_tells_everyone.sql
 select
-  '20261005001100' as migration,
+  '20261008000100' as migration,
   strpos(pg_get_functiondef('app.stand_down_open_offers(uuid)'::regprocedure),
          'recovery.stood_down') > 0                                  as emails_the_stand_down,
   strpos(pg_get_functiondef('app.stand_down_open_offers(uuid)'::regprocedure),

@@ -11,21 +11,19 @@ and *Houston Area Off-Road Recovery*.
 Today: a stuck driver posts a map pin + photo in the group, volunteers with 4x4s/winches/tractors
 comment or call, someone drives out, and the poster edits the post to `#### Recovered ####`.
 
-With Winch Up: a registered member requests recovery, the system finds the closest eligible members,
-and alerts each selected member through every recovery channel they have enabled and can receive:
-push, email, and explicitly-consented SMS. Multiple helpers may offer and join the recovery team.
-**Nobody installs anything.**
+With Winch Up: a stuck driver fills in one request page, the system texts the nearest matching
+volunteers, the first to reply wins, the requester gets a name + ETA, and a status page closes the
+loop. **Nobody installs anything.**
 
 ## Users
 
-- **Members** — there is one membership. Every active registered member can request help and can
-  help another member. Do not create requester/volunteer roles or require admin approval merely to
-  be a recovery candidate.
-- **Recovery helpers** — members selected geographically for a specific SOS. Eligibility is based
-  on account standing, usable location, requester exclusion, blocking/safety rules, equipment/radius
-  constraints and capacity. A recurring `available_to_help` flag is NOT an eligibility gate.
-- **Admins** — moderate accounts, incidents and operations. Suspension/banning can exclude a member;
-  an old responder `approval` state must not gate normal recovery matching.
+- **Requesters** — stuck, on a phone, weak signal, possibly panicking. **They now need an account**
+  (owner's decision, 2026-09-21): `create_request` refuses without one. They still reach their
+  status page through an unguessable link (`/r/[token]`) rather than by signing in, because by the
+  time help arrives they may be on somebody else's phone. Optimize every decision for them.
+- **Responders** — volunteers with equipment. Phone OTP auth. Must be approved by an admin before
+  they are dispatched to.
+- **Admins** — the owner + the Facebook group admins.
 
 ## Stack (fixed — do not re-litigate)
 
@@ -61,32 +59,24 @@ No other paid services without asking the owner first.
    - Submit → SMS the requester a link to `/r/[token]`.
 
 2. **Dispatch** — a server-side state machine in Postgres, advanced by a job every 60 s.
-   - Start with every active member in good standing who has a usable permitted location; exclude
-     the requester, blocked/suspended accounts and members who cannot satisfy the recovery's safety,
-     equipment/radius or active-job constraints.
-   - Sort closest → farthest and select members in configurable waves.
-   - **Channel eligibility comes after geographic selection.** For each selected member independently:
-     send push when enabled/configured; send recovery email when enabled and a verified email exists;
-     send SMS only when the phone is verified/usable AND explicit recovery-SMS consent exists.
-   - Missing/disabled SMS must never remove a member from geographic matching or suppress email/push.
-     Multiple channels for one SOS are intentional; dedupe per request + member + channel + wave.
-   - Multiple helpers may offer and join one recovery team. Continue widening while
-     `active_helper_count < helpers_needed`; stop expansion when enough helpers are aboard.
-   - Exact recovery coordinates and private contact data stay restricted to authorized recovery
-     participants. Approximate distance may be shown before acceptance.
-   - Location preference: recent authorized GPS, then permitted last-known/home location fallback.
-     Never describe stale/home location as live.
-   - SMS STOP/START controls SMS consent only; do not equate phone verification with SMS consent.
+   - Ring 1 = approved + active responders within **15 mi** whose equipment matches. SMS up to
+     **10** of them: short summary + distance + "Reply 1 to take it, 2 to pass".
+   - No acceptance after **7 min** → ring 2 (**30 mi**) → 7 min → ring 3 (**60 mi**).
+   - **25 min** with no acceptance → status `unmatched`: alert admins, show the requester a
+     "No volunteer yet" panel with the admin-editable paid recovery/tow list (`pro_options`).
+   - First `1` reply wins, enforced by a row lock — **a double accept must be impossible**.
+   - Winner gets the requester's phone, the exact pin and the photo links. The requester gets the
+     responder's first name, vehicle and ETA. Everyone else gets "Already covered, thanks".
+   - The inbound webhook handles `1`, `2`, `YES`, `SI`, `NO`, `STOP` and unknown replies.
 
 3. **`/r/[token]`** — requester status page. Timeline (Sent → Notifying volunteers (N within 30 mi)
    → Accepted by Mike, ETA 40 min → On site → Recovered), "Call responder" once accepted, Cancel,
    Mark recovered (+ optional thank-you note, texted to the responder). Shareable link.
 
-4. **Profile / recovery readiness** — members may add a verified phone, home/general location,
-   vehicles, equipment, radius and notification preferences. These enrich matching and delivery;
-   completing a separate volunteer application or receiving admin approval is not required merely
-   to be a member who can help. A temporary "Pause recovery alerts" control may suppress call-outs
-   without changing membership.
+4. **`/join`** — responder signup: phone OTP, name, home location (geocoded) + radius (15/30/60 mi),
+   equipment checkboxes, vehicle, hours available, active/paused toggle. New responders are
+   `pending` until an admin approves them (keeps out scammers and tow companies posing as
+   volunteers).
 
 5. **`/me`** — responder dashboard: active/paused, current job, past recoveries, stats.
 

@@ -91,7 +91,7 @@
 \i supabase/migrations/20261005001000_manual_dispatch_needs_approval.sql
 
 \echo '--- 10/10  when a recovery ends, everybody called out is told, and told the truth ---'
-\i supabase/migrations/20261005001100_stand_down_tells_everyone.sql
+\i supabase/migrations/20261008000100_stand_down_tells_everyone.sql
 
 \echo ''
 \echo '=== Telling PostgREST the schema changed ==='
@@ -105,7 +105,7 @@ create table if not exists supabase_migrations.schema_migrations (version text p
 
 insert into supabase_migrations.schema_migrations (version) values
   ('20261005000200'), ('20261005000300'), ('20261005000400'), ('20261005000500'),
-  ('20261005000600'), ('20261005000700'), ('20261005000800'), ('20261005000900'), ('20261005001000'), ('20261005001100')
+  ('20261005000600'), ('20261005000700'), ('20261005000800'), ('20261005000900'), ('20261005001000'), ('20261008000100')
 on conflict (version) do nothing;
 
 \echo ''

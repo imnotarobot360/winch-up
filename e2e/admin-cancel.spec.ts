@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 /**
@@ -24,6 +25,9 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
  * code, cancels that one, and deletes it in teardown.
  */
 
+/** Where the unpacked Postgres lives on the machine this repo is developed on. Absent on CI. */
+const WIN_PSQL = "C:/Users/jjser/tools/pgsql/bin/psql.exe";
+
 const ADMIN = { email: "admin@winchup.test", password: "recovery-demo-2026" };
 
 /** Unique per run, so two runs cannot fight over the same row. */
@@ -38,9 +42,13 @@ function psql(statement: string): string {
     // PATH on the machine this repo is developed on -- the Postgres zip is unpacked, never
     // installed. Falling back to a bare "psql" fails with spawnSync ENOENT inside beforeAll, which
     // Playwright reports as a 0ms failure and then SKIPS the rest of the file, so four assertions
-    // vanish and the run still looks mostly green. A default that works nowhere is worse than no
-    // default; this one works on the machine it was written on.
-    process.env.PSQL ?? "psql",
+    // vanish and the run still looks mostly green.
+    //
+    // BOTH, not either. CI has psql on PATH and no C:\ drive; this machine has the drive and not the
+    // PATH entry. Picking one breaks the other, and the merge on 2026-10-08 picked PATH and silently
+    // reintroduced the ENOENT here -- while leaving the comment above it, which is how a merge
+    // leaves code and its explanation disagreeing.
+    process.env.PSQL ?? (existsSync(WIN_PSQL) ? WIN_PSQL : "psql"),
     [
       "-h", "127.0.0.1",
       "-p", process.env.PGPORT ?? "54322",

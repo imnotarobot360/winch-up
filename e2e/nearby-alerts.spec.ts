@@ -92,9 +92,41 @@ test("a recovery reaches the member a few miles away and not the one in another 
   // ---- the helper nearby shares where they are --------------------------
   const near = await memberAt(browser, NEAR, NEAR_BY);
 
-  // Universal membership: no persistent "available to help" opt-in is required. Geographic
-  // eligibility comes from active account standing + a usable location; channel preferences are
-  // evaluated separately after matching.
+  // AVAILABLE TO HELP comes first, and it is a different switch from the on-call toggle on
+  // /me. profiles.available_to_help is what app.candidates() and the help feed read; it
+  // ships OFF, and it lives on /account/notifications. Sharing a position without it means
+  // the member is located and still never matched -- which is exactly how this spec failed,
+  // with a filed request, a fresh position four miles away, and an empty feed.
+  await near.page.goto("/account/notifications");
+  // role=switch with aria-checked, not a checkbox: the design system's Toggle is a button.
+  // getByLabel().isChecked() throws on it, which is how this failed once.
+  const available = near.page.getByRole("switch", {
+    name: /^available to help|^disponible para ayudar/i,
+  });
+  if ((await available.getAttribute("aria-checked")) !== "true") {
+    await available.click();
+    await expect(available, "the switch stays on").toHaveAttribute("aria-checked", "true", {
+      timeout: 20_000,
+    });
+  }
+
+  // AND PROVE IT THROUGH A RELOAD, because the switch is optimistic.
+  //
+  // notification-settings.tsx flips the control first and reverts if the server action refuses, so
+  // reading aria-checked proves the CLICK landed, not the WRITE. When the write does not land, nothing
+  // here fails -- the spec carries on and dies a hundred lines later on "Photos are not available for
+  // this request", because app.may_see_request_photos reads profiles.available_to_help and found it
+  // false. That is what happened in the full suite on 2026-10-01: the file passed in isolation, failed
+  // in the suite, and the message pointed at the photographs rather than at the switch.
+  //
+  // A reload is the only thing that distinguishes the two, and it costs one page load in a test that
+  // already does a dozen.
+  await near.page.reload();
+  await expect(
+    available,
+    "available to help survived a reload, so the database agrees and not just the screen",
+  ).toHaveAttribute("aria-checked", "true", { timeout: 20_000 });
+
   await near.page.goto("/me");
   await near.page.getByRole("button", { name: /share where i am|update my position/i }).click();
 
@@ -240,6 +272,40 @@ test("a recovery reaches the member a few miles away and not the one in another 
     ).toBeVisible({ timeout: 20_000 });
   }
 
+  // AND SWITCH AVAILABILITY BACK OFF. It ships off, so off is the state the rest of the suite
+  // was written against.
+  //
+  // Asserted, not attempted. The first version of this read aria-checked and only clicked when
+  // it said true -- so when the read came back anything else the restore quietly did nothing,
+  // the test went green, and the switch stayed on. There is no uncertainty to be careful about
+  // here: this spec turned it on itself a hundred lines up. If the screen now disagrees, that
+  // is worth failing over, because a member being shown OFF while the dispatcher sees ON is how
+  // somebody gets rung at 2am after deciding they would not be.
+  await near.page.goto("/account/notifications");
+  const stillAvailable = near.page.getByRole("switch", {
+    name: /^available to help|^disponible para ayudar/i,
+  });
+  await stillAvailable.waitFor({ state: "visible", timeout: 20_000 });
+  await expect(
+    stillAvailable,
+    "the switch this spec turned on still reads as on",
+  ).toHaveAttribute("aria-checked", "true", { timeout: 20_000 });
+
+  await stillAvailable.click();
+  await expect(
+    stillAvailable,
+    "and it goes back off, so the next spec starts where the seed left it",
+  ).toHaveAttribute("aria-checked", "false", { timeout: 20_000 });
+
+  // The switch is optimistic with a rollback: it flips first and reverts if the server action
+  // refuses. So reading it once proves the click landed, not that the write did. Reloading is
+  // what distinguishes those two, and it is the only part of this a stale render cannot fake.
+  await near.page.reload();
+  await stillAvailable.waitFor({ state: "visible", timeout: 20_000 });
+  await expect(
+    stillAvailable,
+    "still off after a reload, which means the database agrees and not just the screen",
+  ).toHaveAttribute("aria-checked", "false", { timeout: 20_000 });
   await near.context.close();
   await stuck.context.close();
 });

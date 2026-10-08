@@ -162,32 +162,42 @@ missed, not a single migration. Worth sweeping the rest of that date with the sa
 | Version | File |
 |---|---|
 | `20261005001000` | manual_dispatch_needs_approval.sql |
-| `20261005001100` | stand_down_tells_everyone.sql |
+| `20261008000100` | stand_down_tells_everyone.sql |
 
 Left out on purpose: both are NEWER than everything recorded, so they are a forward-only apply and
 the guard permits them. Re-applying them is a proved no-op -- every guarded block reports "already"
 and their own verification queries still read `t`. The intent was for CI's `db push` to apply and
 record them, so the whole path could be seen working end to end.
 
-**That intent is now unsafe, for a reason that has nothing to do with the ledger.**
+## The Recovery V2 collision, and how it was resolved
 
-## Why CI must not run yet
+While this reconciliation was being done, `origin/main` gained seven merged PRs -- "Recovery V2" --
+that were not in the local checkout. Recovery V2 deliberately removed the approval gate restored on
+2026-10-05, including from `admin_manual_dispatch`, and refused to deploy if `available_to_help`
+still appeared in `app.candidates()`. Its migration contained, literally:
 
-`origin/main` carries seven merged PRs -- "Recovery V2" -- that were not in the local checkout when
-this reconciliation was done. Recovery V2 deliberately removes the approval gate restored on
-2026-10-05, including from `admin_manual_dispatch`, and refuses to deploy if
-`available_to_help` still appears in `app.candidates()`.
+    src := replace(src, E'\n    and r.approval = ''approved''', '');
 
-And the two collide on a version number:
+And the two collided on a version number: `20261005001100` was both
+`stand_down_tells_everyone.sql` locally and `recovery_v2_universal_members.sql` on the remote. The
+ledger records 14-digit versions, not filenames, so whichever file won that number would have left
+the other marked applied without ever having run -- and because `20261005001100` was deliberately
+unrecorded, the next `db push` would have applied Recovery V2 to production and stripped the gates.
 
-| | |
-|---|---|
-| local, unpushed | `20261005001100_stand_down_tells_everyone.sql` |
-| `origin/main` | `20261005001100_recovery_v2_universal_members.sql` |
+**Resolved 2026-10-08 by the owner's decision: the gate stands, V2 reverted, stand-down renumbered.**
 
-The ledger records 14-digit versions, not filenames. So whichever file wins that number leaves the
-other marked applied without ever having run. And because `20261005001100` is deliberately
-unrecorded, the next `db push` would apply Recovery V2 to production and strip the gates.
+  * Recovery V2's two migrations were deleted, and the files it had rewritten were restored:
+    CLAUDE.md, the notification settings screen, and six pgTAP suites including the one whose
+    assertions it had removed.
+  * The stand-down migration is now `20261008000100`, so no version is claimed twice and nothing
+    can be masked.
+  * NOT reverted, deliberately, because they are not Recovery V2 and are good: the Supabase CLI pin
+    against release-API rate limits, and the commits that made the E2E helpers find a local Postgres.
+  * The `psql` lookup in two E2E specs now tries `PSQL`, then the unpacked Windows path, then
+    `PATH`. CI has the PATH entry and no C:\ drive; this machine has the drive and not the entry.
+    The merge had picked PATH alone and silently reintroduced the ENOENT those specs were fixed for
+    the day before, while leaving the comment that explained the old fix sitting above it.
 
-Nothing of Recovery V2 has reached production. The ledger is correct and nothing was replayed. The
-open question is which direction is intended, and it is not a ledger question.
+Verified after the revert: the history replays from empty, 1430 pgTAP assertions with none failing
+or aborted, 240 unit tests, typecheck, and the i18n, claims and env guards. The ledger guard,
+dry-run with `REMOTE_VERSIONS`, reports a forward-only apply of exactly the two pending versions.

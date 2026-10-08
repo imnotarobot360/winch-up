@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 /**
@@ -22,6 +23,9 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
  * ONE PROJECT, because it edits a shared demo volunteer, and it puts the number back in teardown.
  */
 
+/** Where the unpacked Postgres lives on the machine this repo is developed on. Absent on CI. */
+const WIN_PSQL = "C:/Users/jjser/tools/pgsql/bin/psql.exe";
+
 const MIKE = { email: "mike@winchup.test", password: "recovery-demo-2026" };
 const MIKE_USER = "00000000-0000-4000-8000-000000000002";
 
@@ -34,7 +38,9 @@ function psql(statement: string): string {
     // Playwright reports as ONE 0ms failure and then skips the rest of the file. Both specs written
     // on 2026-10-05 had this, and both were reported as passing earlier the same day, because they
     // happened to be run from a shell that had pgsql/bin on its PATH.
-    process.env.PSQL ?? "psql",
+    // BOTH, not either: CI has psql on PATH and no C: drive, this machine has the drive and not
+    // the PATH entry. See admin-cancel.spec.ts for what picking one of them cost.
+    process.env.PSQL ?? (existsSync(WIN_PSQL) ? WIN_PSQL : "psql"),
     [
       "-h", "127.0.0.1",
       "-p", process.env.PGPORT ?? "54322",
