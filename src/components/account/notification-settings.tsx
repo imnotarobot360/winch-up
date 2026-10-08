@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 
-import { setAvailableToHelpAction } from "@/app/actions/offers";
 import { PushToggle } from "@/components/pwa/push-toggle";
 import { Button, Callout, Card, Toggle } from "@/components/ui/primitives";
 import { Link } from "@/i18n/navigation";
@@ -60,7 +59,6 @@ export function NotificationSettings() {
   const format = useFormatter();
 
   const [prefs, setPrefs] = useState<Prefs>(DEFAULTS);
-  const [available, setAvailable] = useState(false);
   /**
    * THREE OUTCOMES, NOT TWO, because two of them were being reported as the same sentence.
    *
@@ -112,7 +110,7 @@ export function NotificationSettings() {
         // text, and a `+` joined expression is not literal enough for it -- the result degrades to
         // GenericStringError and the destructure below stops compiling. Long line, working types.
         .select(
-          "notify_recovery, notify_recovery_status, notify_chat, notify_community, notify_marketing, available_to_help, allow_direct_messages, notify_direct_messages",
+          "notify_recovery, notify_recovery_status, notify_chat, notify_community, notify_marketing, allow_direct_messages, notify_direct_messages",
         )
         .eq("user_id", user.id)
         .maybeSingle(),
@@ -135,9 +133,7 @@ export function NotificationSettings() {
     ]);
 
     if (profile) {
-      const { available_to_help: willing, ...rest } = profile as Record<string, unknown>;
-      setPrefs({ ...DEFAULTS, ...(rest as Partial<Prefs>) });
-      setAvailable(Boolean(willing));
+      setPrefs({ ...DEFAULTS, ...(profile as Partial<Prefs>) });
     }
     const row = recovery as { sms_opt_in: boolean; sms_opt_out_at: string | null; phone: string | null } | null;
     // Told apart rather than lumped together: "you have not volunteered" and "we have no number
@@ -172,25 +168,6 @@ export function NotificationSettings() {
 
     if (saveError || !written || written.length === 0) {
       setPrefs((p) => ({ ...p, [key]: previous }));
-      setError("save_failed");
-    }
-  }
-
-  /**
-   * Availability goes through the RPC, not a table write.
-   *
-   * Turning it on also creates the member's recovery capability row, which is what the dispatcher
-   * matches against. A direct update would mark somebody willing with nothing to match through —
-   * available, never rung, and no error anywhere.
-   */
-  async function setAvailability(next: boolean) {
-    const previous = available;
-    setAvailable(next);
-    setError(null);
-
-    const result = await setAvailableToHelpAction(next);
-    if (!result.ok) {
-      setAvailable(previous);
       setError("save_failed");
     }
   }
@@ -278,12 +255,6 @@ export function NotificationSettings() {
 
       <Card className="space-y-3">
         <h2 className="text-xl font-semibold">{t("helpingTitle")}</h2>
-        <Toggle
-          checked={available}
-          onChange={(v) => void setAvailability(v)}
-          label={t("availableLabel")}
-          hint={t("availableHint")}
-        />
         <Toggle
           checked={prefs.notify_recovery}
           onChange={(v) => void setPref("notify_recovery", v)}

@@ -35,8 +35,8 @@ import { existsSync } from "node:fs";
  * That is also why CI has never seen either problem.
  */
 export default function globalSetup() {
-  const psql = process.env.PSQL ?? "C:/Users/jjser/tools/pgsql/bin/psql.exe";
-  if (!existsSync(psql)) return;
+  const psql = process.env.PSQL ?? "psql";
+  if (psql !== "psql" && !existsSync(psql)) return;
 
   const sql = [
     "delete from public.rate_limit_hits",
@@ -66,11 +66,11 @@ export default function globalSetup() {
           "-h",
           "127.0.0.1",
           "-p",
-          process.env.PGPORT ?? "55432",
+          process.env.PGPORT ?? "54322",
           "-U",
           process.env.PGUSER ?? "postgres",
           "-d",
-          process.env.PGDATABASE ?? "winchup",
+          process.env.PGDATABASE ?? "postgres",
           "-v",
           "ON_ERROR_STOP=1",
           "-tAc",

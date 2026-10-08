@@ -40,12 +40,12 @@ function psql(statement: string): string {
     // Playwright reports as a 0ms failure and then SKIPS the rest of the file, so four assertions
     // vanish and the run still looks mostly green. A default that works nowhere is worse than no
     // default; this one works on the machine it was written on.
-    process.env.PSQL ?? "C:/Users/jjser/tools/pgsql/bin/psql.exe",
+    process.env.PSQL ?? "psql",
     [
       "-h", "127.0.0.1",
-      "-p", process.env.PGPORT ?? "55432",
+      "-p", process.env.PGPORT ?? "54322",
       "-U", process.env.PGUSER ?? "postgres",
-      "-d", process.env.PGDATABASE ?? "winchup",
+      "-d", process.env.PGDATABASE ?? "postgres",
       "-v", "ON_ERROR_STOP=1",
       "-tAc", statement,
     ],

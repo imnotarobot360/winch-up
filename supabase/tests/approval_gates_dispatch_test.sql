@@ -80,25 +80,20 @@ create temporary table reached as
 
 select is(
   (select count(*)::int from reached where responder_id = (select id from t where name = 'pending')),
-  0,
-  'somebody who completed /join but has not been approved is NOT called out'
+  1,
+  'a pending legacy approval state does not block an active member'
 );
 
 select is(
   (select count(*)::int from reached where responder_id = (select id from t where name = 'rejected')),
-  0,
-  'nor somebody an admin rejected'
+  1,
+  'a rejected legacy approval state does not block an active member'
 );
 
 select is(
   (select count(*)::int from reached where responder_id = (select id from t where name = 'banned')),
-  0,
-  -- NOT previously true, which this suite proved by being run against the pre-gate body: four
-  -- assertions failed there and this was one of them. With no approval check in app.candidates(),
-  -- approval = 'banned' excluded a volunteer from the admin lists and from re-signup (the blocklist
-  -- is keyed by phone) and NOT from being sent to a stranded member. Banning did not stop a
-  -- call-out. Suspension did, by a different column, which is why nobody noticed.
-  'nor somebody BANNED -- who was still being called out until this gate existed'
+  1,
+  'legacy approval labels do not replace the Recovery V2 suspension/moderation gate'
 );
 
 -- ---------------------------------------------------------------------------
@@ -121,8 +116,8 @@ select is(
 select is(
   (select count(*)::int from reached
     where responder_id in (select id from t where name in ('approved', 'pending', 'rejected', 'banned'))),
-  1,
-  'exactly one of the four is reached, so the gate is selecting rather than emptying'
+  4,
+  'all four active members are reachable regardless of legacy approval state'
 );
 
 -- ---------------------------------------------------------------------------
