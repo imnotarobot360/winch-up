@@ -32,7 +32,8 @@ export type EmailTemplateKey =
   | "security.email_changed"
   | "security.account_deleted"
   | "membership.signed"
-  | "recovery.offer";
+  | "recovery.offer"
+  | "recovery.stood_down";
 
 export type EmailParams = Record<string, string | number | null | undefined>;
 
@@ -356,6 +357,82 @@ const TEMPLATES: Record<EmailTemplateKey, { en: Renderer; es: Renderer }> = {
    * params are resolved at SEND time from the request -- if the recovery was scrubbed or deleted
    * between queueing and sending, this still renders a sensible email instead of "undefined mi".
    */
+  /**
+   * The recovery you were called out to is off.
+   *
+   * Sent to EVERYONE who was alerted, not only whoever had accepted. Until 2026-10-05 cancelling a
+   * recovery told nobody at all: the offers were marked 'superseded' in the database and the one
+   * text that existed named a template outside sms.enabled_templates, so it was suppressed. People
+   * were left holding an alert that was never withdrawn.
+   *
+   * DELIBERATELY SAYS NOTHING ABOUT THE RECOVERY beyond its code. The vehicle, the situation and the
+   * distance were justified in the call-out because they are what somebody decides on; in a
+   * stand-down they are a detail about a stranger's bad afternoon, kept in an inbox for no reason.
+   *
+   * And it does not say WHY. The requester may have been recovered by a mate, given up, or filed it
+   * twice -- cancel_reason is free text they typed, and forwarding it to a list of volunteers is not
+   * something they agreed to.
+   */
+  "recovery.stood_down": {
+    en: (p) => ({
+      subject:
+        p.status === "recovered"
+          ? p.code
+            ? `Recovery ${p.code} is covered`
+            : "That recovery is covered"
+          : p.status === "expired"
+            ? p.code
+              ? `Recovery ${p.code} has closed`
+              : "That recovery has closed"
+            : p.code
+              ? `Recovery ${p.code} was called off`
+              : "That recovery was called off",
+      blocks: [
+        // The three endings mean different things to somebody deciding whether to get in the truck,
+        // and until 2026-10-05 all three said "already covered" -- which told a volunteer who had
+        // waited 25 minutes for nothing that somebody else had it in hand.
+        p.status === "recovered"
+          ? "Somebody else reached them first, so you are stood down. Thank you for being willing — that is the whole point of this group."
+          : p.status === "expired"
+            ? "Nobody was able to go, so that request has closed. You are stood down; there is nothing to do."
+            : "That recovery was called off by the person who asked for it. You are stood down — nothing more is needed.",
+        "If you had already set off, thank you for turning out.",
+      ],
+      cta: "See your dashboard",
+      after: [
+        "You are getting this because you were alerted to that recovery. You can change which alerts you receive in your notification settings.",
+      ],
+      tagline: "No rig left behind.",
+    }),
+    es: (p) => ({
+      subject:
+        p.status === "recovered"
+          ? p.code
+            ? `El rescate ${p.code} ya está cubierto`
+            : "Ese rescate ya está cubierto"
+          : p.status === "expired"
+            ? p.code
+              ? `El rescate ${p.code} se cerró`
+              : "Ese rescate se cerró"
+            : p.code
+              ? `El rescate ${p.code} fue cancelado`
+              : "Ese rescate fue cancelado",
+      blocks: [
+        p.status === "recovered"
+          ? "Otra persona llegó primero, así que puede retirarse. Gracias por estar dispuesto — para eso existe este grupo."
+          : p.status === "expired"
+            ? "Nadie pudo ir, así que esa solicitud se cerró. Puede retirarse; no hay nada que hacer."
+            : "La persona que pidió ayuda canceló ese rescate. Puede retirarse — no se necesita nada más.",
+        "Si ya había salido, gracias por responder.",
+      ],
+      cta: "Ver su panel",
+      after: [
+        "Recibe esto porque fue convocado a ese rescate. Puede cambiar qué avisos recibe en los ajustes de notificaciones.",
+      ],
+      tagline: "Ningún vehículo se queda atrás.",
+    }),
+  },
+
   "recovery.offer": {
     en: (p) => ({
       subject: p.miles

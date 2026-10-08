@@ -92,6 +92,23 @@ async function personalise(
     };
   }
 
+  // A STAND-DOWN. Only the code, on purpose: see the template's note on why a cancelled
+  // recovery's details do not belong in somebody's inbox. The button goes to their own dashboard
+  // rather than the recovery, which no longer exists to look at.
+  if (row.template_key === "recovery.stood_down") {
+    const p = (row.params ?? {}) as Record<string, unknown>;
+    const str = (v: unknown) => (typeof v === "string" && v.trim() !== "" ? v : undefined);
+    return {
+      // Their own dashboard, not the recovery: it is closed and there is nothing there to act on.
+      actionUrl: `${siteUrl}/me`,
+      params: {
+        ...(str(p.short_code) ? { code: String(p.short_code) } : {}),
+        // recovered | cancelled | expired. The three endings are not interchangeable.
+        ...(str(p.status) ? { status: String(p.status) } : {}),
+      },
+    };
+  }
+
   if (row.template_key !== "membership.signed") {
     // The welcome email's button goes to the app itself. It carries no token: unlike
     // verification, there is nothing single-use about "open the app", and putting a credential

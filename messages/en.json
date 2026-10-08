@@ -2030,7 +2030,12 @@
     "responder": {
       "responder_notified": "Somebody near you needs a hand — {short_code}.",
       "responder_notified_near": "Somebody needs a hand {miles} miles away. Can you help?",
-      "thanked": "You got a thank-you for {short_code}."
+      "thanked": "You got a thank-you for {short_code}.",
+      "stood_down": {
+        "recovered": "Somebody else reached that recovery. You are stood down.",
+        "cancelled": "That recovery was called off. You are stood down.",
+        "expired": "Nobody could go, so that request has closed."
+      }
     },
     "message": {
       "new": "New message on {short_code}.",
