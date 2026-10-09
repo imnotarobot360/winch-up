@@ -54,7 +54,7 @@ export function Button({
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("rounded-2xl border border-line bg-surface p-5", className)}
+      className={cn("winch-panel rounded-2xl border border-line bg-surface-sunk p-5", className)}
       {...props}
     />
   );

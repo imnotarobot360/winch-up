@@ -2149,7 +2149,7 @@
     "sendSos": "Send SOS",
     "helpSomeone": "Help someone",
     "noneOpen": "Nothing open right now. Good.",
-    "openCount": "{count, plural, one {# recovery open near you} other {# recoveries open near you}}"
+    "openCount": "{count, plural, one {# recovery open on the board} other {# recoveries open on the board}}"
   },
   "members": {
     "title": "Members",

@@ -1,5 +1,8 @@
 "use client";
 
+import { MessageCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
+
 import { NotificationBell } from "@/components/chrome/notification-bell";
 import { Wordmark } from "@/components/brand/wordmark";
 import { APP_NAME } from "@/config/app";
@@ -32,9 +35,13 @@ export function AppHeader() {
  * headers that drift, there is one bar and two callers.
  */
 export function HeaderBar() {
+  const t = useTranslations("dm");
   return (
-    <header className="sticky top-0 z-20 border-b border-line bg-trail/95 backdrop-blur">
-      <div className="relative mx-auto flex w-full max-w-xl items-center justify-center px-4 py-2">
+    <header className="sticky top-0 z-20 border-b border-line bg-trail/95 pt-[env(safe-area-inset-top)] backdrop-blur">
+      <div className="relative mx-auto flex w-full max-w-6xl items-center justify-center px-16 py-2">
+        <Link href="/messages" aria-label={t("pageTitle")} className="absolute left-2 flex size-12 items-center justify-center rounded-xl text-ink-soft hover:bg-trail-soft">
+          <MessageCircle size={24} aria-hidden="true" />
+        </Link>
         <Link href="/" aria-label={APP_NAME} className="flex items-center py-1">
           <Wordmark className="display text-3xl text-ink" />
         </Link>

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
+import { MapPinned, List, Map } from "lucide-react";
+import { ScreenHeading } from "@/components/ui/screen-heading";
 
 import { BoardMap } from "@/components/board/board-map";
 import { Callout, Card } from "@/components/ui/primitives";
@@ -52,7 +54,7 @@ export function BoardList({ initial }: { initial: BoardRow[] }) {
 
   const [rows, setRows] = useState(initial);
   const [filter, setFilter] = useState<"open" | "all">("open");
-  const [view, setView] = useState<"list" | "map">("list");
+  const [view, setView] = useState<"list" | "map">("map");
 
   const refresh = useCallback(async () => {
     try {
@@ -75,11 +77,8 @@ export function BoardList({ initial }: { initial: BoardRow[] }) {
   const openCount = rows.filter((row) => OPEN.includes(row.status)).length;
 
   return (
-    <main className="mx-auto w-full max-w-2xl space-y-5 px-4 py-6">
-      <header>
-        <h1 className="text-3xl font-bold leading-tight">{t("title")}</h1>
-        <p className="mt-2 text-base text-ink-soft">{t("subtitle")}</p>
-      </header>
+    <main className="winch-screen max-w-5xl space-y-5">
+      <ScreenHeading title={t("title")} description={t("subtitle")} icon={<MapPinned size={28} />} />
 
       <Callout tone="neutral">{t("privacyNote", { miles: BOARD.blurMiles })}</Callout>
 
@@ -90,21 +89,22 @@ export function BoardList({ initial }: { initial: BoardRow[] }) {
             type="button"
             onClick={() => setView(v)}
             aria-pressed={view === v}
-            className={`min-h-12 flex-1 rounded-field border-2 px-3 font-semibold ${
+            className={`flex min-h-14 min-w-0 flex-1 items-center justify-center gap-2 rounded-field border-2 px-3 text-base font-semibold ${
               view === v ? "border-brand bg-brand-tint" : "border-line"
             }`}
           >
+            {v === "list" ? <List size={20} aria-hidden="true" /> : <Map size={20} aria-hidden="true" />}
             {t(v === "list" ? "viewList" : "viewMap")}
           </button>
         ))}
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2" role="group" aria-label={t("filterOpen", { count: openCount })}>
         <button
           type="button"
           onClick={() => setFilter("open")}
           aria-pressed={filter === "open"}
-          className={`min-h-12 flex-1 rounded-field border-2 px-3 font-semibold ${
+          className={`flex min-h-14 min-w-0 flex-1 items-center justify-center gap-2 rounded-field border-2 px-3 text-base font-semibold ${
             filter === "open" ? "border-brand bg-brand-tint" : "border-line"
           }`}
         >
@@ -114,7 +114,7 @@ export function BoardList({ initial }: { initial: BoardRow[] }) {
           type="button"
           onClick={() => setFilter("all")}
           aria-pressed={filter === "all"}
-          className={`min-h-12 flex-1 rounded-field border-2 px-3 font-semibold ${
+          className={`flex min-h-14 min-w-0 flex-1 items-center justify-center gap-2 rounded-field border-2 px-3 text-base font-semibold ${
             filter === "all" ? "border-brand bg-brand-tint" : "border-line"
           }`}
         >
@@ -130,11 +130,11 @@ export function BoardList({ initial }: { initial: BoardRow[] }) {
         </Card>
       ) : null}
 
-      <ul className="space-y-3">
+      <ul className="grid gap-4 md:grid-cols-2">
         {visible.map((row) => (
           <li key={row.short_code}>
             <Card className="space-y-2">
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-mono text-sm text-ink-faint">{row.short_code}</p>
                   <p className="text-lg font-semibold">
@@ -179,7 +179,7 @@ export function BoardList({ initial }: { initial: BoardRow[] }) {
                 href={mapAppUrl(row.lat, row.lng)}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-block text-base underline underline-offset-4"
+                className="winch-secondary-action mt-3 text-base"
               >
                 {row.is_approximate ? t("approxArea") : t("exactArea")}
               </a>

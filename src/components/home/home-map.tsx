@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { LifeBuoy, HandHelping, MapPin } from "lucide-react";
 
 import { BoardMap } from "@/components/board/board-map";
 import { HeaderBar } from "@/components/chrome/app-header";
@@ -8,7 +9,8 @@ import type { BoardRow } from "@/components/board/board-list";
 import { Link } from "@/i18n/navigation";
 
 /**
- * Screen 4 of the design reference: the map, and the one button that matters over it.
+ * The member home: the public map and the two recovery actions.
+ * On phones they stack without covering each other; on larger screens they sit side by side.
  *
  * WHAT THE PINS ARE
  *
@@ -38,65 +40,40 @@ export function HomeMap({
   banner?: React.ReactNode;
 }) {
   const t = useTranslations("homeMap");
+  const openRows = rows.filter((row) => ["submitted", "dispatching", "unmatched"].includes(row.status));
 
   return (
-    <div className="relative min-h-[100dvh] bg-surface">
-      {/* The reference's home header: wordmark centred, bell right. No hamburger -- the mockup
-          shows one, but there is no drawer behind it in this app, and the brief says no button
-          may be decorative. The five tabs at the bottom are the navigation. */}
-      <div className="relative z-10">
-        <HeaderBar />
-      </div>
-
-      {/* Slotted rather than read here, because this is a client component and the prompt needs
-          the session. It OVERLAYS the top of the map rather than pushing it down: the map below
-          is positioned against a fixed header offset, so displacing it would mean this banner
-          quietly changed the geometry of the whole screen. Renders nothing when there is
-          nothing to sign, which is every day until an agreement is published. */}
-      {banner ? (
-        <div className="pointer-events-none absolute inset-x-0 top-[3.25rem] z-10 px-4 pt-3">
-          <div className="pointer-events-auto mx-auto w-full max-w-xl">{banner}</div>
-        </div>
-      ) : null}
-
-      {/* The map fills what is left below the header. inset-0 with a top offset rather than a
-          flex child, so the floating card can be positioned against the viewport bottom. */}
-      <div className="absolute inset-x-0 bottom-0 top-[3.25rem]">
-        <BoardMap rows={rows} fill />
-      </div>
-
-      {/* The floating card. Bottom-anchored above the tab bar, which is 6rem of fixed chrome --
-          the brief says the nav must never cover an important button, and this is the important
-          button. */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-4 pb-[calc(7rem+env(safe-area-inset-bottom))]">
-        <div className="pointer-events-auto mx-auto w-full max-w-xl space-y-3 rounded-2xl border-2 border-line bg-surface-sunk/95 p-4 shadow-lg backdrop-blur">
-          <div>
-            <h2 className="text-xl font-bold text-ink">{t("needHelp")}</h2>
-            <p className="mt-1 text-base text-ink-soft">{t("needHelpBody")}</p>
+    <>
+      <HeaderBar />
+      <main className="winch-screen winch-home mx-auto max-w-6xl">
+        <section className="winch-home-map relative overflow-hidden rounded-2xl border border-line" aria-label={t("openCount", { count: openRows.length })}>
+          <BoardMap rows={openRows} fill />
+          <div className="pointer-events-none absolute left-3 top-3 z-10">
+            <span className="winch-status-pill shadow-lg">
+              <MapPin size={16} aria-hidden="true" />
+              {openRows.length > 0 ? t("openCount", { count: openRows.length }) : t("noneOpen")}
+            </span>
           </div>
+        </section>
 
-          <Link
-            href="/request"
-            className="tap-target flex w-full items-center justify-center rounded-field bg-brand px-4 text-center text-lg font-bold text-on-brand"
-          >
-            {t("sendSos")}
-          </Link>
-
-          {/* The other half of universal membership. The brief asks for a clearly accessible way
-              to go and help somebody, and a home screen that only offers "I need help" quietly
-              tells every member which of the two roles they are. */}
-          <Link
-            href="/help"
-            className="tap-target flex w-full items-center justify-center rounded-field border-2 border-line px-4 text-center text-base font-semibold text-ink"
-          >
-            {t("helpSomeone")}
-          </Link>
-
-          <p className="text-center text-sm text-ink-faint">
-            {rows.length > 0 ? t("openCount", { count: rows.length }) : t("noneOpen")}
-          </p>
+        <div className="mt-4 space-y-4 md:mt-0">
+          <section className="winch-map-overlay space-y-4 p-5">
+            <div>
+              <h1 className="winch-heading flex items-center gap-3"><LifeBuoy size={28} className="shrink-0 text-brand-text" aria-hidden="true" />{t("needHelp")}</h1>
+              <p className="mt-2 text-base text-ink-soft">{t("needHelpBody")}</p>
+            </div>
+            <Link href="/request" className="winch-primary-action">
+              <LifeBuoy size={22} aria-hidden="true" />
+              {t("sendSos")}
+            </Link>
+            <Link href="/help" className="winch-secondary-action">
+              <HandHelping size={22} aria-hidden="true" />
+              {t("helpSomeone")}
+            </Link>
+          </section>
+          {banner}
         </div>
-      </div>
-    </div>
+      </main>
+    </>
   );
 }
