@@ -35,6 +35,6 @@ export default async function RequestPage({
 
   if (!user) redirect({ href: "/signin?next=/request", locale });
 
-  const { data: vehicles } = await supabase.from("vehicles").select("id, make, model, year, vehicle_class, drivetrain, is_primary").eq("user_id", user.id).order("is_primary", { ascending: false });
+  const { data: vehicles } = await supabase.from("vehicles").select("id, make, model, year, vehicle_class, drivetrain, is_primary").eq("user_id", user?.id ?? "").order("is_primary", { ascending: false });
   return <RequestWizard registeredVehicles={(vehicles ?? []) as Array<{ id: string; make: string | null; model: string | null; year: number | null; vehicle_class: string; drivetrain: string; is_primary: boolean }>} />;
 }
