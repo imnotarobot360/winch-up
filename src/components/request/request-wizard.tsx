@@ -102,7 +102,8 @@ function emptyDraft(): Draft {
   };
 }
 
-export function RequestWizard() {
+type RegisteredVehicle = { id: string; make: string | null; model: string | null; year: number | null; vehicle_class: string; drivetrain: string; is_primary: boolean };
+export function RequestWizard({ registeredVehicles = [] }: { registeredVehicles?: RegisteredVehicle[] }) {
   const t = useTranslations("request");
   const tMembership = useTranslations("membership");
   const tEnum = useTranslations("enum");
@@ -110,6 +111,7 @@ export function RequestWizard() {
   const router = useRouter();
 
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [selectedRig, setSelectedRig] = useState("");
   const [stepIndex, setStepIndex] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -283,6 +285,19 @@ export function RequestWizard() {
 
         {step === "vehicle" ? (
           <div className="space-y-5">
+            {registeredVehicles.length > 0 && <div className="space-y-3 rounded-xl border-2 border-brand bg-brand-tint p-4">
+              <p className="text-lg font-bold">{locale === "es" ? "¿Es este el vehículo que necesita ayuda?" : "Is this the vehicle that needs help?"}</p>
+              {registeredVehicles.map((rig) => <button key={rig.id} type="button" aria-pressed={selectedRig === rig.id}
+                className={"w-full rounded-lg border-2 p-3 text-left font-semibold " + (selectedRig === rig.id ? "border-brand bg-surface" : "border-line bg-surface-sunk")}
+                onClick={() => { setSelectedRig(rig.id); update({ vehicleClass: VEHICLE_CLASSES.includes(rig.vehicle_class as (typeof VEHICLE_CLASSES)[number]) ? rig.vehicle_class as (typeof VEHICLE_CLASSES)[number] : null, vehicleMake: rig.make ?? "", vehicleModel: rig.model ?? "", vehicleYear: rig.year?.toString() ?? "", drivetrain: DRIVETRAINS.includes(rig.drivetrain as (typeof DRIVETRAINS)[number]) ? rig.drivetrain as (typeof DRIVETRAINS)[number] : "unknown" }); }}>
+                {[rig.year, rig.make, rig.model].filter(Boolean).join(" ") || rig.vehicle_class}{rig.is_primary ? (locale === "es" ? " · Principal" : " · Primary") : ""}
+              </button>)}
+              <button type="button" aria-pressed={selectedRig === "other"}
+                className={"w-full rounded-lg border-2 p-3 text-left font-semibold " + (selectedRig === "other" ? "border-brand bg-surface" : "border-line bg-surface-sunk")}
+                onClick={() => { setSelectedRig("other"); update({ vehicleClass: null, vehicleMake: "", vehicleModel: "", vehicleYear: "", drivetrain: "unknown" }); }}>
+                {locale === "es" ? "No, es otro vehículo" : "No, another vehicle"}
+              </button>
+            </div>}
             <ChoiceList
               name={t("steps.vehicle.title")}
               columns={2}
