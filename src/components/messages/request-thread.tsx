@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
+import { MessagesSquare } from "lucide-react";
 
 import { TeamPanel, type TeamMember } from "@/components/recovery/team-panel";
 import { Button, Callout, Card, TextArea } from "@/components/ui/primitives";
@@ -290,7 +291,7 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
   return (
     <Card className="space-y-3">
       <div>
-        <h2 className="text-xl font-semibold">{t("title")}</h2>
+        <h2 className="flex items-center gap-2 text-xl font-semibold"><MessagesSquare size={22} className="shrink-0 text-brand-text" aria-hidden="true" />{t("title")}</h2>
         <p className="mt-1 text-sm text-ink-faint">{t("privateNote")}</p>
       </div>
 
@@ -360,7 +361,7 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
             href={`https://www.google.com/maps/dir/?api=1&destination=${location.lat.toFixed(6)},${location.lng.toFixed(6)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="tap-target flex w-full items-center justify-center rounded-field border-2 border-brand bg-brand px-4 text-center text-lg font-semibold text-white"
+            className="winch-primary-action"
           >
             {t("locationOpen")}
           </a>
@@ -376,10 +377,10 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
           {messages.map((message) => (
             <li
               key={message.id}
-              className={`max-w-[85%] rounded-field border-2 p-3 ${
+              className={`winch-chat-bubble max-w-[85%] rounded-2xl border p-3 ${
                 message.mine
-                  ? "ml-auto border-brand bg-brand-tint"
-                  : "mr-auto border-line bg-surface-sunk"
+                  ? "ml-auto rounded-br-sm border-line bg-trail-soft"
+                  : "mr-auto rounded-bl-sm border-line bg-surface"
               }`}
             >
               {/* Who said it. Redundant with two people; necessary with a team, where "they" is
@@ -388,7 +389,7 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
                 <p className="text-xs font-semibold text-ink-soft">{message.sender_name}</p>
               ) : null}
               {message.body ? (
-                <p className="whitespace-pre-wrap text-base">{message.body}</p>
+                <p className="whitespace-pre-wrap break-words text-base">{message.body}</p>
               ) : null}
               <p className="mt-1 text-xs text-ink-faint">
                 {relative(message.created_at)}
@@ -408,9 +409,9 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
           {pending.map((item) => (
             <li
               key={item.clientId}
-              className="ml-auto max-w-[85%] rounded-field border-2 border-dashed border-line bg-surface-sunk p-3 opacity-70"
+              className="winch-chat-bubble ml-auto max-w-[85%] rounded-2xl border-2 border-dashed border-line bg-surface-sunk p-3"
             >
-              <p className="whitespace-pre-wrap text-base">{item.body}</p>
+              <p className="whitespace-pre-wrap break-words text-base">{item.body}</p>
               <p className="mt-1 text-xs text-ink-faint">
                 {item.attempts > 1 ? t("retrying", { attempts: item.attempts }) : t("waiting")}
               </p>
@@ -430,7 +431,7 @@ export function RequestThread({ requestId, closed }: { requestId: string; closed
       {closed || readOnly ? (
         <p className="text-sm text-ink-faint">{t("closedNote")}</p>
       ) : (
-        <form onSubmit={submit} className="space-y-2">
+        <form onSubmit={submit} className="winch-chat-composer space-y-2">
           <TextArea
             aria-label={t("composeLabel")}
             placeholder={t("placeholder")}

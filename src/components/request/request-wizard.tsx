@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { createRequestAction } from "@/app/actions/request";
@@ -113,6 +113,15 @@ export function RequestWizard() {
   const [stepIndex, setStepIndex] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const ready = draft !== null;
+
+  // Announce the new question and start at its top after moving through a long step.
+  useEffect(() => {
+    if (!ready) return;
+    headingRef.current?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0 });
+  }, [stepIndex, ready]);
 
   // Restore on mount. Photos keep their storage paths but lose their object-URL previews, which
   // is fine: the upload already happened.
@@ -231,8 +240,8 @@ export function RequestWizard() {
   const isLastStep = stepIndex === STEPS.length - 1;
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-xl flex-col">
-      <header className="sticky top-0 z-10 space-y-2 border-b border-line bg-surface px-4 py-3">
+    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col">
+      <header className="sticky top-0 z-10 space-y-3 border-b border-line bg-trail/95 px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur">
         {/* The reference's three dots over the eight-step flow. The groups are real -- where you
             are, what you need, what you agree to -- so this is not decoration bolted on to match
             a mockup; it is information the wizard always had and never showed. */}
@@ -244,11 +253,11 @@ export function RequestWizard() {
           <p className="text-sm font-medium text-ink-faint">
             {t("progress", { current: stepIndex + 1, total: STEPS.length })}
           </p>
-          <h1 className="text-2xl font-bold leading-tight">{t(`steps.${step}.title`)}</h1>
+          <h1 ref={headingRef} tabIndex={-1} className="winch-heading focus:outline-none">{t(`steps.${step}.title`)}</h1>
         </div>
       </header>
 
-      <main className="flex-1 space-y-5 px-4 py-5">
+      <main className="winch-screen flex-1 space-y-5">
         {step === "emergency" ? (
           <EmergencyStep
             acknowledged={draft.emergencyAck}
@@ -494,13 +503,13 @@ export function RequestWizard() {
         ) : null}
       </main>
 
-      <footer className="sticky bottom-0 border-t border-line bg-surface px-4 py-3">
+      <footer className="sticky bottom-0 z-10 border-t border-line bg-surface-sunk px-4 pt-3 pb-[max(.75rem,env(safe-area-inset-bottom))]">
         <div className="flex gap-3">
           {stepIndex > 0 ? (
             <Button
               type="button"
               variant="secondary"
-              className="w-28"
+              className="w-auto shrink-0 px-4"
               onClick={() => setStepIndex((index) => Math.max(0, index - 1))}
             >
               {t("back")}

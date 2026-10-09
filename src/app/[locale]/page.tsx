@@ -1,5 +1,7 @@
 import { cookies } from "next/headers";
 import Image from "next/image";
+import { LifeBuoy, MapPinned, HandHelping, Mountain, BookOpen } from "lucide-react";
+import { TopoBackdrop } from "@/components/brand/topo";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import type { BoardRow } from "@/components/board/board-list";
@@ -98,7 +100,7 @@ async function LandingPage() {
   const tLegal = await getTranslations("legal");
 
   return (
-    <main className="mx-auto w-full max-w-xl px-4 py-8">
+    <main className="winch-screen max-w-5xl">
       {/*
         * The launch panel from the brand board. The lockup is real artwork with its own alpha,
         * so it sits directly on the Trail Green field.
@@ -107,7 +109,9 @@ async function LandingPage() {
         * string is deliberately not repeated here -- an English reader would see it twice -- so
         * a Spanish lockup is the thing that closes that gap.
         */}
-      <header className="-mx-4 -mt-8 mb-8 bg-trail px-4 pt-10 pb-8">
+      <header className="winch-panel relative mb-6 overflow-hidden border border-line bg-trail p-6 sm:p-10">
+        <TopoBackdrop />
+        <div className="relative sm:flex sm:items-center sm:gap-10">
         <h1 className="m-0">
           <Image
             src="/brand/logo-lockup.png"
@@ -119,14 +123,16 @@ async function LandingPage() {
             priority
           />
         </h1>
-        <p className="mt-2 text-lg text-ink">{tApp("tagline")}</p>
+        <p className="mt-4 max-w-sm text-xl font-semibold text-ink sm:text-2xl">{tApp("tagline")}</p>
+        </div>
       </header>
 
       {/* The only thing on this page that matters to someone who is actually stuck. */}
       <Link
         href="/request"
-        className="tap-target mt-8 flex w-full items-center justify-center rounded-field text-center bg-brand px-6 text-xl font-bold text-on-brand"
+        className="winch-primary-action w-full text-xl"
       >
+        <LifeBuoy size={26} aria-hidden="true" />
         {t("stuckCta")}
       </Link>
 
@@ -134,7 +140,7 @@ async function LandingPage() {
         {t("emergencyNote")}
       </Callout>
 
-      <Card className="mt-8 space-y-2">
+      <Card className="mt-6 space-y-3">
         <h2 className="text-xl font-semibold">{t("howTitle")}</h2>
         <ol className="list-decimal space-y-1 pl-5 text-base text-ink-soft">
           <li>{t("how1")}</li>
@@ -143,50 +149,57 @@ async function LandingPage() {
         </ol>
       </Card>
 
-      <Card className="mt-4 space-y-3">
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <Card className="flex h-full flex-col gap-3">
+        <HandHelping size={26} className="text-brand-text" aria-hidden="true" />
         <h2 className="text-xl font-semibold">{t("volunteerTitle")}</h2>
         <p className="text-base text-ink-soft">{t("volunteerSoon")}</p>
         <Link
           href="/join"
-          className="tap-target flex w-full items-center justify-center rounded-field text-center border-2 border-line px-4 text-lg font-semibold"
+          className="winch-secondary-action mt-auto"
         >
           {t("volunteerCta")}
         </Link>
       </Card>
 
-      <Card className="mt-4 space-y-3">
+      <Card className="flex h-full flex-col gap-3">
+        <MapPinned size={26} className="text-brand-text" aria-hidden="true" />
         <h2 className="text-xl font-semibold">{t("boardTitle")}</h2>
         <p className="text-base text-ink-soft">{t("boardBody")}</p>
         <Link
           href="/board"
-          className="tap-target flex w-full items-center justify-center rounded-field text-center border-2 border-line px-4 text-lg font-semibold"
+          className="winch-secondary-action mt-auto"
         >
           {t("boardCta")}
         </Link>
       </Card>
 
       {/* Behind an account, so this is a door rather than the directory itself. */}
-      <Card className="mt-4 space-y-3">
+      <Card className="flex h-full flex-col gap-3">
+        <Mountain size={26} className="text-brand-text" aria-hidden="true" />
         <h2 className="text-xl font-semibold">{t("trailsTitle")}</h2>
         <p className="text-base text-ink-soft">{t("trailsBody")}</p>
         <Link
           href="/trails"
-          className="tap-target flex w-full items-center justify-center rounded-field text-center border-2 border-line px-4 text-lg font-semibold"
+          className="winch-secondary-action mt-auto"
         >
           {t("trailsLink")}
         </Link>
       </Card>
 
-      <Card className="mt-4 space-y-3">
+      <Card className="flex h-full flex-col gap-3">
+        <BookOpen size={26} className="text-brand-text" aria-hidden="true" />
         <h2 className="text-xl font-semibold">{t("resourcesTitle")}</h2>
         <p className="text-base text-ink-soft">{t("resourcesBody")}</p>
         <Link
           href="/resources"
-          className="tap-target flex w-full items-center justify-center rounded-field text-center border-2 border-line px-4 text-lg font-semibold"
+          className="winch-secondary-action mt-auto"
         >
           {t("resourcesLink")}
         </Link>
       </Card>
+
+      </div>
 
       <nav className="mt-10 flex flex-wrap gap-4 text-base text-ink-soft">
         <Link href="/terms" className="underline underline-offset-4">

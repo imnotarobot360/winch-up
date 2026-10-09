@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { Avatar } from "@/components/ui/avatar";
+import { ScreenHeading } from "@/components/ui/screen-heading";
+
 import { IconCog } from "@/components/ui/icons";
 import { MenuList } from "@/components/ui/menu-list";
 import { Button, Callout, Card, Checkbox, Field, TextInput } from "@/components/ui/primitives";
@@ -193,7 +196,7 @@ export function MeDashboard() {
             other place it appears, so without this they have no route to /account at all and
             therefore no route to deleting their account. */}
         {signedIn ? (
-          <Link href="/account" className="inline-block text-base underline underline-offset-4">
+          <Link href="/account" className="inline-flex min-h-11 items-center text-base underline underline-offset-4">
             {t("accountSettings")}
           </Link>
         ) : null}
@@ -206,17 +209,15 @@ export function MeDashboard() {
   );
 
   return (
-    <main className="mx-auto w-full max-w-xl space-y-5 px-4 py-6">
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold leading-tight">
-            {t("greeting", { name: profile.first_name })}
-          </h1>
-          <p className="text-base text-ink-soft">
-            {t("stats", { count: profile.recoveries_count })}
-          </p>
-        </div>
-      </header>
+    <main className="winch-screen max-w-3xl space-y-5">
+      <Card className="flex flex-wrap items-center gap-4 border-trail-line">
+        <Avatar name={profile.first_name} size="lg" />
+        <ScreenHeading
+          className="min-w-0 flex-1"
+          title={t("greeting", { name: profile.first_name })}
+          description={t("stats", { count: profile.recoveries_count })}
+        />
+      </Card>
 
       {error ? <Callout tone="danger">{t(`errors.${error}`)}</Callout> : null}
 
@@ -228,13 +229,13 @@ export function MeDashboard() {
       <div className="grid gap-3 sm:grid-cols-2">
         <Link
           href="/request"
-          className="tap-target flex items-center justify-center rounded-field bg-brand px-6 text-center text-lg font-bold text-on-brand"
+          className="winch-primary-action"
         >
           {t("requestHelp")}
         </Link>
         <Link
           href="/help"
-          className="tap-target flex items-center justify-center rounded-field border-2 border-line bg-surface px-6 text-center text-lg font-bold text-ink"
+          className="winch-secondary-action"
         >
           {t("helpSomeone")}
         </Link>
@@ -508,7 +509,7 @@ export function MeDashboard() {
         <p className="text-base text-ink-soft">
           {profile.equipment.map((item) => tEnum(`equipment.${item}`)).join(", ")}
         </p>
-        <Link href="/join" className="text-base underline underline-offset-4">
+        <Link href="/join" className="inline-flex min-h-11 items-center text-base underline underline-offset-4">
           {t("editProfile")}
         </Link>
 
@@ -518,7 +519,7 @@ export function MeDashboard() {
             button that deletes their account. Same failure as /welcome: every page rendered,
             every link resolved, and the route in was missing.
             Found while writing /data-deletion, because the instructions there have to be true. */}
-        <Link href="/account" className="text-base underline underline-offset-4">
+        <Link href="/account" className="ml-4 inline-flex min-h-11 items-center text-base underline underline-offset-4">
           {t("accountSettings")}
         </Link>
       </Card>

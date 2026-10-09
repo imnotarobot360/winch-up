@@ -9,6 +9,8 @@
 import "mapbox-gl/dist/mapbox-gl.css";
 
 import { useEffect, useRef, useState } from "react";
+import { MapPinOff } from "lucide-react";
+import { TopoBackdrop } from "@/components/brand/topo";
 import { useTranslations } from "next-intl";
 
 import type { BoardRow } from "./board-list";
@@ -114,11 +116,15 @@ export function BoardMap({ rows, fill = false }: { rows: BoardRow[]; fill?: bool
   if (failed) {
     return (
       <div
-        className={`flex items-center justify-center bg-surface-sunk p-6 text-center text-ink-soft ${
+        className={`relative flex items-center justify-center overflow-hidden bg-trail p-6 text-center text-ink-soft ${
           fill ? "h-full" : "min-h-64 rounded-field border-2 border-line"
         }`}
       >
-        {t("mapUnavailable")}
+        <TopoBackdrop />
+        <div role="status" className="relative max-w-xs space-y-3">
+          <MapPinOff size={36} className="mx-auto text-brand-text" aria-hidden="true" />
+          <p className="text-base">{t("mapUnavailable")}</p>
+        </div>
       </div>
     );
   }
