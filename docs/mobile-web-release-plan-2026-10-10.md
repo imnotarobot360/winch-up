@@ -130,3 +130,19 @@ Status: planning only. This branch MUST NOT be merged or deployed until release 
 2. Implement and security-test native authentication, waiver, request creation/status, photo upload, map/location confirmation, approved-volunteer dispatch, and chat against the existing server-side authorization contracts.
 3. Run signed development builds in Xcode and Android tooling; test permissions, keyboard, safe areas, offline/retry behavior, notification opt-in, camera, and account deletion on physical devices.
 4. Complete privacy disclosures, app identifiers/signing, store metadata, and internal distribution checks. No public release has been prepared or submitted.
+
+
+## Post-merge production checkpoint — October 11, 2026
+
+- PR #9 was merged to `main` as commit `3276f5bc4ef9028607d864620b63e6a51141a962`. The web redesign and profile vehicle selection are live through the normal Vercel main-branch deployment path; both Vercel project checks succeeded.
+- Main-branch CI run [38164100310](https://github.com/imnotarobot360/winch-up/actions/runs/38164100310) passed typecheck, lint, unit tests, build, Playwright E2E, and pgTAP.
+- The production migration job passed its connection and ledger checks. It found all 141 local migrations already recorded in production, and `supabase db push` reported the database was up to date. This release applied no schema changes.
+- No real SOS alert or volunteer dispatch was sent. The native SOS mutation remains disabled; no iOS/Android store build or submission was made.
+
+### Still pending before native SOS or app-store release
+
+1. Configure isolated staging Supabase with synthetic users and outbound messaging disabled; verify mobile profile vehicle reads and RLS.
+2. Implement and security-test native authentication, waiver, request/status, photo upload, map/location confirmation, approved-volunteer dispatch, and chat against existing server-side authorization contracts.
+3. Create signed iOS and Android development builds, then complete physical-device permission, safe-area, keyboard, offline/retry, camera, notification, and account-deletion QA.
+4. Complete privacy disclosures, signing, store metadata, and internal distribution review.
+5. For any live SOS validation, first use the isolated staging environment, explicit consent, approved test accounts/devices, and test-only recipient numbers. No real member notification is approved by this checkpoint.
