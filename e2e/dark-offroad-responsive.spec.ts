@@ -112,6 +112,18 @@ test.describe("dark off-road presentation", () => {
     await next.click();
     await next.click(); // Photos are optional; no Storage request is made.
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(/what are you driving/i);
+    await expect(page.getByText(/is the vehicle that needs help listed in your profile/i)).toBeVisible();
+    const profileVehicle = page.getByRole("button", { name: /2018 Jeep Wrangler.*Primary/i });
+    await expect(profileVehicle).toBeVisible();
+    await profileVehicle.click();
+    await expect(profileVehicle).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByLabel(/make/i)).toHaveValue("Jeep");
+    await expect(page.getByLabel(/model/i)).toHaveValue("Wrangler");
+    await expect(page.getByLabel(/vehicle year/i)).toHaveValue("2018");
+    const otherVehicle = page.getByRole("button", { name: /no, another vehicle/i });
+    await otherVehicle.click();
+    await expect(otherVehicle).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByLabel(/make/i)).toHaveValue("");
     for (const width of [320, 390, 412]) {
       await page.setViewportSize({ width, height: 700 });
       await fitsScreen(page);
