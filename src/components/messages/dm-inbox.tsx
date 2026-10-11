@@ -89,12 +89,12 @@ export function DmInbox() {
         <li key={thread.thread_id}>
           <Link
             href={`/messages/${thread.thread_id}`}
-            className="flex items-center gap-3 rounded-field border-2 border-line bg-surface-sunk p-3"
+            className="winch-panel flex min-h-20 items-center gap-3 rounded-2xl border border-line bg-surface-sunk p-4 hover:border-brand"
           >
             <Avatar name={thread.other_name} />
 
             <div className="min-w-0 flex-1">
-              <div className="flex items-baseline justify-between gap-2">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-2">
                 <p className="truncate text-base font-bold text-ink">
                   {thread.other_name ?? t("someone")}
                 </p>

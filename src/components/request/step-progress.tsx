@@ -46,7 +46,7 @@ export function StepProgress({
         const done = i < active;
         const current = i === active;
         return (
-          <li key={group.key} className="flex flex-1 items-center gap-2">
+          <li key={group.key} className="flex min-w-0 flex-1 items-center gap-2">
             <span
               // aria-current rather than a visual-only state: the dot is the only thing saying
               // where you are, and a screen reader user is filling in the same form.

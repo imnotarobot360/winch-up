@@ -358,3 +358,13 @@ select u.phone, u.id, 'phone', jsonb_build_object('sub', u.id::text, 'phone', u.
   from auth.users u
  where u.phone is not null and u.phone <> ''
 on conflict (provider_id, provider) do nothing;
+
+
+-- A local-only profile vehicle so browser tests exercise the requester's vehicle picker.
+insert into public.vehicles (id, user_id, make, model, year, vehicle_class, drivetrain, is_primary)
+values (
+  '22222222-2222-4222-8222-222222222222',
+  '00000000-0000-4000-8000-000000000002',
+  'Jeep', 'Wrangler', 2018, 'truck', '4wd', true
+)
+on conflict (id) do nothing;

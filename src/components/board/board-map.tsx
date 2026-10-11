@@ -9,6 +9,8 @@
 import "mapbox-gl/dist/mapbox-gl.css";
 
 import { useEffect, useRef, useState } from "react";
+import { Layers3, LocateFixed, MapPinOff } from "lucide-react";
+import { TopoBackdrop } from "@/components/brand/topo";
 import { useTranslations } from "next-intl";
 
 import type { BoardRow } from "./board-list";
@@ -32,6 +34,9 @@ const OPEN = ["submitted", "dispatching", "unmatched"];
 export function BoardMap({ rows, fill = false }: { rows: BoardRow[]; fill?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
+  const [terrain, setTerrain] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const mapRef = useRef<import("mapbox-gl").Map | null>(null);
   const t = useTranslations("board");
 
   useEffect(() => {
@@ -41,7 +46,7 @@ export function BoardMap({ rows, fill = false }: { rows: BoardRow[]; fill?: bool
       return;
     }
 
-    let map: { remove: () => void } | null = null;
+    let map: import("mapbox-gl").Map | null = null;
     let cancelled = false;
 
     (async () => {
@@ -55,7 +60,7 @@ export function BoardMap({ rows, fill = false }: { rows: BoardRow[]; fill?: bool
         // at night it is the brightest thing on a phone held at arm's length.
         const instance = new mapboxgl.Map({
           container: containerRef.current,
-          style: "mapbox://styles/mapbox/dark-v11",
+          style: terrain ? "mapbox://styles/mapbox/outdoors-v12" : "mapbox://styles/mapbox/dark-v11",
           center: [-97.7431, 31.0], // Texas
           zoom: 5.2,
           attributionControl: true,
@@ -100,6 +105,7 @@ export function BoardMap({ rows, fill = false }: { rows: BoardRow[]; fill?: bool
         }
 
         map = instance;
+        mapRef.current = instance;
       } catch {
         if (!cancelled) setFailed(true);
       }
@@ -107,32 +113,65 @@ export function BoardMap({ rows, fill = false }: { rows: BoardRow[]; fill?: bool
 
     return () => {
       cancelled = true;
+      if (mapRef.current === map) mapRef.current = null;
       map?.remove();
     };
-  }, [rows]);
+  }, [rows, terrain]);
+
+  // Location is requested only when the user taps the control. Never persist or
+  // broadcast this position; the public map must not expose a member's coordinates.
+  function locateMe() {
+    if (!navigator.geolocation || !mapRef.current) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        mapRef.current?.flyTo({ center: [coords.longitude, coords.latitude], zoom: 11, essential: true });
+        setLocating(false);
+      },
+      () => setLocating(false),
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
+    );
+  }
 
   if (failed) {
     return (
       <div
-        className={`flex items-center justify-center bg-surface-sunk p-6 text-center text-ink-soft ${
+        className={`relative flex items-center justify-center overflow-hidden bg-trail p-6 text-center text-ink-soft ${
           fill ? "h-full" : "min-h-64 rounded-field border-2 border-line"
         }`}
       >
-        {t("mapUnavailable")}
+        <TopoBackdrop />
+        <div role="status" className="relative max-w-xs space-y-3">
+          <MapPinOff size={36} className="mx-auto text-brand-text" aria-hidden="true" />
+          <p className="text-base">{t("mapUnavailable")}</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div
-      ref={containerRef}
-      role="application"
-      aria-label={t("mapLabel")}
-      className={
-        fill
-          ? "h-full w-full"
-          : "min-h-[24rem] w-full overflow-hidden rounded-field border-2 border-line"
-      }
-    />
+    <div className={fill ? "relative h-full w-full" : "relative min-h-[24rem] w-full overflow-hidden rounded-field border-2 border-line"}>
+      <div
+        ref={containerRef}
+        role="application"
+        aria-label={t("mapLabel")}
+        className={fill ? "h-full w-full" : "h-[24rem] w-full"}
+      />
+      <div className="absolute bottom-9 left-3 z-10 flex flex-col gap-2" aria-label="Map controls">
+        <button type="button" onClick={() => setTerrain((current) => !current)}
+          className="flex min-h-11 items-center gap-2 rounded-xl border border-white/20 bg-[#0b1c14]/95 px-3 py-2 text-sm font-bold text-white shadow-lg"
+          aria-pressed={terrain} aria-label={terrain ? "Switch to dark map" : "Switch to terrain map"}>
+          <Layers3 size={18} aria-hidden="true" /> {terrain ? "Terrain" : "Dark"}
+        </button>
+        <button type="button" onClick={locateMe} disabled={locating}
+          className="flex min-h-11 items-center gap-2 rounded-xl border border-white/20 bg-[#0b1c14]/95 px-3 py-2 text-sm font-bold text-white shadow-lg disabled:opacity-60"
+          aria-label="Center map on my location">
+          <LocateFixed size={18} aria-hidden="true" /> {locating ? "Locating…" : "My location"}
+        </button>
+      </div>
+      <div className="pointer-events-none absolute bottom-3 right-3 rounded-lg bg-[#0b1c14]/90 px-2 py-1 text-xs text-white">
+        <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-[#ff6a00]" /> Open SOS · Approximate locations
+      </div>
+    </div>
   );
 }
