@@ -2149,7 +2149,7 @@
     "sendSos": "Enviar SOS",
     "helpSomeone": "Ayudar a alguien",
     "noneOpen": "Nada abierto ahora mismo. Qué bueno.",
-    "openCount": "{count, plural, one {# rescate abierto cerca} other {# rescates abiertos cerca}}"
+    "openCount": "{count, plural, one {# rescate abierto en el tablero} other {# rescates abiertos en el tablero}}"
   },
   "members": {
     "title": "Miembros",

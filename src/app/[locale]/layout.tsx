@@ -64,6 +64,7 @@ export async function generateMetadata({
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
   // The form is full of large tap targets; pinch-zoom still has to work for anyone who needs it.
   maximumScale: 5,
   themeColor: "#0b2d1f",

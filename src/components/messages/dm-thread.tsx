@@ -150,13 +150,13 @@ export function DmThread({ threadId }: { threadId: string }) {
     // min-width:auto lets a wide child push past the viewport rather than wrap. Without it the
     // message bubbles ran off the right edge on a phone -- which is the only screen that matters
     // here. Seen in a screenshot; the DOM text read fine, which is why it needed looking at.
-    <div className="w-full min-w-0 space-y-4">
-      <header className="flex items-center gap-3 border-b-2 border-line pb-3">
+    <div className="winch-panel w-full min-w-0 space-y-4 border border-line bg-surface-sunk p-4 sm:p-5">
+      <header className="flex items-center gap-3 border-b border-line pb-4">
         <Avatar name={other.display_name} />
         <div className="min-w-0 flex-1">
           <Link
             href={`/members/${other.user_id}`}
-            className="text-lg font-bold text-ink underline underline-offset-4"
+            className="inline-flex min-h-11 items-center text-lg font-bold text-ink underline underline-offset-4"
           >
             {other.display_name ?? t("someone")}
           </Link>
@@ -182,16 +182,12 @@ export function DmThread({ threadId }: { threadId: string }) {
               <div
                 className={
                   m.mine
-                    ? "max-w-[85%] rounded-field bg-brand px-3 py-2 text-on-brand"
-                    : "max-w-[85%] rounded-field border-2 border-line bg-surface-sunk px-3 py-2 text-ink"
+                    ? "winch-chat-bubble max-w-[85%] rounded-2xl rounded-br-sm bg-trail-soft px-4 py-3 text-ink"
+                    : "winch-chat-bubble max-w-[85%] rounded-2xl rounded-bl-sm border border-line bg-surface px-4 py-3 text-ink"
                 }
               >
                 <p className="text-base whitespace-pre-wrap break-words">{m.body}</p>
-                <p
-                  className={
-                    m.mine ? "mt-1 text-xs text-on-brand/80" : "mt-1 text-xs text-ink-faint"
-                  }
-                >
+                <p className="mt-2 text-xs text-ink-soft">
                   {format.relativeTime(new Date(m.created_at))}
                   {/* Read receipts only on your own messages: on theirs it would be telling them
                       what they already know, and read_at exists to answer "did they see it". */}
@@ -210,7 +206,7 @@ export function DmThread({ threadId }: { threadId: string }) {
           squashed the input to a sliver and gave the button the rest. Vertical is also the right
           shape for a phone held one-handed, which is what this app is read on. */}
       <form
-        className="sticky bottom-0 space-y-2 border-t-2 border-line bg-surface pt-3"
+        className="winch-chat-composer space-y-2"
         onSubmit={(e) => {
           e.preventDefault();
           void send();
@@ -223,7 +219,7 @@ export function DmThread({ threadId }: { threadId: string }) {
           maxLength={2000}
           aria-label={t("composeLabel")}
           placeholder={t("composePlaceholder")}
-          className="w-full rounded-field border-2 border-line bg-surface-sunk px-3 py-2 text-base text-ink"
+          className="min-h-14 w-full resize-y rounded-field border border-line bg-surface px-3 py-3 text-base text-ink placeholder:text-ink-faint"
         />
         <Button type="submit" size="md" disabled={sending || draft.trim().length === 0}>
           {sending ? t("sending") : t("send")}

@@ -49,8 +49,8 @@ export default async function MessageThreadPage({
   const t = await getTranslations({ locale, namespace: "dm" });
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 py-6">
-      <Link href="/messages" className="text-sm text-ink-soft underline underline-offset-4">
+    <main className="winch-screen mx-auto flex max-w-3xl flex-col gap-4">
+      <Link href="/messages" className="inline-flex min-h-11 items-center text-sm text-ink-soft underline underline-offset-4">
         {t("backToInbox")}
       </Link>
 

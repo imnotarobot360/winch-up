@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { MessagesSquare } from "lucide-react";
+import { ScreenHeading } from "@/components/ui/screen-heading";
 import { redirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
@@ -44,13 +46,12 @@ export default async function MessagesPage({ params }: { params: Promise<{ local
   const t = await getTranslations({ locale, namespace: "dm" });
 
   return (
-    <main className="mx-auto w-full max-w-xl space-y-5 px-4 py-6">
+    <main className="winch-screen max-w-3xl space-y-5">
       <header>
         <Link href="/account" className="text-sm text-ink-soft underline underline-offset-4">
           {t("backToAccount")}
         </Link>
-        <h1 className="mt-2 font-display text-3xl">{t("pageTitle")}</h1>
-        <p className="mt-1 text-ink-soft">{t("pageBody")}</p>
+        <ScreenHeading className="mt-4" title={t("pageTitle")} description={t("pageBody")} icon={<MessagesSquare size={28} />} />
       </header>
 
       <DmInbox />

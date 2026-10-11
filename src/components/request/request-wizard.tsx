@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { createRequestAction } from "@/app/actions/request";
@@ -102,7 +102,8 @@ function emptyDraft(): Draft {
   };
 }
 
-export function RequestWizard() {
+type RegisteredVehicle = { id: string; make: string | null; model: string | null; year: number | null; vehicle_class: string; drivetrain: string; is_primary: boolean };
+export function RequestWizard({ registeredVehicles = [] }: { registeredVehicles?: RegisteredVehicle[] }) {
   const t = useTranslations("request");
   const tMembership = useTranslations("membership");
   const tEnum = useTranslations("enum");
@@ -110,9 +111,19 @@ export function RequestWizard() {
   const router = useRouter();
 
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [selectedRig, setSelectedRig] = useState("");
   const [stepIndex, setStepIndex] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const ready = draft !== null;
+
+  // Announce the new question and start at its top after moving through a long step.
+  useEffect(() => {
+    if (!ready) return;
+    headingRef.current?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0 });
+  }, [stepIndex, ready]);
 
   // Restore on mount. Photos keep their storage paths but lose their object-URL previews, which
   // is fine: the upload already happened.
@@ -231,8 +242,8 @@ export function RequestWizard() {
   const isLastStep = stepIndex === STEPS.length - 1;
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-xl flex-col">
-      <header className="sticky top-0 z-10 space-y-2 border-b border-line bg-surface px-4 py-3">
+    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col">
+      <header className="sticky top-0 z-10 space-y-3 border-b border-line bg-trail/95 px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur">
         {/* The reference's three dots over the eight-step flow. The groups are real -- where you
             are, what you need, what you agree to -- so this is not decoration bolted on to match
             a mockup; it is information the wizard always had and never showed. */}
@@ -244,11 +255,11 @@ export function RequestWizard() {
           <p className="text-sm font-medium text-ink-faint">
             {t("progress", { current: stepIndex + 1, total: STEPS.length })}
           </p>
-          <h1 className="text-2xl font-bold leading-tight">{t(`steps.${step}.title`)}</h1>
+          <h1 ref={headingRef} tabIndex={-1} className="winch-heading focus:outline-none">{t(`steps.${step}.title`)}</h1>
         </div>
       </header>
 
-      <main className="flex-1 space-y-5 px-4 py-5">
+      <main className="winch-screen flex-1 space-y-5">
         {step === "emergency" ? (
           <EmergencyStep
             acknowledged={draft.emergencyAck}
@@ -274,6 +285,19 @@ export function RequestWizard() {
 
         {step === "vehicle" ? (
           <div className="space-y-5">
+            {registeredVehicles.length > 0 && <div className="space-y-3 rounded-xl border-2 border-brand bg-brand-tint p-4">
+              <p className="text-lg font-bold">{locale === "es" ? "¿Es este el vehículo que necesita ayuda?" : "Is this the vehicle that needs help?"}</p>
+              {registeredVehicles.map((rig) => <button key={rig.id} type="button" aria-pressed={selectedRig === rig.id}
+                className={"w-full rounded-lg border-2 p-3 text-left font-semibold " + (selectedRig === rig.id ? "border-brand bg-surface" : "border-line bg-surface-sunk")}
+                onClick={() => { setSelectedRig(rig.id); update({ vehicleClass: VEHICLE_CLASSES.includes(rig.vehicle_class as (typeof VEHICLE_CLASSES)[number]) ? rig.vehicle_class as (typeof VEHICLE_CLASSES)[number] : null, vehicleMake: rig.make ?? "", vehicleModel: rig.model ?? "", vehicleYear: rig.year?.toString() ?? "", drivetrain: DRIVETRAINS.includes(rig.drivetrain as (typeof DRIVETRAINS)[number]) ? rig.drivetrain as (typeof DRIVETRAINS)[number] : "unknown" }); }}>
+                {[rig.year, rig.make, rig.model].filter(Boolean).join(" ") || rig.vehicle_class}{rig.is_primary ? (locale === "es" ? " · Principal" : " · Primary") : ""}
+              </button>)}
+              <button type="button" aria-pressed={selectedRig === "other"}
+                className={"w-full rounded-lg border-2 p-3 text-left font-semibold " + (selectedRig === "other" ? "border-brand bg-surface" : "border-line bg-surface-sunk")}
+                onClick={() => { setSelectedRig("other"); update({ vehicleClass: null, vehicleMake: "", vehicleModel: "", vehicleYear: "", drivetrain: "unknown" }); }}>
+                {locale === "es" ? "No, es otro vehículo" : "No, another vehicle"}
+              </button>
+            </div>}
             <ChoiceList
               name={t("steps.vehicle.title")}
               columns={2}
@@ -494,13 +518,13 @@ export function RequestWizard() {
         ) : null}
       </main>
 
-      <footer className="sticky bottom-0 border-t border-line bg-surface px-4 py-3">
+      <footer className="sticky bottom-0 z-10 border-t border-line bg-surface-sunk px-4 pt-3 pb-[max(.75rem,env(safe-area-inset-bottom))]">
         <div className="flex gap-3">
           {stepIndex > 0 ? (
             <Button
               type="button"
               variant="secondary"
-              className="w-28"
+              className="w-auto shrink-0 px-4"
               onClick={() => setStepIndex((index) => Math.max(0, index - 1))}
             >
               {t("back")}
