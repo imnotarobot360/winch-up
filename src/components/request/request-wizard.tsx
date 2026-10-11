@@ -59,6 +59,7 @@ type Draft = {
   emergencyAck: boolean;
   location: LocationValue | null;
   photos: UploadedPhoto[];
+  selectedVehicleId: string | null;
   vehicleClass: (typeof VEHICLE_CLASSES)[number] | null;
   vehicleMake: string;
   vehicleModel: string;
@@ -83,6 +84,7 @@ function emptyDraft(): Draft {
     emergencyAck: false,
     location: null,
     photos: [],
+    selectedVehicleId: null,
     vehicleClass: null,
     vehicleMake: "",
     vehicleModel: "",
@@ -111,7 +113,6 @@ export function RequestWizard({ registeredVehicles = [] }: { registeredVehicles?
   const router = useRouter();
 
   const [draft, setDraft] = useState<Draft | null>(null);
-  const [selectedRig, setSelectedRig] = useState("");
   const [stepIndex, setStepIndex] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -133,7 +134,7 @@ export function RequestWizard({ registeredVehicles = [] }: { registeredVehicles?
       if (stored) {
         const parsed = JSON.parse(stored) as Draft;
         if (parsed?.submissionId) {
-          setDraft({ ...emptyDraft(), ...parsed });
+          setDraft({ ...emptyDraft(), ...parsed, selectedVehicleId: parsed.selectedVehicleId ?? null });
           return;
         }
       }
@@ -172,7 +173,7 @@ export function RequestWizard({ registeredVehicles = [] }: { registeredVehicles?
       case "photos":
         return true;
       case "vehicle":
-        return draft.vehicleClass !== null;
+        return draft.vehicleClass !== null && (registeredVehicles.length === 0 || draft.selectedVehicleId !== null);
       case "situation":
         return draft.stuckType !== null && !containsContactInfo(draft.notes);
       case "land":
@@ -287,14 +288,14 @@ export function RequestWizard({ registeredVehicles = [] }: { registeredVehicles?
           <div className="space-y-5">
             {registeredVehicles.length > 0 && <div className="space-y-3 rounded-xl border-2 border-brand bg-brand-tint p-4">
               <p className="text-lg font-bold">{locale === "es" ? "¿Es este el vehículo que necesita ayuda?" : "Is this the vehicle that needs help?"}</p>
-              {registeredVehicles.map((rig) => <button key={rig.id} type="button" aria-pressed={selectedRig === rig.id}
-                className={"w-full rounded-lg border-2 p-3 text-left font-semibold " + (selectedRig === rig.id ? "border-brand bg-surface" : "border-line bg-surface-sunk")}
-                onClick={() => { setSelectedRig(rig.id); update({ vehicleClass: VEHICLE_CLASSES.includes(rig.vehicle_class as (typeof VEHICLE_CLASSES)[number]) ? rig.vehicle_class as (typeof VEHICLE_CLASSES)[number] : null, vehicleMake: rig.make ?? "", vehicleModel: rig.model ?? "", vehicleYear: rig.year?.toString() ?? "", drivetrain: DRIVETRAINS.includes(rig.drivetrain as (typeof DRIVETRAINS)[number]) ? rig.drivetrain as (typeof DRIVETRAINS)[number] : "unknown" }); }}>
+              {registeredVehicles.map((rig) => <button key={rig.id} type="button" aria-pressed={draft.selectedVehicleId === rig.id}
+                className={"w-full rounded-lg border-2 p-3 text-left font-semibold " + (draft.selectedVehicleId === rig.id ? "border-brand bg-surface" : "border-line bg-surface-sunk")}
+                onClick={() => { update({ selectedVehicleId: rig.id, vehicleClass: VEHICLE_CLASSES.includes(rig.vehicle_class as (typeof VEHICLE_CLASSES)[number]) ? rig.vehicle_class as (typeof VEHICLE_CLASSES)[number] : null, vehicleMake: rig.make ?? "", vehicleModel: rig.model ?? "", vehicleYear: rig.year?.toString() ?? "", drivetrain: DRIVETRAINS.includes(rig.drivetrain as (typeof DRIVETRAINS)[number]) ? rig.drivetrain as (typeof DRIVETRAINS)[number] : "unknown" }); }}>
                 {[rig.year, rig.make, rig.model].filter(Boolean).join(" ") || rig.vehicle_class}{rig.is_primary ? (locale === "es" ? " · Principal" : " · Primary") : ""}
               </button>)}
-              <button type="button" aria-pressed={selectedRig === "other"}
-                className={"w-full rounded-lg border-2 p-3 text-left font-semibold " + (selectedRig === "other" ? "border-brand bg-surface" : "border-line bg-surface-sunk")}
-                onClick={() => { setSelectedRig("other"); update({ vehicleClass: null, vehicleMake: "", vehicleModel: "", vehicleYear: "", drivetrain: "unknown" }); }}>
+              <button type="button" aria-pressed={draft.selectedVehicleId === "other"}
+                className={"w-full rounded-lg border-2 p-3 text-left font-semibold " + (draft.selectedVehicleId === "other" ? "border-brand bg-surface" : "border-line bg-surface-sunk")}
+                onClick={() => { update({ selectedVehicleId: "other", vehicleClass: null, vehicleMake: "", vehicleModel: "", vehicleYear: "", drivetrain: "unknown" }); }}>
                 {locale === "es" ? "No, es otro vehículo" : "No, another vehicle"}
               </button>
             </div>}
@@ -328,6 +329,9 @@ export function RequestWizard({ registeredVehicles = [] }: { registeredVehicles?
                 />
               </Field>
             </div>
+            <Field label={locale === "es" ? "Año del vehículo (opcional)" : "Vehicle year (optional)"} htmlFor="vehicle-year">
+              <TextInput id="vehicle-year" value={draft.vehicleYear} inputMode="numeric" maxLength={4} onChange={(event) => update({ vehicleYear: event.target.value.replace(/\\D/g, "").slice(0, 4) })} />
+            </Field>
             <Field label={t("vehicle.drivetrain")}>
               <ChoiceList
                 name={t("vehicle.drivetrain")}
