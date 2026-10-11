@@ -173,7 +173,7 @@ export function RequestWizard({ registeredVehicles = [] }: { registeredVehicles?
       case "photos":
         return true;
       case "vehicle":
-        return draft.vehicleClass !== null && (registeredVehicles.length === 0 || draft.selectedVehicleId !== null);
+        return draft.vehicleClass !== null && (registeredVehicles.length === 0 || draft.selectedVehicleId === "other" || registeredVehicles.some((rig) => rig.id === draft.selectedVehicleId));
       case "situation":
         return draft.stuckType !== null && !containsContactInfo(draft.notes);
       case "land":
@@ -330,7 +330,7 @@ export function RequestWizard({ registeredVehicles = [] }: { registeredVehicles?
               </Field>
             </div>
             <Field label={locale === "es" ? "Año del vehículo (opcional)" : "Vehicle year (optional)"} htmlFor="vehicle-year">
-              <TextInput id="vehicle-year" value={draft.vehicleYear} inputMode="numeric" maxLength={4} onChange={(event) => update({ vehicleYear: event.target.value.replace(/\\D/g, "").slice(0, 4) })} />
+              <TextInput id="vehicle-year" value={draft.vehicleYear} inputMode="numeric" maxLength={4} onChange={(event) => update({ vehicleYear: event.target.value.replace(/[^0-9]/g, "").slice(0, 4) })} />
             </Field>
             <Field label={t("vehicle.drivetrain")}>
               <ChoiceList
