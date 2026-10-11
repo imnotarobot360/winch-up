@@ -188,6 +188,8 @@ async function fileRequest(page: Page, note: string): Promise<string> {
   // These are ChoiceList, which renders role="radio" rather than a button — a deliberate choice
   // in the design system, because a dropdown on a mid-range Android in sunlight with cold hands
   // is worse than a column of large targets. Asking for a button here finds nothing.
+  const otherVehicle = page.getByRole("button", { name: /^(no, another vehicle|no, es otro vehículo)$/i });
+  if (await otherVehicle.count()) await otherVehicle.click();
   await page.getByRole("radio", { name: /^truck$|^troca$/i }).first().click();
   await page.getByRole("button", { name: /^(next|siguiente)$/i }).click();
 
