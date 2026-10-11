@@ -251,6 +251,8 @@ async function fileRequest(page: Page, note: string): Promise<string> {
   // Photos skipped: uploads need storage-api, which the local stack answers 501 to on purpose.
   await page.getByRole("button", { name: /^(next|siguiente)$/i }).click();
 
+  const otherVehicle = page.getByRole("button", { name: /^(no, another vehicle|no, es otro vehículo)$/i });
+  if (await otherVehicle.count()) await otherVehicle.click();
   await page.getByRole("radio", { name: /^truck$|^troca$/i }).first().click();
   await page.getByRole("button", { name: /^(next|siguiente)$/i }).click();
 
