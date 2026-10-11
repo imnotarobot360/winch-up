@@ -287,7 +287,7 @@ export function RequestWizard({ registeredVehicles = [] }: { registeredVehicles?
         {step === "vehicle" ? (
           <div className="space-y-5">
             {registeredVehicles.length > 0 && <div className="space-y-3 rounded-xl border-2 border-brand bg-brand-tint p-4">
-              <p className="text-lg font-bold">{locale === "es" ? "¿Es este el vehículo que necesita ayuda?" : "Is this the vehicle that needs help?"}</p>
+              <p className="text-lg font-bold">{locale === "es" ? "¿El vehículo que necesita ayuda está registrado en tu perfil?" : "Is the vehicle that needs help listed in your profile?"}</p>
               {registeredVehicles.map((rig) => <button key={rig.id} type="button" aria-pressed={draft.selectedVehicleId === rig.id}
                 className={"w-full rounded-lg border-2 p-3 text-left font-semibold " + (draft.selectedVehicleId === rig.id ? "border-brand bg-surface" : "border-line bg-surface-sunk")}
                 onClick={() => { update({ selectedVehicleId: rig.id, vehicleClass: VEHICLE_CLASSES.includes(rig.vehicle_class as (typeof VEHICLE_CLASSES)[number]) ? rig.vehicle_class as (typeof VEHICLE_CLASSES)[number] : null, vehicleMake: rig.make ?? "", vehicleModel: rig.model ?? "", vehicleYear: rig.year?.toString() ?? "", drivetrain: DRIVETRAINS.includes(rig.drivetrain as (typeof DRIVETRAINS)[number]) ? rig.drivetrain as (typeof DRIVETRAINS)[number] : "unknown" }); }}>
