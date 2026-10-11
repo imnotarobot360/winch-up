@@ -28,14 +28,16 @@ export function Avatar({
   name,
   src,
   size = "md",
+  onError,
 }: {
   name: string | null;
   /** A SIGNED url. Never a raw storage path -- the bucket is private and a path renders nothing. */
   src?: string | null;
   /** md is the list row; lg is the profile header. */
   size?: "md" | "lg";
+  onError?: () => void;
 }) {
-  const [failed, setFailed] = useState(false);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
   const initials =
     (name ?? "")
@@ -47,7 +49,7 @@ export function Avatar({
 
   const dimensions = size === "lg" ? "size-20 text-2xl" : "size-12 text-base";
 
-  if (src && !failed) {
+  if (src && src !== failedSrc) {
     return (
       // A plain img, not next/image. The URL is signed and short-lived, so the optimizer would
       // cache a variant that outlives it and then serve a 403 from its own cache.
@@ -55,7 +57,10 @@ export function Avatar({
         src={src}
         alt=""
         aria-hidden
-        onError={() => setFailed(true)}
+        onError={() => {
+          setFailedSrc(src);
+          onError?.();
+        }}
         className={`${dimensions} shrink-0 rounded-full border-2 border-line object-cover`}
       />
     );

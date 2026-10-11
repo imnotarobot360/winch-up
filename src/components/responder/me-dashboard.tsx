@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Avatar } from "@/components/ui/avatar";
@@ -98,13 +98,15 @@ const OPEN_STATES = ["queued", "sent", "delivered"];
  * `security definer` RPC that works out who you are from `auth.uid()`. The requester's phone and
  * exact pin arrive through `get_job_contact`, which only answers for the job you actually took.
  */
-export function MeDashboard() {
+export function MeDashboard({ initialAvatarUrl = null }: { initialAvatarUrl?: string | null }) {
   const t = useTranslations("me");
   const tEnum = useTranslations("enum");
 
   const [loading, setLoading] = useState(true);
   const [signedIn, setSignedIn] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl);
+  const avatarRefreshes = useRef(0);
   const [feed, setFeed] = useState<FeedRow[]>([]);
   const [mine, setMine] = useState<MyRequest[]>([]);
   const [contact, setContact] = useState<JobContact | null>(null);
@@ -116,6 +118,46 @@ export function MeDashboard() {
   const [acks, setAcks] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const refreshAvatar = useCallback(async () => {
+    avatarRefreshes.current = 0;
+    try {
+      const response = await fetch("/api/photos/avatar/sign-read", {
+        method: "POST",
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        setAvatarUrl(null);
+        return;
+      }
+      const result = (await response.json()) as { avatarUrl?: unknown };
+      setAvatarUrl(typeof result.avatarUrl === "string" ? result.avatarUrl : null);
+    } catch {
+      setAvatarUrl(null);
+    }
+  }, []);
+
+  const refreshExpiredAvatar = useCallback(async () => {
+    if (avatarRefreshes.current > 0) {
+      setAvatarUrl(null);
+      return;
+    }
+    avatarRefreshes.current += 1;
+    try {
+      const response = await fetch("/api/photos/avatar/sign-read", {
+        method: "POST",
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        setAvatarUrl(null);
+        return;
+      }
+      const result = (await response.json()) as { avatarUrl?: unknown };
+      setAvatarUrl(typeof result.avatarUrl === "string" ? result.avatarUrl : null);
+    } catch {
+      setAvatarUrl(null);
+    }
+  }, []);
 
   const load = useCallback(async () => {
     const supabase = supabaseBrowser();
@@ -155,7 +197,27 @@ export function MeDashboard() {
 
   useEffect(() => {
     void load();
-  }, [load]);
+    void refreshAvatar();
+
+    const refresh = () => void refreshAvatar();
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === "winchup:avatar-updated") refresh();
+    };
+    window.addEventListener("winchup:avatar-updated", refresh);
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("focus", refresh);
+    const { data: { subscription } } = supabaseBrowser().auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") setAvatarUrl(null);
+      if (event === "SIGNED_IN") window.setTimeout(refresh, 0);
+    });
+
+    return () => {
+      window.removeEventListener("winchup:avatar-updated", refresh);
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", refresh);
+      subscription.unsubscribe();
+    };
+  }, [load, refreshAvatar]);
 
   async function run(fn: string, args: Record<string, unknown>) {
     setBusy(true);
@@ -211,7 +273,13 @@ export function MeDashboard() {
   return (
     <main className="winch-screen max-w-3xl space-y-5">
       <Card className="flex flex-wrap items-center gap-4 border-trail-line">
-        <Avatar name={profile.first_name} size="lg" />
+        <Link
+          href="/account"
+          aria-label={t("accountSettings")}
+          className="shrink-0 rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
+        >
+          <Avatar name={profile.first_name} src={avatarUrl} size="lg" onError={() => void refreshExpiredAvatar()} />
+        </Link>
         <ScreenHeading
           className="min-w-0 flex-1"
           title={t("greeting", { name: profile.first_name })}

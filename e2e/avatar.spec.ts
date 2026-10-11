@@ -99,6 +99,14 @@ test("a member can add a photograph, and it survives a reload", async ({ page })
   test.skip(!(await hasStorage()), "No Storage service on this stack -- see hasStorage() above");
 
   await signIn(page);
+
+  // Keep the dashboard open in another tab while Account Settings changes the photo. Both tabs
+  // share this authenticated session; the storage event must refresh the signed URL without a
+  // sign-out, reload, or new login.
+  const dashboard = await page.context().newPage();
+  await dashboard.goto("/me");
+  await hydrated(dashboard.locator("main"));
+
   await page.goto("/account");
   await hydrated(page.locator("main"));
 
@@ -134,9 +142,26 @@ test("a member can add a photograph, and it survives a reload", async ({ page })
     /token=|signature=/,
   );
 
+  const liveDashboardImg = dashboard.locator('main a[href="/account"] img');
+  await expect(liveDashboardImg, "the already-open dashboard refreshes from the account update").toBeVisible({
+    timeout: 20_000,
+  });
+  await expect(liveDashboardImg).toHaveAttribute("src", /\/storage\/v1\/.*(token=|signature=)/);
+
+  // The member dashboard uses the same private profile photo after Account Settings saves it.
+  await page.goto("/me");
+  await hydrated(page.locator("main"));
+  const dashboardImg = page.locator('main a[href="/account"] img');
+  await expect(dashboardImg, "the dashboard greets the signed-in member with their saved photo").toBeVisible({
+    timeout: 20_000,
+  });
+  await expect(dashboardImg).toHaveAttribute("src", /\/storage\/v1\/.*(token=|signature=)/);
+
   // --- put the shared demo member back -----------------------------------------
   // Every run drives the same four accounts. A photograph left behind would change what the
   // members list and the DM screens render for everybody else's runs.
+  await page.goto("/account");
+  await hydrated(page.locator("main"));
   await page.getByRole("button", { name: /remove photo/i }).click();
 
   // WAIT FOR THE REMOVAL TO LAND BEFORE RELOADING. Reloading straight after the click aborts the
@@ -155,6 +180,21 @@ test("a member can add a photograph, and it survives a reload", async ({ page })
     page.getByRole("button", { name: /add a photo/i }),
     "and it STAYS removed across a reload, so a row was written rather than only the state",
   ).toBeVisible({ timeout: 20_000 });
+
+  await page.goto("/me");
+  await hydrated(page.locator("main"));
+  await expect(
+    page.locator('main a[href="/account"] img'),
+    "the dashboard falls back after the profile photo is removed",
+  ).toHaveCount(0);
+
+  await dashboard.reload();
+  await hydrated(dashboard.locator("main"));
+  await expect(
+    dashboard.locator('main a[href="/account"] img'),
+    "the other signed-in tab also falls back after removal",
+  ).toHaveCount(0);
+  await dashboard.close();
 });
 
 test("the account screen falls back to initials with no photograph", async ({ page }) => {

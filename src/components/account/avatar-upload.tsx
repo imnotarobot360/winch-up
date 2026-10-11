@@ -91,6 +91,7 @@ export function AvatarUpload({
       // Show it immediately from the local file rather than waiting for a round trip to mint a
       // signed URL for an object the browser already has.
       setSrc(URL.createObjectURL(jpeg));
+      notifyAvatarUpdated();
     } catch {
       setError(t("photoFailed"));
     } finally {
@@ -126,6 +127,7 @@ export function AvatarUpload({
     // member removing a picture from their profile is not a request to erase it from storage --
     // account deletion is, and that is a different path.
     setSrc(null);
+    notifyAvatarUpdated();
   }
 
   return (
@@ -194,4 +196,14 @@ async function toSquareJpeg(file: File): Promise<Blob> {
       0.85,
     );
   });
+}
+
+
+function notifyAvatarUpdated() {
+  window.dispatchEvent(new Event("winchup:avatar-updated"));
+  try {
+    window.localStorage.setItem("winchup:avatar-updated", Date.now().toString());
+  } catch {
+    // Storage can be unavailable in a private browser context; the same-tab event still works.
+  }
 }

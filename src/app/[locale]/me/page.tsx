@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { MeDashboard } from "@/components/responder/me-dashboard";
+import { signAvatar } from "@/lib/avatar-photos";
+import { supabaseServer } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -23,5 +25,20 @@ export default async function MePage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  return <MeDashboard />;
+  const supabase = await supabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let avatarUrl: string | null = null;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("avatar_path")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    avatarUrl = await signAvatar(profile?.avatar_path);
+  }
+
+  return <MeDashboard initialAvatarUrl={avatarUrl} />;
 }
