@@ -164,6 +164,8 @@ test("a recovery reaches the member a few miles away and not the one in another 
 
   // Vehicle, situation, land. These are ChoiceList, which renders role=radio rather than a
   // button; the steps below are lifted from membership.spec rather than guessed at again.
+  const otherVehicle = stuck.page.getByRole("button", { name: /^(no, another vehicle|no, es otro vehículo)$/i });
+  if (await otherVehicle.count()) await otherVehicle.click();
   await stuck.page.getByRole("radio", { name: /^truck$|^troca$/i }).first().click();
   await stuck.page.getByRole("button", { name: /^(next|siguiente)$/i }).click();
 
