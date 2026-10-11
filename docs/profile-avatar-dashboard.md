@@ -26,6 +26,6 @@ The member dashboard now uses the photo already stored in `profiles.avatar_path`
 
 ## Validation
 
-CI results will be recorded in the pull request after its workflows complete. The Playwright avatar suite uses the local CI Supabase Storage service and a test account; it does not connect to production. Physical iPhone and Android device validation requires an isolated staging project and development builds, so it is not claimed by repository CI.
+GitHub Actions passed on commit `23ea0cc708603af68068021ca4ddf510cbff0898` (run [38174556787](https://github.com/imnotarobot360/winch-up/actions/runs/38174556787)): typecheck, lint, unit tests, production build, Playwright across four viewport presets and two browser engines, and pgTAP. The mobile workflow passed Expo dependency installation, TypeScript, and Expo compatibility checks (run [38174556386](https://github.com/imnotarobot360/winch-up/actions/runs/38174556386)). The Playwright avatar test used local CI Supabase Storage and a test account, not production. The production migration job was skipped. Physical iPhone and Android device validation requires an isolated staging project and development builds, so it is not claimed by repository CI.
 
 No production deployment, production migration, production data change, or SOS was performed for this feature.
