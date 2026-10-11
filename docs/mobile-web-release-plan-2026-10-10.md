@@ -115,3 +115,18 @@ Status: planning only. This branch MUST NOT be merged or deployed until release 
 - Apple requires Xcode 26+ / iOS 26 SDK for uploads since April 28, 2026 (verify again at submission).
 - Google Play new apps/updates require target Android 16 / API 36+ since Aug 31, 2026 (verify again at submission).
 - Sources: https://developer.apple.com/app-store/review/guidelines/ ; https://developer.apple.com/news/upcoming-requirements/ ; https://developer.android.com/google/play/requirements/target-sdk
+
+
+## Progress checkpoint — October 11, 2026
+
+- The PR's web redesign passed the repository verification workflow, including typecheck, lint, unit tests, production build, responsive Playwright coverage across four viewport presets and two browser engines, and pgTAP. Production migration remained skipped.
+- Expo mobile foundation dependency install, TypeScript typecheck, and Expo compatibility check passed. iOS/Android native binaries and physical-device behavior are still unverified.
+- The native request screen now asks whether the vehicle is listed in the member profile, lets the member select a saved vehicle, and provides make/model/year fields for another vehicle. The web wizard asks the same profile-match question and browser E2E covers choosing a saved vehicle and switching to another vehicle.
+- The mobile SOS mutation remains deliberately disabled. No production database credentials, migrations, dispatch, real SOS alerts, or store submissions are part of this work.
+
+### Remaining before any release
+
+1. Configure a separate staging Supabase project with synthetic accounts, RLS verification, and outbound SMS/email/push disabled; verify the mobile profile vehicle query against it.
+2. Implement and security-test native authentication, waiver, request creation/status, photo upload, map/location confirmation, approved-volunteer dispatch, and chat against the existing server-side authorization contracts.
+3. Run signed development builds in Xcode and Android tooling; test permissions, keyboard, safe areas, offline/retry behavior, notification opt-in, camera, and account deletion on physical devices.
+4. Complete privacy disclosures, app identifiers/signing, store metadata, and internal distribution checks. No public release has been prepared or submitted.
