@@ -144,6 +144,86 @@ The buttons then render and start a flow the shim cannot finish, which is the po
 exercises discovery and layout, not the provider handshake. Leave the variable unset and you get
 the shipped state, which is no buttons at all.
 
+
+## Apple on the native apps
+
+The section above is the WEB flow. The native apps need a second configuration that shares the
+Apple Developer account and almost nothing else, and the part people get wrong is which identifier
+goes where.
+
+**iOS native does NOT use the Services ID.** `expo-apple-authentication` talks to the system
+Sign in with Apple sheet, and the identity token it returns has the **bundle identifier** as its
+audience. Supabase has to be told to accept that: Authentication → Providers → Apple →
+**Authorized Client IDs**, which takes bundle IDs, alongside the Services ID used by the web. Put
+the Services ID there and every native sign-in fails validation with an audience mismatch, which
+reads like a broken key.
+
+**Android has no native Sign in with Apple.** There is no system sheet to call, so Android uses the
+same web OAuth flow as the browser — the Services ID — and comes back into the app through its URL
+scheme rather than to `/auth/callback`. That redirect has to be registered with Supabase like any
+other, and it is the app's scheme, not a domain.
+
+**The nonce is passed twice, in two different forms, and swapping them is the classic failure.**
+Hash a random string with SHA-256 and give the HASH to `expo-apple-authentication`; give the RAW
+string to Supabase's `signInWithIdToken` as `nonce`. Apple embeds the hash in the token, Supabase
+hashes what you send and compares. Send the same form to both and the token is rejected with a
+message that says nothing about nonces.
+
+**Apple gives the member's name ONCE, on first authorization, and never again.** If it is not
+persisted during that first callback it is gone for that Apple ID unless the member removes the app
+from their Apple account and starts over. It also arrives from the client, so it is a display name
+and not an identity claim — the same rule `app.handle_new_user` already applies to the name typed at
+signup, which it validates and nulls rather than trusting.
+
+**Hide My Email applies here exactly as it does on the web**, including the trap above: mail to
+`@privaterelay.appleid.com` only arrives if the sending domain is registered in Apple's console. An
+unregistered domain bounces silently, so an Apple member would get no welcome email and nothing
+would appear to be wrong.
+
+### Per environment, which is where this gets fiddly
+
+The mobile app deliberately points at a **separate, non-production Supabase project** — its
+`.env.example` says so in capitals, because pointing development SOS at production would alert real
+volunteers. Apple is therefore configured **once per Supabase project**, and sign-in failing in one
+environment while working in another is the expected shape of a half-finished setup, not a bug.
+
+What the repo already fixes, for development:
+
+| | |
+|---|---|
+| iOS bundle identifier | `com.winchup.mobile.dev` |
+| Android package | `com.winchup.mobile.dev` |
+| URL scheme | `winchup-dev` |
+| `expo.extra.environment` | `development` |
+
+Staging and production identifiers **are not decided and are not invented here.** Pick them before
+creating the App IDs, because a bundle identifier cannot be renamed once it has shipped to
+TestFlight — the convention the dev values imply would be `com.winchup.mobile.staging` and
+`com.winchup.mobile`, with schemes to match, but that is the owner's call to make explicitly.
+
+### What only the owner can do
+
+Nothing below can be done from this repository, and none of these values may be guessed.
+
+1. **App ID** for each environment's bundle identifier, with the **Sign in with Apple** capability
+   enabled. This is what makes the native sheet work.
+2. **Services ID** — one, shared by web and Android — already described in the web section above.
+3. **Key** with Sign in with Apple, and the `.p8` downloaded on the one occasion Apple offers it.
+   The same key serves every environment; it belongs to the team, not the app.
+4. **Team ID**, from the membership page.
+5. In **each Supabase project** (production, and the separate one the mobile app uses):
+   Authentication → Providers → Apple → Services ID, Team ID, Key ID, `.p8` contents, **and the
+   bundle identifiers in Authorized Client IDs**.
+6. **Redirect URLs** in Supabase: the existing `https://www.winch-up.com/auth/callback` for the web,
+   plus the app scheme for Android, e.g. `winchup-dev://auth/callback` for development.
+7. **Private relay**: register the sending domain and the Resend identity in Apple's console, or
+   welcome mail to Apple members disappears without an error.
+
+Until step 5 is done for a given project, the web button will not appear there at all — the UI reads
+`/auth/v1/settings` and only draws providers the dashboard has enabled, which is the behaviour
+described at the top of this file. That is also the fastest way to check the configuration landed:
+load the sign-in page and look.
+
 ## What is NOT done
 
 - **Apple** is not configured and has never run against a real OAuth handshake. Google has:
@@ -155,6 +235,12 @@ the shipped state, which is no buttons at all.
 - Account **linking** has no UI. Supabase links matching verified emails by itself; a member who
   signs in with a provider using a *different* address gets a second account, and merging the
   two is a manual database job today.
-- Native mobile SDKs (§9) are not built, because there is no mobile app. The signature record is
-  already platform-agnostic — keyed by user id, with a `signed_via` column — so an agreement
-  signed on the web counts everywhere, which is what §9 actually requires.
+- Native mobile SDKs (§9) are not built. **The mobile app now exists** — `apps/mobile`, an Expo
+  Router foundation added on 2026-10-11 — and its sign-in screen is email and password only;
+  `expo-apple-authentication` is not a dependency yet. See "Apple on the native apps" above for
+  what its configuration needs that the web's does not. The signature record is already
+  platform-agnostic — keyed by user id, with a `signed_via` column — so an agreement signed on the
+  web counts everywhere, which is what §9 actually requires.
+- **Nothing Apple has ever run against a real handshake, on any platform**, and it cannot until the
+  Apple Developer identifiers exist. Any claim that Apple sign-in "works" before then is untested
+  by construction, on web and native alike.
