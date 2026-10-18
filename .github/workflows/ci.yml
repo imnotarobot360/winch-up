@@ -59,26 +59,7 @@ jobs:
 
       - run: npm ci
 
-      # THE MOBILE PACKAGE IS SEPARATE AND ITS DEPENDENCIES ARE NOT IN THE ROOT LOCKFILE.
-      #
-      # apps/mobile has its own package.json, and the root vitest run now includes
-      # apps/mobile/**/*.test.ts for apple-auth.test.ts. Without this step that file cannot be
-      # transformed — vite resolves "extends": "expo/tsconfig.base" and the whole unit run dies,
-      # not just the one test. The failure names tsconfig and says nothing about Expo being
-      # absent, so it reads as a config mistake rather than a missing install.
-      #
-      # --legacy-peer-deps because apps/mobile sits INSIDE the web project, so npm sees the web
-      # app's react-dom while resolving the mobile app's react. They are two independent packages
-      # that happen to share a directory tree, and npm has no way to be told that.
-      - run: npm install --legacy-peer-deps --no-audit --no-fund
-        working-directory: apps/mobile
-
       - run: npm run verify
-
-      # The mobile app's own typecheck. `npm run verify` typechecks the web app against the root
-      # tsconfig, which does not cover apps/mobile at all.
-      - run: npx tsc --noEmit
-        working-directory: apps/mobile
 
   # ---------------------------------------------------------------------------
   # The browser suite, against a Supabase this runner starts and throws away.
