@@ -1,4 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { UserRound } from "lucide-react";
+import { ScreenHeading } from "@/components/ui/screen-heading";
 
 import { AccountForm } from "@/components/account/account-form";
 import { signAvatar } from "@/lib/avatar-photos";
@@ -67,9 +69,8 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
   const t = await getTranslations("account");
 
   return (
-    <main className="mx-auto w-full max-w-xl px-4 py-8">
-      <h1 className="text-3xl font-bold">{t("title")}</h1>
-      <p className="mt-2 text-lg text-ink-soft">{t("body")}</p>
+    <main className="winch-screen max-w-3xl">
+      <ScreenHeading title={t("title")} description={t("body")} icon={<UserRound size={28} />} />
       <div className="mt-6">
         <AccountForm
           userId={user!.id}

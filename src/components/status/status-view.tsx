@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 
 import { acceptOfferAction, declineOfferAction } from "@/app/actions/offers";
+import { Radio, Truck } from "lucide-react";
+
 import { IconPin } from "@/components/ui/icons";
 import {
   cancelRequestAction,
@@ -154,7 +156,7 @@ export function StatusView({
   const team = data.team ?? [];
 
   return (
-    <main className="mx-auto w-full max-w-xl space-y-5 px-4 py-6">
+    <main className="winch-screen max-w-3xl space-y-5">
       {/* `unmatched` means the dispatcher ran out of people to ring. It used to also mean nobody
           had put their hand up, because those were the same thing. They are not any more: a
           member can find a request on /help and offer long after the rings are done. Left alone,
@@ -188,8 +190,8 @@ export function StatusView({
           </div>
         ) : null}
 
-        <p className="font-mono text-base text-ink-faint">{data.short_code}</p>
-        <h1 className="text-3xl font-bold leading-tight">
+        <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-line bg-trail px-3 py-1 font-mono text-sm text-ink-soft"><Radio size={16} aria-hidden="true" />{data.short_code}</p>
+        <h1 className="winch-heading">
           {awaitingChoice
             ? t("awaitingChoiceTitle")
             : tEnum(`requestStatus.${data.status}`)}
@@ -233,7 +235,7 @@ export function StatusView({
           <ul className="space-y-3">
             {data.offers.map((offer) => (
               <li key={offer.id} className="rounded-2xl border border-line p-4">
-                <div className="flex items-baseline justify-between gap-2">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <p className="text-lg font-bold">
                     {offer.first_name}
                     {offer.verified ? (
@@ -306,6 +308,7 @@ export function StatusView({
 
       {data.responder ? (
         <Card className="space-y-3 border-good">
+          <span className="winch-heading-icon" aria-hidden="true"><Truck size={28} /></span>
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-ink-faint">
               {t("responderTitle")}
@@ -366,14 +369,14 @@ export function StatusView({
 
       <Card className="space-y-3">
         <h2 className="text-xl font-semibold">{t("timelineTitle")}</h2>
-        <ol className="space-y-3">
+        <ol className="winch-timeline">
           {data.timeline.map((entry, index) => (
             <li key={`${entry.type}-${index}`} className="flex gap-3">
               <span
                 aria-hidden
-                className="mt-2 h-3 w-3 shrink-0 rounded-full bg-brand"
+                className="relative mt-2 h-3 w-3 shrink-0 rounded-full bg-brand ring-4 ring-brand-tint"
               />
-              <span>
+              <span className="min-w-0">
                 <span className="block font-medium">{tEnum(`event.${entry.type}`)}</span>
                 <span className="block text-sm text-ink-faint">
                   {format.dateTime(new Date(entry.at), {

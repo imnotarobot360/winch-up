@@ -88,7 +88,8 @@ jobs:
     runs-on: ubuntu-latest
     # supabase start pulls images, then a production build, then the suite on one worker.
     timeout-minutes: 45
-    if: ${{ github.event_name == 'push' }}
+    # PRs also receive an isolated Supabase runner; no external production secrets are required.
+    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
 
     steps:
       - uses: actions/checkout@v5

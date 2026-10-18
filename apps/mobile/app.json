@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "WINCH-UP Dev",
+    "slug": "winch-up-mobile",
+    "scheme": "winchup-dev",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "WINCH-UP uses your location only when you choose to locate your vehicle or send an SOS."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#ea580c"
+        }
+      ]
+    ],
+    "ios": {
+      "bundleIdentifier": "com.winchup.mobile.dev",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Attach a photo to your assistance request."
+      }
+    },
+    "android": {
+      "package": "com.winchup.mobile.dev",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA"
+      ]
+    },
+    "extra": {
+      "environment": "development"
+    }
+  }
+}

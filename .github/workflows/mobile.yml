@@ -1,0 +1,31 @@
+name: Mobile foundation validation
+
+on:
+  pull_request:
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/mobile.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mobile-typecheck:
+    name: Expo dependency install and TypeScript
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install native dependencies without modifying root lockfile
+        run: npm install --no-package-lock --no-audit --no-fund
+      - name: Check native TypeScript
+        run: npm run typecheck
+      - name: Check Expo dependency compatibility
+        run: npx expo install --check
