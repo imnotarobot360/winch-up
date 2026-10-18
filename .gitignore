@@ -39,3 +39,6 @@ npm-debug.log*
 
 # Rendered email templates (npm run email:render) — generated, paste-only, never committed
 .tmp/
+
+# The mobile package installs with --no-package-lock on purpose; see .github/workflows/mobile.yml
+apps/mobile/package-lock.json

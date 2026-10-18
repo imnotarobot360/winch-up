@@ -27,5 +27,11 @@ jobs:
         run: npm install --no-package-lock --no-audit --no-fund
       - name: Check native TypeScript
         run: npm run typecheck
+      # The mobile package's own unit tests, run HERE rather than in the root suite. The root
+      # vitest cannot reach them: apps/mobile/tsconfig.json extends "expo/tsconfig.base", so
+      # without this job's install vite fails to resolve it and the whole root run dies rather
+      # than one file. This job already has the install, so the tests belong with it.
+      - name: Native unit tests
+        run: npm test
       - name: Check Expo dependency compatibility
         run: npx expo install --check
