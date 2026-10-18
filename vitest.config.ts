@@ -11,7 +11,15 @@ export default defineConfig({
     // @vitest-environment comment. Nothing here touches a database or the network.
     // scripts/ is in here for check-db-url.test.ts: the migrate job has no Node step, so
     // that checker has to be shell, and one tested implementation beats a TypeScript twin.
-    include: ["src/**/*.test.ts", "src/**/*.test.tsx", "scripts/**/*.test.ts"],
+    // apps/mobile is in here for apple-auth.test.ts. The Expo app is a SEPARATE package with its
+    // own node_modules, so this line only works where those are installed -- including on CI,
+    // which has no mobile job yet. See the note in apps/mobile/README.md.
+    include: [
+      "src/**/*.test.ts",
+      "src/**/*.test.tsx",
+      "scripts/**/*.test.ts",
+      "apps/mobile/**/*.test.ts",
+    ],
     environment: "node",
   },
   resolve: {

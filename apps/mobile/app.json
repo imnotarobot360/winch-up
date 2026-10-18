@@ -20,14 +20,16 @@
         {
           "color": "#ea580c"
         }
-      ]
+      ],
+      "expo-apple-authentication"
     ],
     "ios": {
       "bundleIdentifier": "com.winchup.mobile.dev",
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Attach a photo to your assistance request."
-      }
+      },
+      "usesAppleSignIn": true
     },
     "android": {
       "package": "com.winchup.mobile.dev",
